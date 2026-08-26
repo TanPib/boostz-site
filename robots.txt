@@ -1,0 +1,6 @@
+# La console d'administration n'a rien a faire dans un moteur de recherche.
+# Ce n'est pas une protection - elle repose entierement sur requireAdmin cote
+# API, et un robots.txt n'empeche personne d'ouvrir une URL. Cela evite
+# seulement de mettre une porte en vitrine.
+User-agent: *
+Disallow: /console.html
