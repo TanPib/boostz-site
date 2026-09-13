@@ -3,35 +3,440 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boostz — votre collection de cartes, enfin tenue</title>
-<meta name="description" content="Boostz réunit vos cartes à collectionner, leur cote et vos échanges entre collectionneurs.">
-<link rel="stylesheet" href="style.css">
+<title>boostZ — Boost ta collection TCG</title>
+<meta name="description" content="boostZ réunit ta collection de cartes à collectionner, leur cote et tes échanges entre collectionneurs. Neuf jeux, cartes et produits scellés, dans une seule application.">
+<meta name="theme-color" content="#08070B">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/landing.css">
 </head>
-<body>
-<div class="page">
-<header><a class="marque" href="/">boost<span>z</span></a></header>
+<body class="lp">
 
-<h1>Votre collection, enfin tenue.</h1>
-<p class="chapeau">Boostz réunit vos cartes à collectionner, leur cote au fil des jours et vos
-échanges avec les autres collectionneurs. Neuf jeux, un seul endroit.</p>
+<div id="cursor-dot" class="lp-cursor-dot" hidden></div>
+<div id="cursor-ring" class="lp-cursor-ring" hidden></div>
+<div id="confetti" class="lp-confetti" aria-hidden="true"></div>
 
-<div class="encadre">
-<p><strong>Le site complet arrive.</strong> En attendant, voici les deux documents qui vous
-concernent directement.</p>
+<header class="lp-top">
+  <a class="bz-logo" href="index.html" aria-label="boostZ, accueil">
+    <span class="bz-logo-boost">boost</span><span class="bz-logo-z" aria-hidden="true"><span class="g1">Z</span><span class="g2">Z</span><span class="z">Z</span></span>
+  </a>
+  <nav id="lp-account" class="lp-top-right" aria-label="Compte"></nav>
+</header>
+
+<main>
+<!-- 01 · Le booster -->
+<section id="intro" class="lp-hero" aria-labelledby="hero-title">
+  <div class="lp-hero-glow" aria-hidden="true"></div>
+  <div class="lp-speed" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+  <h1 id="hero-title" class="lp-wordmark">
+    <span class="lp-wordmark-boost">boost</span><span class="lp-wordmark-z"><span class="g1" aria-hidden="true">Z</span><span class="g2" aria-hidden="true">Z</span><span class="z">Z</span></span>
+    <span class="lp-skid" aria-hidden="true"></span>
+  </h1>
+  <p class="lp-baseline">Boost ta collection TCG</p>
+  <p class="lp-hero-facts">9 jeux · cartes et scellés · application en développement</p>
+
+  <div class="lp-stage">
+    <div id="pack" class="lp-pack" role="button" tabindex="0" aria-label="Déchirer le booster" data-cur="1">
+      <div id="pack-top" class="lp-pack-top">
+        <span class="lp-pack-perf"></span>
+        <span class="lp-pack-tear">✂ DÉCHIRE ICI</span>
+      </div>
+      <div class="lp-pack-body">
+        <span class="lp-hatch" aria-hidden="true"></span>
+        <span class="lp-pack-face">
+          <span class="lp-pack-logo"><span class="b">boost</span><span class="z">Z</span></span>
+          <span class="lp-pack-ed">BOOSTER ÉDITION ZÉRO</span>
+          <span class="lp-pack-bolt"><svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)" aria-hidden="true"><path d="M13 2 4 14h6l-3 8 10-12h-6l2-8Z"/></svg></span>
+          <span class="lp-pack-in">9 TCG À L'INTÉRIEUR</span>
+        </span>
+        <span class="lp-pack-perf is-bottom"></span>
+        <span class="lp-shine" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div id="opened" class="lp-opened" hidden>
+      <span class="lp-flash" aria-hidden="true"></span>
+      <div id="burst" aria-hidden="true"></div>
+      <div id="hero-card" class="lp-holo-card lp-hero-card" data-cur="1">
+        <span data-holo="1" class="lp-holo" aria-hidden="true"></span>
+        <span class="lp-hatch is-strong" aria-hidden="true"></span>
+        <span id="hero-emblem" class="lp-card-window"></span>
+        <span class="lp-card-foot">
+          <b>Étincelle — carte de démo</b>
+          <span>HOLO RARE ★ · 199/165</span>
+        </span>
+        <span data-gloss="1" class="lp-gloss" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <p id="hint-sealed" class="lp-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 12h14M13 6l6 6-6 6"/></svg>Glisse vers la droite pour déchirer — ou clique</p>
+  <p id="hint-opened" class="lp-hint-open" hidden>
+    <span>Neuf TCG couverts, une seule application. Descends : ta carte te suit partout.</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.4" stroke-linecap="round" class="lp-bounce" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
+  </p>
+</section>
+
+<!-- 02 · Les usages -->
+<section id="usages" class="lp-section lp-bordered" aria-labelledby="usages-title">
+  <div class="lp-wrap">
+    <p class="lp-kicker">L'APP, EN SIX USAGES</p>
+    <h2 id="usages-title" class="lp-title">Tout ce que boostZ <span class="lp-outline">fait pour toi.</span></h2>
+    <div class="lp-usages">
+      <a class="lp-usage" href="#scan" data-cur="1" style="--hover:rgba(139,61,255,.6)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="var(--brand-violet)" aria-hidden="true"><path d="M4 4h5v2H6v3H4V4Zm11 0h5v5h-2V6h-3V4ZM4 15h2v3h3v2H4v-5Zm14 0h2v5h-5v-2h3v-3Zm-9-5h6v4H9v-4Z"/></svg>
+        <b>Vitrine</b>
+        <p>Scanne une carte ou une page de classeur entière : tout se range tout seul, dans le catalogue officiel français.</p>
+        <span>VOIR →</span>
+      </a>
+      <a class="lp-usage" href="#invest" data-cur="1" style="--hover:rgba(61,220,151,.6)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--fill-success)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>
+        <b>Invest'</b>
+        <p>La valeur de ta collection, cartes et scellés, sa courbe d'évolution et des alertes de hausse ou de baisse.</p>
+        <span>VOIR →</span>
+      </a>
+      <a class="lp-usage" href="#analyse" data-cur="1" style="--hover:rgba(77,255,166,.6)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#4DFFA6" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15.5 15.5 20 20"/></svg>
+        <b>Analyse d'état</b>
+        <p>Coins, bords, surface, centrage évalués sur photo, pour t'aider à juger l'état avant d'envoyer une carte en gradation.</p>
+        <span>VOIR →</span>
+      </a>
+      <a class="lp-usage" href="#echanges" data-cur="1" style="--hover:rgba(255,79,160,.6)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--brand-rose)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 8h13M16 4l4 4-4 4M17 16H4M8 12l-4 4 4 4"/></svg>
+        <b>Échanges</b>
+        <p>Du troc entre collectionneurs, cotes comparées, en main propre. Aucun argent ne passe par l'application.</p>
+        <span>VOIR →</span>
+      </a>
+      <a class="lp-usage" href="#autour" data-cur="1" style="--hover:rgba(58,169,255,.6)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="var(--brand-bleu)" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.75 2.75 0 0 1 0 5.5Z"/></svg>
+        <b>Autour de toi</b>
+        <p>Boutiques, brocantes et tournois près de chez toi, avec les forums de ta région.</p>
+        <span>VOIR →</span>
+      </a>
+      <a class="lp-usage" href="#finale" data-cur="1" style="--hover:rgba(245,166,35,.6)">
+        <svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bzCoinU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#D97706"/></linearGradient></defs><circle cx="12" cy="12" r="11" fill="url(#bzCoinU)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/><text x="12" y="16.2" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="12" fill="#fff">b</text></svg>
+        <b>Boosties</b>
+        <p>Gagne des boosties en contribuant au catalogue, dépense-les en avatars, cadres, bannières et titres.</p>
+        <span>VOIR →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="lp-marquee" aria-hidden="true">
+  <div class="lp-marquee-track">
+    <span>9 TCG · CARTES &amp; SCELLÉS · COTES À JOUR · TROC SANS ARGENT · ANALYSE D'ÉTAT · BOOSTIES · CATALOGUE FR ·&nbsp;</span>
+    <span>9 TCG · CARTES &amp; SCELLÉS · COTES À JOUR · TROC SANS ARGENT · ANALYSE D'ÉTAT · BOOSTIES · CATALOGUE FR ·&nbsp;</span>
+  </div>
 </div>
 
-<h2>Documents</h2>
-<ul>
-<li><a href="/confidentialite.html">Politique de confidentialité</a> — quelles données nous
-traitons, où elles sont hébergées et combien de temps.</li>
-<li><a href="/suppression-compte.html">Supprimer votre compte</a> — la marche à suivre, ce qui
-est effacé et ce qui est conservé.</li>
-</ul>
+<!-- 03 · Scan -->
+<div id="scan" class="lp-scene" style="height:260vh">
+  <div class="lp-sticky">
+    <div id="scan-fit" class="lp-scene-row">
+      <div class="lp-scene-text">
+        <p class="lp-kicker">01 — VITRINE</p>
+        <h2 class="lp-title is-big">Scanne.<br><span class="lp-outline">C'est rangé.</span></h2>
+        <p class="lp-body">Une boîte à chaussures pleine de cartes en vrac ? Scanne-les : chacune est identifiée, rangée dans la bonne collection, et ta progression grimpe extension par extension.</p>
+        <div class="lp-chips">
+          <span>Carte seule</span><span>Page de classeur, plusieurs cartes d'un coup</span><span>Recherche par nom</span>
+        </div>
+      </div>
+      <div class="lp-sorter">
+        <div class="bz-row" style="gap:8px">
+          <b class="lp-sorter-title">Tri automatique</b>
+          <span class="lp-sorter-meta">9 cartes en vrac</span>
+        </div>
+        <div id="sort-box" class="lp-sort-box" aria-hidden="true">
+          <div id="loose"></div>
+          <div id="bins" class="lp-bins"></div>
+        </div>
+        <div class="lp-sorter-foot">
+          <span>Ta vitrine</span>
+          <b id="scan-count">448 cartes</b>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<footer>
-<a href="/confidentialite.html">Confidentialité</a>
-<a href="/suppression-compte.html">Suppression de compte</a>
+<!-- 04 · Cote -->
+<div id="invest" class="lp-scene" style="height:240vh">
+  <div class="lp-sticky">
+    <div class="lp-scene-glow" aria-hidden="true"></div>
+    <div class="lp-scene-row">
+      <div id="inv-card" class="lp-holo-card lp-inv-card" data-cur="1">
+        <span data-holo="1" class="lp-holo" aria-hidden="true"></span>
+        <span id="inv-emblem" class="lp-card-window is-inv"></span>
+        <span class="lp-card-label">ÉTINCELLE · NM</span>
+        <span data-gloss="1" class="lp-gloss" aria-hidden="true"></span>
+      </div>
+      <div class="lp-scene-text is-wide">
+        <p class="lp-kicker">02 — INVEST'</p>
+        <h2 class="lp-title is-big">Ce que ça vaut.<br><span class="lp-outline">Au fil des jours.</span></h2>
+        <div class="bz-row" style="gap:14px;margin-top:22px">
+          <b id="inv-val" class="lp-inv-value">8 420 €</b>
+          <span id="inv-delta" class="lp-inv-delta">▲ +340 € · 30 j</span>
+          <span class="lp-demo-tag">EXEMPLE</span>
+        </div>
+        <svg viewBox="0 0 640 240" preserveAspectRatio="none" class="lp-inv-chart" aria-hidden="true">
+          <defs><linearGradient id="bzXpFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139,61,255,.38)"/><stop offset="1" stop-color="rgba(139,61,255,0)"/></linearGradient></defs>
+          <line x1="0" y1="70" x2="640" y2="70" stroke-dasharray="3 7" stroke-width="1" stroke="rgba(255,255,255,.08)"/>
+          <line x1="0" y1="140" x2="640" y2="140" stroke-dasharray="3 7" stroke-width="1" stroke="rgba(255,255,255,.08)"/>
+          <path id="inv-fill" d="M16,205 C60,200 90,214 140,196 C190,178 220,186 270,160 C320,134 350,142 400,110 C450,86 480,92 530,64 C580,44 600,50 624,34 L624,240 L16,240 Z" fill="url(#bzXpFill)" opacity="0"/>
+          <path id="inv-line" d="M16,205 C60,200 90,214 140,196 C190,178 220,186 270,160 C320,134 350,142 400,110 C450,86 480,92 530,64 C580,44 600,50 624,34" fill="none" stroke="#8B3DFF" stroke-width="3.5" stroke-linecap="round"/>
+          <circle id="inv-dot" cx="624" cy="34" r="6" fill="#8B3DFF" stroke="#fff" stroke-width="2" opacity="0"/>
+        </svg>
+        <p class="lp-body is-small">Valeur totale décotée selon l'état, cartes et scellés compris. Les cotes viennent des catalogues de chaque jeu et des prix demandés sur les annonces eBay actives. Elles restent indicatives et ne sont <b>jamais inventées</b> : une carte sans cote l'affiche.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 · Analyse -->
+<div id="analyse" class="lp-scene" style="height:260vh">
+  <div class="lp-sticky">
+    <div class="lp-scene-row">
+      <div class="lp-ana">
+        <div class="lp-ana-card">
+          <span class="lp-hatch" aria-hidden="true"></span>
+          <span id="ana-emblem" class="lp-card-window is-ana"></span>
+          <span class="lp-card-label is-ana">RECTO · EN ANALYSE</span>
+          <span id="ana-laser" class="lp-laser" aria-hidden="true"></span>
+        </div>
+        <span class="lp-corner tl" aria-hidden="true"></span><span class="lp-corner tr" aria-hidden="true"></span>
+        <span class="lp-corner bl" aria-hidden="true"></span><span class="lp-corner br" aria-hidden="true"></span>
+        <span id="ana-stamp" class="lp-stamp is-ana" hidden>NEAR MINT 8,5</span>
+      </div>
+      <div class="lp-scene-text is-wide">
+        <p class="lp-kicker">03 — ANALYSE D'ÉTAT</p>
+        <h2 class="lp-title">Coins. Bords.<br><span class="lp-outline">Surface. Centrage.</span></h2>
+        <div id="ana-grades" class="lp-grades">
+          <div class="lp-grade" data-g="0"><b>Coins</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">8,5</b></div>
+          <div class="lp-grade" data-g="1"><b>Bords</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">9,0</b></div>
+          <div class="lp-grade" data-g="2"><b>Surface</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">7,5</b></div>
+          <div class="lp-grade" data-g="3"><b>Centrage</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">9,5</b></div>
+        </div>
+        <p class="lp-body is-small">Photographie ta carte recto puis verso : quatre critères évalués, chacun détaillé en sous-scores. Une aide à l'évaluation, <b>pas une note certifiée</b>, pour décider avant d'envoyer ta carte en gradation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 · Troc -->
+<div id="echanges" class="lp-scene" style="height:220vh">
+  <div class="lp-sticky is-column">
+    <div class="lp-center-head">
+      <p class="lp-kicker">04 — ÉCHANGES</p>
+      <h2 class="lp-title is-big">Troque. <span class="lp-outline">Sans argent.</span></h2>
+    </div>
+    <div id="swap-stage" class="lp-swap" aria-hidden="true">
+      <div id="swap-av-l" class="lp-swap-av is-left">
+        <span data-ring="1" style="background:linear-gradient(135deg,var(--brand-rose),var(--brand-violet))">L</span>
+        <b>Toi</b><small>LéoTCG</small>
+      </div>
+      <div id="swap-av-r" class="lp-swap-av is-right">
+        <span data-ring="1" style="background:linear-gradient(135deg,var(--brand-bleu),var(--brand-violet))">S</span>
+        <b>SachaCollec</b><small>Collectionneuse</small>
+      </div>
+      <div id="swap-a" class="lp-swap-card is-a"><span id="swap-a-emblem"></span><small>Pokémon · 41,00 €</small></div>
+      <div id="swap-b" class="lp-swap-card is-b"><span id="swap-b-emblem"></span><small>Lorcana · 38,20 €</small></div>
+      <span class="lp-swap-z"><span>Z</span></span>
+      <span id="swap-chip" class="lp-swap-chip">Cotes comparées : troc équilibré ✓</span>
+      <span id="swap-stamp" class="lp-stamp is-swap" hidden>TROC CONCLU !</span>
+      <span id="swap-stars" class="lp-swap-stars" hidden>
+        <span class="stars">★★★★★</span>
+        <span class="txt">Vous vous notez : 5 étoiles reçues rapportent 25 boosties</span>
+      </span>
+    </div>
+    <p class="lp-body is-small is-center">boostZ compare les cotes des deux côtés et t'aide à juger si le troc est équilibré. La remise se fait en main propre, sans argent, avec une notation en cinq étoiles. <b>Réservé aux 18 ans et plus.</b></p>
+  </div>
+</div>
+
+<div class="lp-marquee" aria-hidden="true">
+  <div class="lp-marquee-track is-reverse">
+    <span>POKÉMON · YU-GI-OH! · ONE PIECE · LORCANA · STAR WARS UNLIMITED · MAGIC · ANIMAL CROSSING · DRAGON BALL SUPER · WORLD OF WARCRAFT ·&nbsp;</span>
+    <span>POKÉMON · YU-GI-OH! · ONE PIECE · LORCANA · STAR WARS UNLIMITED · MAGIC · ANIMAL CROSSING · DRAGON BALL SUPER · WORLD OF WARCRAFT ·&nbsp;</span>
+  </div>
+</div>
+
+<!-- 07 · Les neuf jeux -->
+<section id="jeux" class="lp-section lp-jeux" aria-labelledby="jeux-title">
+  <div id="jeux-glow" class="lp-jeux-glow" aria-hidden="true"></div>
+  <div class="lp-wrap">
+    <p class="lp-kicker">05 — NEUF JEUX</p>
+    <h2 id="jeux-title" class="lp-title is-big">Neuf univers.<br><span class="lp-outline">Une app.</span></h2>
+    <p class="lp-body" style="max-width:480px">Touche un jeu : chacun garde sa couleur partout dans l'application, cartes et produits scellés compris.</p>
+    <div id="game-tiles" class="lp-tiles" role="list"></div>
+    <div class="lp-game-info" aria-live="polite">
+      <span id="jeux-dot" class="lp-game-dot"></span>
+      <div style="flex:1;min-width:220px">
+        <b id="jeux-name" class="lp-game-name"></b>
+        <p id="jeux-tag" class="lp-game-tag"></p>
+      </div>
+      <span id="jeux-cov" class="lp-game-cov"></span>
+    </div>
+    <p class="bz-tiny" style="margin-top:12px">Couverture des cotes au 13 septembre 2026. La cote d'une carte s'affiche quand une source la publie ; sinon, l'application indique « pas de cote ».</p>
+  </div>
+</section>
+
+<!-- 08 · Autour de toi -->
+<div id="autour" class="lp-scene" style="height:220vh">
+  <div class="lp-sticky">
+    <div class="lp-scene-row">
+      <div class="lp-map-card">
+        <svg id="france" class="lp-map" role="img" aria-label="Carte de France avec des boutiques, brocantes et tournois d'illustration"></svg>
+        <div class="lp-map-legend">
+          <span><i style="background:var(--brand-rose)"></i><b id="cnt-broc">0</b>Brocantes</span>
+          <span><i style="background:var(--brand-violet)"></i><b id="cnt-bout">0</b>Boutiques</span>
+          <span><i style="background:var(--brand-bleu)"></i><b id="cnt-tour">0</b>Tournois</span>
+        </div>
+        <p class="bz-tiny" style="text-align:center;margin:8px 0 0">Points d'illustration</p>
+      </div>
+      <div class="lp-scene-text">
+        <p class="lp-kicker">06 — AUTOUR DE TOI</p>
+        <h2 class="lp-title">Le TCG vit aussi<br><span class="lp-outline">près de chez toi.</span></h2>
+        <p class="lp-body">Boutiques (OpenStreetMap, resynchronisé chaque semaine), brocantes et vide-greniers (open data DataTourisme) et tournois, sur la même carte, avec les forums de ta région.</p>
+        <p class="bz-tiny lp-scroll-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="lp-bounce" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>Continue de dérouler : la France s'allume, point par point.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 · Boosties -->
+<section id="finale" class="lp-section" aria-labelledby="boosties-title">
+  <div class="lp-finale-glow" aria-hidden="true"></div>
+  <div class="lp-wrap">
+    <div class="lp-center-head">
+      <p class="lp-kicker">07 — BOOSTIES</p>
+      <h2 id="boosties-title" class="lp-title is-big">Contribue. <span class="lp-outline">Personnalise.</span></h2>
+      <p class="lp-body" style="margin-inline:auto;max-width:580px">La première photo d'une carte peu documentée rapporte plus que la centième d'une star du catalogue. Tes boosties se dépensent dans la boutique de personnalisation : essaie sur le profil ci-dessous.</p>
+    </div>
+    <div class="lp-profile-row">
+      <div class="lp-profile">
+        <div id="pf-banner" class="lp-pf-banner"><span class="lp-hatch" aria-hidden="true"></span><span class="lp-shine" aria-hidden="true"></span></div>
+        <div class="lp-pf-body">
+          <div id="pf-avatar" class="lp-pf-avatar">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path id="pf-glyph" d=""/></svg>
+          </div>
+          <div class="bz-row" style="gap:8px;margin-top:12px">
+            <b class="lp-pf-name">LéoTCG</b>
+            <span id="pf-rar" class="lp-pf-rar"></span>
+          </div>
+          <div id="pf-title" class="lp-pf-title"></div>
+          <div class="lp-pf-stats"><span><b>457</b> cartes</span><span><b>38</b> scellés</span><span><b>12</b> échanges</span></div>
+        </div>
+      </div>
+      <div class="lp-shop">
+        <div class="bz-row">
+          <b class="lp-shop-title">Boutique de personnalisation</b>
+          <span class="lp-coin-chip"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bzCoinV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#D97706"/></linearGradient></defs><circle cx="12" cy="12" r="11" fill="url(#bzCoinV)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/></svg>1 240</span>
+        </div>
+        <div class="lp-shop-line"><span class="lp-shop-label">Avatar</span><div id="opt-av" class="lp-opts"></div></div>
+        <div class="lp-shop-line"><span class="lp-shop-label">Cadre</span><div id="opt-fr" class="lp-opts"></div></div>
+        <div class="lp-shop-line"><span class="lp-shop-label">Bannière</span><div id="opt-bn" class="lp-opts"></div></div>
+        <div class="lp-shop-line is-last"><span class="lp-shop-label">Titre</span><div id="opt-ti" class="lp-opts"></div></div>
+        <div class="lp-rarities">
+          <span style="color:var(--rar-commun)"><i style="background:var(--rar-commun)"></i>Commun</span>
+          <span style="color:var(--rar-rare)"><i style="background:var(--rar-rare)"></i>Rare</span>
+          <span style="color:#B58BFF"><i style="background:var(--rar-epique)"></i>Épique</span>
+          <span style="color:var(--rar-legendaire)"><i style="background:var(--rar-legendaire)"></i>Légendaire</span>
+          <span style="color:var(--rar-mythique)"><i style="background:var(--rar-mythique)"></i>Mythique</span>
+        </div>
+        <p class="bz-tiny" style="margin:12px 0 0;line-height:1.7">Pochettes Éclat, Prisme et Zénith : rareté plancher garantie, probabilités publiées, doublons partiellement remboursés en boosties. Les boosties sont une unité de compte interne, sans valeur monétaire, utilisable uniquement dans l'application pour personnaliser ton compte.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · L'app et la confiance -->
+<section id="app" class="lp-section lp-bordered" aria-labelledby="app-title">
+  <div class="lp-app-glow" aria-hidden="true"></div>
+  <div class="lp-wrap lp-app-row">
+    <div class="lp-phone-wrap">
+      <div class="lp-phone-frame" data-cur="1" id="phone">
+        <div class="lp-phone">
+          <div class="lp-phone-status"><span>9:41</span><span class="notch"></span><span class="icons">●●●</span></div>
+          <div class="lp-phone-bar">
+            <span class="lp-mini-logo"><span class="b">boost</span><span class="z">Z</span></span>
+            <span class="lp-coin-chip is-mini">1 240</span>
+            <span class="lp-mini-av"></span>
+          </div>
+          <div class="lp-phone-value">
+            <span class="lp-phone-eyebrow">VALEUR TOTALE</span>
+            <div class="bz-row" style="gap:8px;margin-top:3px"><b>12 480 €</b><span class="lp-phone-delta">▲ +340 €</span></div>
+            <svg viewBox="0 0 200 34" preserveAspectRatio="none" aria-hidden="true"><path d="M2,28 C30,26 45,30 70,22 C95,14 115,18 140,12 C165,7 180,9 198,4" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="2" stroke-linecap="round"/><circle cx="198" cy="4" r="3" fill="#fff"/></svg>
+          </div>
+          <div class="lp-phone-filters"><span class="is-on">Tous</span><span>Pokémon</span><span>Lorcana</span><span>One P.</span></div>
+          <div id="phone-cards" class="lp-phone-cards"></div>
+          <div class="lp-phone-nav" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="var(--text-accent)"><path d="M4 4h4.5v4.5H4V4Zm5.75 0h4.5v4.5h-4.5V4ZM15.5 4H20v4.5h-4.5V4ZM4 9.75h4.5v4.5H4v-4.5Zm5.75 0h4.5v4.5h-4.5v-4.5Zm5.75 0H20v4.5h-4.5v-4.5ZM4 15.5h4.5V20H4v-4.5Zm5.75 0h4.5V20h-4.5v-4.5Zm5.75 0H20V20h-4.5v-4.5Z"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>
+            <span class="lp-phone-fab"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h5v2H6v3H4V4Zm11 0h5v5h-2V6h-3V4ZM4 15h2v3h3v2H4v-5Zm14 0h2v5h-5v-2h3v-3Zm-9-5h6v4H9v-4Z"/></svg></span>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.2" stroke-linecap="round"><path d="M7 8h13M16 4l4 4-4 4M17 16H4M8 12l-4 4 4 4"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(255,255,255,.4)"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg>
+          </div>
+        </div>
+      </div>
+      <span class="lp-float is-green" aria-hidden="true">+340 € ce mois</span>
+      <span class="lp-float is-grey" aria-hidden="true">Catalogue officiel FR</span>
+    </div>
+
+    <div class="lp-app-text">
+      <p class="lp-kicker">08 — L'APP</p>
+      <h2 id="app-title" class="lp-title is-big">Bientôt dans<br><span class="lp-outline">ta poche.</span></h2>
+      <div class="lp-trust">
+        <div class="lp-trust-item">
+          <span class="lp-trust-ico" style="--c:var(--brand-bleu)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3Z"/></svg></span>
+          <div><b>Tes données restent en Europe</b><p>Le serveur tourne à Francfort et la base de données est à Paris, photos de tes cartes comprises.</p></div>
+        </div>
+        <div class="lp-trust-item">
+          <span class="lp-trust-ico" style="--c:var(--brand-violet)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h11a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3V5Z"/><path d="M8 9h6M8 13h6"/></svg></span>
+          <div><b>Des catalogues choisis pour le français</b><p>Pour plusieurs jeux, la source retenue est celle qui publie les vraies illustrations françaises, pas de l'anglais traduit.</p></div>
+        </div>
+        <div class="lp-trust-item">
+          <span class="lp-trust-ico" style="--c:var(--brand-rose)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
+          <div><b>15 ans pour collectionner, 18 ans pour échanger</b><p>Catalogue, collection et personnalisation dès 15 ans. Échanges, messagerie et forums à partir de 18 ans.</p></div>
+        </div>
+      </div>
+      <div class="lp-stores">
+        <span class="lp-store">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
+          <span><small>BIENTÔT SUR</small><b>App Store</b></span>
+        </span>
+        <span class="lp-store">
+          <svg width="15" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)" aria-hidden="true"><path d="M4 3.5v17l9-8.5-9-8.5Zm10.2 7.4 2.6-2.4 3.2 1.8c.9.5.9 1.9 0 2.4l-3.2 1.8-2.6-2.4v-1.2Zm-1 2.3 2.3 2.2-9.7 5.4 7.4-7.6Zm0-3.4L5.8 4.2l9.7 5.4-2.3 2.2Z"/></svg>
+          <span><small>BIENTÔT SUR</small><b>Google Play</b></span>
+        </span>
+      </div>
+      <p class="bz-tiny" style="margin:14px 0 0">Application en développement, pas encore publiée sur les stores. Aucune date de sortie n'est arrêtée.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="lp-footer">
+  <div class="lp-wrap" style="padding-block:36px 44px">
+    <div class="bz-row" style="gap:18px">
+      <span class="lp-mini-logo is-foot"><span class="b">boost</span><span class="z">Z</span></span>
+      <span class="lp-foot-base">Boost ta collection TCG</span>
+      <span class="lp-foot-copy">© 2026 boostZ · application en développement</span>
+    </div>
+    <nav class="lp-foot-nav" aria-label="Liens du site">
+      <a href="confidentialite.html">Politique de confidentialité</a>
+      <a href="suppression-compte.html" class="is-red"><span class="lp-lock" data-lock hidden></span>Supprimer mon compte</a>
+      <a href="support.html" class="is-violet"><span class="lp-lock" data-lock hidden></span>Contacter le support</a>
+      <span id="foot-note" class="bz-tiny" hidden>Connexion requise pour ces deux actions.</span>
+    </nav>
+    <div class="lp-legal">
+      <p>Boostz n'est affilié, associé, autorisé, approuvé par, ni officiellement lié à aucun éditeur, distributeur ou titulaire de droits sur les jeux de cartes référencés. L'ensemble des noms, marques, logos et visuels de cartes demeure la propriété exclusive de leurs titulaires respectifs. Aucune image officielle n'est utilisée sur ce site : les cartes affichées sont des visuels de démonstration.</p>
+      <p>Les échanges se font entre particuliers, sans transfert d'argent via l'application. Les cotes affichées sont indicatives et proviennent de sources tierces. Les boosties sont une unité de compte interne, sans valeur monétaire, non transférables et non convertibles en euros.</p>
+    </div>
+    <p class="bz-tiny" style="margin-top:16px">Éditeur, siège et hébergeur : <span style="color:var(--amber)">[À COMPLÉTER — mentions légales]</span></p>
+  </div>
 </footer>
-</div>
+
+<script type="module" src="assets/landing.js"></script>
 </body>
 </html>
