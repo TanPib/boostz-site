@@ -3,4 +3,7 @@
 # API, et un robots.txt n'empeche personne d'ouvrir une URL. Cela evite
 # seulement de mettre une porte en vitrine.
 User-agent: *
+Disallow: /admin.html
 Disallow: /console.html
+Disallow: /connexion.html
+Disallow: /compte.html
