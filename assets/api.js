@@ -36,7 +36,18 @@ export function saveSession(token, user) {
   }
 }
 
+// LE COMPTE CONFIRMÉ PAR LE SERVEUR, pendant CE chargement de page.
+//
+// La copie gardée en sessionStorage se modifie à la main dans le navigateur, et
+// elle vieillit : un admin rétrogradé la garde jusqu'à sa prochaine relecture. Rien
+// de ce qui dépend du rôle (le bouton « Admin ») ne doit donc se fier à elle, seulement
+// à ce que /auth/me vient de répondre. Null tant que rien n'a été relu.
+let verified = null;
+
+export const verifiedUser = () => verified;
+
 export function clearSession() {
+  verified = null;
   try {
     sessionStorage.removeItem(KEY);
   } catch {
@@ -82,6 +93,7 @@ export async function login(email, password) {
   try {
     const me = await call('/auth/me');
     saveSession(data.token, me);
+    verified = me;
     return { token: data.token, user: me };
   } catch (e) {
     clearSession();
@@ -97,7 +109,11 @@ export async function refreshMe() {
   if (!s) return null;
   const me = await call('/auth/me');
   saveSession(s.token, me);
+  verified = me;
   return me;
 }
 
 export const isAdmin = (user) => !!user && user.role === 'admin';
+
+// Le seul test à utiliser pour afficher un accès d'administration.
+export const isVerifiedAdmin = () => isAdmin(verified);

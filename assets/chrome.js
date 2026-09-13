@@ -4,7 +4,7 @@
 // Tout texte venu de l'API passe par `text` (textContent), jamais par du HTML :
 // un pseudo ou un message de membre ne doit jamais pouvoir s'exécuter dans la
 // page d'un administrateur.
-import { session, clearSession, isAdmin } from './api.js';
+import { session, clearSession, isVerifiedAdmin } from './api.js';
 
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -72,7 +72,9 @@ export function renderTop(host, { label = '', next = '', adminLabel = false, onL
 
   if (user) {
     if (!adminLabel) right.append(el('a', { class: 'bz-top-link bz-hide-sm', href: 'compte.html', text: 'Mon compte' }));
-    if (isAdmin(user) && !adminLabel) {
+    // Le bouton suit le rôle CONFIRMÉ par le serveur pendant ce chargement, jamais
+    // la copie locale de la session (voir verifiedUser dans api.js).
+    if (isVerifiedAdmin() && !adminLabel) {
       right.append(el('a', { class: 'bz-btn is-violet is-sm', href: 'admin.html', text: 'Admin' }));
     }
     if (adminLabel) {

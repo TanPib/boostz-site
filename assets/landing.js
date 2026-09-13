@@ -4,8 +4,8 @@
 // et écrit directement les styles : pas de framework, pas de rendu. Quand le
 // système demande moins de mouvement, les scènes sont posées d'emblée dans leur
 // état final, sans curseur personnalisé, sans confettis ni son.
-import { session, isAdmin } from './api.js';
-import { el, put, initialOf, lockIcon } from './chrome.js';
+import { session, refreshMe, isVerifiedAdmin } from './api.js';
+import { el, put, clear, initialOf, lockIcon } from './chrome.js';
 import { TCGS, emblemSvg } from './tcg.js';
 import { FRANCE_VIEWBOX, FRANCE_D, FRANCE_PINS } from './france.js';
 
@@ -20,23 +20,40 @@ const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const hexA = (hex, alpha) => hex + alpha; // #RRGGBB + AA
 
 // ---------- En-tête et pied de page selon la session ----------
+// Le bouton « Admin » n'apparaît qu'une fois le rôle confirmé par le serveur :
+// l'en-tête est d'abord dessiné sans lui, puis redessiné après /auth/me. Une session
+// trafiquée ou périmée ne montre donc jamais d'accès d'administration.
 function renderAccount() {
   const s = session();
-  const nav = $('lp-account');
+  const nav = clear($('lp-account'));
+  const locks = document.querySelectorAll('[data-lock]');
   if (s && s.user) {
     put(nav,
       el('a', { class: 'bz-top-link', href: 'compte.html', 'data-cur': '1', text: 'Mon compte' }),
-      isAdmin(s.user) ? el('a', { class: 'bz-btn is-violet is-sm', href: 'admin.html', 'data-cur': '1', text: 'Admin' }) : null,
+      isVerifiedAdmin() ? el('a', { class: 'bz-btn is-violet is-sm', href: 'admin.html', 'data-cur': '1', text: 'Admin' }) : null,
       el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(s.user) })
     );
+    for (const slot of locks) slot.hidden = true;
+    $('foot-note').hidden = true;
   } else {
     put(nav, el('a', { class: 'bz-btn is-primary is-sm', href: 'connexion.html', 'data-cur': '1', text: 'Se connecter' }));
-    for (const slot of document.querySelectorAll('[data-lock]')) {
-      slot.append(lockIcon(11));
+    for (const slot of locks) {
+      if (!slot.firstChild) slot.append(lockIcon(11));
       slot.hidden = false;
     }
     $('foot-note').hidden = false;
   }
+}
+
+async function verifyAccount() {
+  if (!session()) return;
+  try {
+    await refreshMe();
+  } catch {
+    // 401 : call() a déjà effacé la session, l'en-tête repasse en « Se connecter ».
+    // Serveur injoignable : on reste sans bouton Admin, faute de confirmation.
+  }
+  renderAccount();
 }
 
 // ---------- Curseur personnalisé ----------
@@ -568,6 +585,7 @@ function frame() {
 
 function start() {
   renderAccount();
+  verifyAccount();
   setupCursor();
   setupPack();
   setupScan();

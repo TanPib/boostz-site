@@ -115,8 +115,11 @@ if (CONTEXT[next]) {
   box.hidden = false;
 }
 
+// Déjà connecté : la copie locale de la session n'est pas une preuve de rôle, donc
+// pas de détour par la console sur sa seule foi. Mon compte relit le compte et
+// n'y propose la console qu'à un admin confirmé.
 const existing = session();
-if (existing) location.replace(destinationFor(existing.user));
+if (existing) location.replace(DESTINATIONS[next] || 'compte.html');
 
 const form = document.getElementById('form');
 const email = document.getElementById('email');
