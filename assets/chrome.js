@@ -158,3 +158,20 @@ export function gate(host, { title, text, next, red = false, cta = 'Se connecter
     })
   ));
 }
+
+// Les captures jointes à une demande de support depuis l'application. Les
+// adresses sont fabriquées par l'API (jamais reprises d'un client, voir
+// server/src/routes/support.js) ; on n'accepte pourtant que https, ou localhost
+// en développement, pour qu'une valeur inattendue ne devienne jamais un lien
+// javascript: ou data: dans la page d'un administrateur.
+const SAFE_IMAGE = /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/)/i;
+
+export function thumbs(urls) {
+  const list = (Array.isArray(urls) ? urls : []).filter((u) => typeof u === 'string' && SAFE_IMAGE.test(u));
+  if (!list.length) return null;
+  return el('div', { class: 'bz-thumbs' },
+    list.map((u, i) => el('a', { href: u, target: '_blank', rel: 'noopener noreferrer', title: 'Ouvrir la capture ' + (i + 1) },
+      el('img', { src: u, alt: 'Capture jointe ' + (i + 1), loading: 'lazy', referrerpolicy: 'no-referrer' })
+    ))
+  );
+}

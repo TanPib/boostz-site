@@ -227,3 +227,17 @@ select.bz-input option { background: #1B1025; color: var(--text); }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
+
+/* ---------- Captures jointes ---------- */
+.bz-thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.bz-thumbs a { display: block; width: 88px; height: 88px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line-strong); background: rgba(255,255,255,.04); }
+.bz-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ---------- Écrans tactiles ----------
+   Les petits boutons de la console et de l'en-tête (27 px) se ratent au doigt.
+   Sur un écran tactile, toute cible passe à 40 px de haut au moins. */
+@media (pointer: coarse) {
+  .bz-btn, .bz-btn.is-sm, .bz-tab, .bz-top-link { min-height: 40px; }
+  .bz-btn.is-sm { padding-inline: 12px; }
+  .bz-thumbs a { width: 96px; height: 96px; }
+}

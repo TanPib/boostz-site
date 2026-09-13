@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contacter le support — boostZ</title>
 <meta name="description" content="Ouvre une demande au support boostZ et suis les réponses.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   .tk-list { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
@@ -29,7 +30,7 @@
 
 <script type="module">
 import { session, refreshMe, call } from './assets/api.js';
-import { el, clear, put, renderTop, gate, say, dateFr, dateTime } from './assets/chrome.js';
+import { el, clear, put, renderTop, gate, say, dateFr, dateTime, thumbs } from './assets/chrome.js';
 
 const TOPICS = [
   ['collection', 'Ma collection (cartes, scellés)'],
@@ -175,7 +176,8 @@ function renderThread() {
   const fiche = el('div', { class: 'fiche' },
     el('span', { class: 'bz-eyebrow', text: t.topic_label + (t.when_label ? ' · ' + t.when_label : '') }),
     el('p', { text: t.description }),
-    t.steps ? el('p', { class: 'bz-muted', text: 'Étapes : ' + t.steps }) : null
+    t.steps ? el('p', { class: 'bz-muted', text: 'Étapes : ' + t.steps }) : null,
+    thumbs(t.images)
   );
   const thread = el('div', { class: 'bz-thread', style: { marginTop: '14px' } });
   for (const m of t.messages || []) {
@@ -186,7 +188,8 @@ function renderThread() {
     const mine = m.kind === 'user';
     thread.append(el('div', { class: 'bz-bubble-wrap' + (mine ? ' is-mine' : '') },
       el('span', { class: 'bz-bubble-meta', text: (mine ? 'Toi' : 'Support boostZ') + ' · ' + dateTime(m.created_date) }),
-      el('span', { class: 'bz-bubble', text: m.body || '(capture jointe, visible dans l’application)' })
+      m.body ? el('span', { class: 'bz-bubble', text: m.body }) : null,
+      thumbs(m.images)
     ));
   }
 
@@ -235,6 +238,7 @@ function renderThread() {
 }
 
 async function openTicket(id) {
+  const changed = !state.detail || state.detail.id !== id;
   state.selected = id;
   renderList();
   clear(threadHost).append(el('div', { class: 'bz-skeleton', style: { height: '120px' } }));
@@ -246,6 +250,8 @@ async function openTicket(id) {
     if (row) row.has_unread = false;
     renderList();
     renderThread();
+    // Sur téléphone, la conversation est sous la liste : on l'amène à l'écran.
+    if (changed && window.matchMedia('(max-width: 760px)').matches) threadHost.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     clear(threadHost).append(el('div', { class: 'bz-msg is-err', role: 'alert', text: err.message }));
   }

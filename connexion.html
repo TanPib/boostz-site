@@ -6,6 +6,7 @@
 <title>Connexion — boostZ</title>
 <meta name="description" content="Connecte-toi à ton compte boostZ pour contacter le support ou gérer ton compte.">
 <meta name="robots" content="noindex">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   body { display: flex; flex-direction: column; background-image:
@@ -41,22 +42,25 @@
     <p class="bz-lead">Connecte-toi avec le compte de ton application boostZ.</p>
 
     <div class="bz-card" style="margin-top:22px;padding:22px">
-      <form id="form" class="bz-stack" style="gap:14px" novalidate>
+      <!-- Sans action ni name sur les champs, et bouton désactivé jusqu'au chargement du
+           script : si le formulaire partait avant que le JavaScript soit prêt, le
+           navigateur l'enverrait en GET et le mot de passe finirait dans l'adresse. -->
+      <form id="form" class="bz-stack" style="gap:14px" action="javascript:void(0)" novalidate>
         <div class="bz-field">
           <label class="bz-label" for="email">Adresse e-mail</label>
-          <input id="email" class="bz-input" type="email" name="email" autocomplete="username" required placeholder="ton@email.fr">
+          <input id="email" class="bz-input" type="email" autocomplete="username" required placeholder="ton@email.fr">
         </div>
         <div class="bz-field">
           <label class="bz-label" for="password">Mot de passe</label>
           <span class="pwd-wrap">
-            <input id="password" class="bz-input" type="password" name="password" autocomplete="current-password" required placeholder="••••••••">
+            <input id="password" class="bz-input" type="password" autocomplete="current-password" required placeholder="••••••••">
             <button id="toggle" class="pwd-toggle" type="button" aria-label="Afficher le mot de passe" aria-pressed="false">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5C7.5 5 3.6 8 2 12c1.6 4 5.5 7 10 7s8.4-3 10-7c-1.6-4-5.5-7-10-7Zm0 10.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2Z"/></svg>
             </button>
           </span>
         </div>
         <div id="message" aria-live="polite"></div>
-        <button id="submit" class="bz-btn is-primary is-block" type="submit">SE CONNECTER</button>
+        <button id="submit" class="bz-btn is-primary is-block" type="submit" disabled>SE CONNECTER</button>
       </form>
 
       <div class="sep"><span></span><span class="bz-eyebrow" style="font-size:10px">ou</span><span></span></div>
@@ -120,6 +124,8 @@ const password = document.getElementById('password');
 const submit = document.getElementById('submit');
 const message = document.getElementById('message');
 const toggle = document.getElementById('toggle');
+
+submit.disabled = false;
 
 toggle.addEventListener('click', () => {
   const shown = password.type === 'text';

@@ -5,7 +5,7 @@
 // grisés ne font qu'annoncer un refus certain, avec sa raison au survol. Tout
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
-import { el, clear, put, renderTop, gate, dateShort, dateTime, roleLabel, rolePillClass, initialOf } from './chrome.js';
+import { el, clear, put, renderTop, gate, dateShort, dateTime, roleLabel, rolePillClass, initialOf, thumbs } from './chrome.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -68,6 +68,15 @@ const pill = (map, key) => {
 };
 
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
+
+// Sur un écran étroit, le détail s'affiche sous la liste : sans ce défilement,
+// toucher une ligne semble ne rien faire.
+const NARROW = window.matchMedia('(max-width: 860px)');
+function revealDetail() {
+  if (!NARROW.matches) return;
+  const detail = host.querySelector('.adm-detail');
+  if (detail) detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 let host, topHost, toastHost, toastTimer;
 
@@ -370,7 +379,7 @@ function renderReports() {
   for (const r of state.reports) {
     list.append(el('button', {
       class: 'adm-item', type: 'button', 'aria-current': r.id === state.reportId ? 'true' : 'false',
-      onclick: () => { state.reportId = r.id; render(); }
+      onclick: () => { state.reportId = r.id; render(); revealDetail(); }
     },
     el('div', { class: 'bz-row', style: { gap: '8px' } },
       el('b', { style: { fontFamily: 'var(--font-ui)', fontSize: '12.5px' }, text: REASONS[r.reason] || r.reason }),
@@ -446,6 +455,7 @@ function renderReports() {
 
 // ---------- Onglet Support ----------
 async function openTicket(id) {
+  const changed = state.ticketId !== id;
   state.ticketId = id;
   state.ticket = null;
   render();
@@ -459,6 +469,7 @@ async function openTicket(id) {
     toast(e.message, 'err');
   }
   render();
+  if (changed) revealDetail();
 }
 
 function renderSupport() {
@@ -526,7 +537,8 @@ function renderSupport() {
       const mine = m.kind === 'support';
       thread.append(el('div', { class: 'bz-bubble-wrap' + (mine ? ' is-mine' : '') },
         el('span', { class: 'bz-bubble-meta', text: (mine ? 'Support boostZ' : (t.user.pseudo || 'Membre')) + ' · ' + dateTime(m.created_date) }),
-        el('span', { class: 'bz-bubble', text: m.body || '(capture jointe)' })
+        m.body ? el('span', { class: 'bz-bubble', text: m.body }) : null,
+        thumbs(m.images)
       ));
     }
     const reply = el('textarea', { class: 'bz-input', rows: '3', maxlength: '4000', 'aria-label': 'Réponse au membre', placeholder: 'Répondre au membre…' });
@@ -555,6 +567,7 @@ function renderSupport() {
         el('span', { class: 'bz-eyebrow', text: 'Demande' }),
         el('p', { text: t.description }),
         t.steps ? el('p', { class: 'bz-muted', text: 'Étapes : ' + t.steps }) : null,
+        thumbs(t.images),
         ctxText ? el('p', { class: 'bz-tiny', text: ctxText }) : null
       ),
       thread,
