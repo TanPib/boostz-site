@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon compte — boostZ</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .who { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .who-av { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #8B3DFF, #FF4FA0); border: 2px solid var(--soft-violet-border);
+    font-family: var(--font-display); font-weight: 800; font-size: 20px; color: #fff; }
+  .who-name { font-family: var(--font-display); font-weight: 700; font-size: 19px; overflow-wrap: anywhere; }
+  .stat-value { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+  .stat-note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .steps a.bz-card { display: flex; align-items: center; gap: 14px; color: var(--text); transition: border-color .2s, transform .2s; }
+  .steps a.bz-card:hover { text-decoration: none; border-color: rgba(255,255,255,.24); transform: translateY(-2px); }
+  .steps .ico { flex: none; width: 40px; height: 40px; border-radius: 13px; display: flex; align-items: center; justify-content: center; }
+  .steps b { font-family: var(--font-display); font-size: 14px; display: block; }
+  .steps .arrow { margin-left: auto; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div id="top"></div>
+<main id="main" class="bz-page is-narrow">
+  <div class="bz-skeleton" style="height:52px;max-width:320px"></div>
+</main>
+
+<script type="module">
+import { refreshMe, session, isAdmin, call } from './assets/api.js';
+import { el, clear, put, renderTop, gate, initialOf, roleLabel, rolePillClass } from './assets/chrome.js';
+
+const main = document.getElementById('main');
+const top = document.getElementById('top');
+
+function showGate() {
+  renderTop(top, { label: 'MON COMPTE', next: 'compte' });
+  gate(main, {
+    title: 'Espace réservé',
+    text: 'Ton compte, le support et la suppression de compte demandent une session ouverte.',
+    next: 'compte'
+  });
+}
+
+const coin = () => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '20'); svg.setAttribute('height', '20'); svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = '<defs><linearGradient id="bzCoin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#D97706"/></linearGradient></defs><circle cx="12" cy="12" r="11" fill="url(#bzCoin)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/><path d="M10 7.2h1.7v3.2a3 3 0 1 1-1.7 2.7V7.2Zm2.6 4.4a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Z" fill="#fff"/>';
+  return svg;
+};
+
+const icon = (d, color) => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '18'); svg.setAttribute('height', '18'); svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', color); svg.setAttribute('stroke-width', '2.2');
+  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round'); svg.setAttribute('aria-hidden', 'true');
+  const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.append(p);
+  return svg;
+};
+
+function stat(label, value, note, extra) {
+  return el('div', { class: 'bz-card is-tight' },
+    el('span', { class: 'bz-eyebrow', text: label }),
+    el('div', { class: 'stat-value' }, extra || null, el('span', { text: value })),
+    note ? el('div', { class: 'stat-note', text: note }) : null
+  );
+}
+
+function step(href, title, text, d, color, bg) {
+  const ico = el('span', { class: 'ico', style: { background: bg, border: '1.5px solid ' + color } }, icon(d, color));
+  return el('a', { class: 'bz-card', href },
+    ico,
+    el('span', {}, el('b', { text: title }), el('span', { class: 'bz-small bz-muted', text })),
+    el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' })
+  );
+}
+
+function render(user, summary) {
+  renderTop(top, { label: 'MON COMPTE', next: 'compte' });
+  const nf = new Intl.NumberFormat('fr-FR');
+  const openCount = summary ? summary.open_count : null;
+  const unread = summary ? summary.unread_count : 0;
+
+  const stats = el('div', { class: 'bz-grid', style: { marginTop: '22px', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))' } },
+    stat('Boosties', nf.format(user.boosties_balance || 0), 'Unité de compte interne, sans valeur monétaire.', coin()),
+    stat('Cartes', nf.format(user.cards_count || 0), 'Dans ta vitrine, tous jeux confondus.'),
+    stat('Âge', user.is_adult ? 'Majeur' : 'Mineur',
+      user.is_adult ? 'Échanges et messagerie ouverts.' : 'Échanges et messagerie fermés jusqu’à 18 ans.'),
+    stat('Support',
+      openCount === null ? '—' : (openCount + (openCount > 1 ? ' demandes' : ' demande')),
+      openCount === null ? 'Indisponible pour le moment.' : (unread ? unread + ' réponse' + (unread > 1 ? 's' : '') + ' non lue' + (unread > 1 ? 's' : '') : 'en cours, rien de nouveau.'))
+  );
+
+  const steps = el('div', { class: 'bz-stack steps', style: { marginTop: '14px' } },
+    step('support.html', 'Contacter le support', 'Ouvrir une demande et suivre les réponses.',
+      'M4 5h16v11H8l-4 4V5Z', 'var(--soft-violet-border)', 'var(--soft-violet-fill)'),
+    step('suppression-compte.html', 'Supprimer mon compte', 'Ce qui est effacé, ce qui est conservé, et la suppression.',
+      'M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3', 'var(--soft-red-border)', 'var(--soft-red-fill)'),
+    isAdmin(user)
+      ? step('admin.html', 'Console d’administration', 'Comptes, signalements, support et journal.',
+        'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3Z', 'rgba(245,166,35,.7)', 'rgba(245,166,35,.1)')
+      : null
+  );
+
+  put(clear(main),
+    el('div', { class: 'who' },
+      el('span', { class: 'who-av', 'aria-hidden': 'true', text: initialOf(user) }),
+      el('div', { style: { minWidth: '0' } },
+        el('div', { class: 'bz-row', style: { gap: '9px' } },
+          el('span', { class: 'who-name', text: user.pseudo || 'Membre' }),
+          el('span', { class: rolePillClass(user), text: roleLabel(user) })
+        ),
+        el('span', { class: 'bz-small bz-muted', style: { overflowWrap: 'anywhere' }, text: user.email })
+      )
+    ),
+    stats,
+    el('h2', { class: 'bz-h2', style: { marginTop: '34px' }, text: 'Démarches' }),
+    steps,
+    el('div', { class: 'bz-msg is-note', style: { marginTop: '18px' } },
+      el('span', { text: 'Ta vitrine, la valeur de ta collection et tes échanges se consultent dans l’application.' })
+    ),
+    el('nav', { class: 'bz-foot' },
+      el('a', { href: 'confidentialite.html', text: 'Politique de confidentialité' }),
+      el('a', { href: 'index.html', class: 'push', text: '← Retour au site' })
+    )
+  );
+}
+
+async function load() {
+  if (!session()) return showGate();
+  try {
+    const user = await refreshMe();
+    const summary = await call('/support/summary').catch(() => null);
+    render(user, summary);
+  } catch (e) {
+    if (e.status === 401) return showGate();
+    renderTop(top, { label: 'MON COMPTE', next: 'compte' });
+    clear(main).append(el('div', { class: 'bz-msg is-err', role: 'alert', text: e.message }));
+  }
+}
+
+load();
+</script>
+</body>
+</html>
