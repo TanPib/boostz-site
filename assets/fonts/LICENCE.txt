@@ -1,0 +1,11 @@
+Polices hébergées sur ce site plutôt que chargées depuis Google Fonts : la politique
+de confidentialité de boostz.fr affirme que le site n'appelle aucun tiers.
+
+Poppins   — Indian Type Foundry
+Exo       — Natanael Gama
+DM Sans   — Colophon Foundry, Google
+Outfit    — Rodrigo Fuenzalida
+
+Toutes les quatre sont distribuées sous la SIL Open Font License, version 1.1 :
+https://openfontlicense.org/open-font-license-official-text/
+Fichiers récupérés le 13/09/2026 (sous-ensemble latin) depuis fonts.gstatic.com.
