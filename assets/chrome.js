@@ -126,6 +126,14 @@ export function dateTime(iso) {
     d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', ' h ');
 }
 
+// Même chose, mois abrégé : pour les colonnes étroites d'un tableau.
+export function dateTimeShort(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { ...DATE_SHORT, year: 'numeric' }) + ' · ' +
+    d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', ' h ');
+}
+
 // Un bandeau de message dans `host`. type : ok | err | info | note.
 export function say(host, text, type = 'ok') {
   clear(host);

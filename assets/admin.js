@@ -1,11 +1,11 @@
 // La console d'administration de boostz.fr.
 //
 // Elle ne décide de rien. Chaque bouton appelle une route /admin/* et le serveur
-// accepte ou refuse selon le rôle et le rang du compte connecté ; les boutons
-// grisés ne font qu'annoncer un refus certain, avec sa raison au survol. Tout
+// accepte ou refuse selon le rôle et le rang du compte connecté ; les actions
+// grisées ne font qu'annoncer un refus certain, avec sa raison. Tout
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
-import { el, clear, put, renderTop, gate, dateShort, dateTime, roleLabel, rolePillClass, initialOf, thumbs } from './chrome.js';
+import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs } from './chrome.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -264,43 +264,131 @@ const userActs = {
   })
 };
 
-// Les boutons d'une ligne. `why` grise le bouton et dit pourquoi au survol ;
-// le serveur refuserait de toute façon.
-function userButtons(u) {
+// Les gestes possibles sur un compte, pour le menu « … » de sa ligne. `why`
+// désactive l'entrée et dit pourquoi, en toutes lettres sous le libellé : une
+// infobulle ne s'affiche pas au doigt. Le serveur refuserait de toute façon.
+function userMenuItems(u) {
   const me = state.me;
   const isSuper = !!me.is_super_admin;
   const self = u.id === me.id;
-  const out = [];
-  const btn = (label, tone, onclick, why) => el('button', {
-    class: 'bz-btn is-sm is-' + tone,
-    type: 'button',
-    text: label,
-    disabled: !!why,
-    title: why || '',
-    onclick: why ? undefined : onclick
-  });
   const superWhy = isSuper ? null : SUPER_ONLY;
-  if (u.deleted) return [el('span', { class: 'bz-tiny', text: '—' })];
+  const item = (label, tone, run, why) => ({ label, tone, run, why: why || null });
+  const items = [];
+  if (u.deleted) return items;
   if (u.banned_at) {
-    out.push(btn('Réactiver', 'green', () => userActs.unban(u), superWhy));
-    out.push(btn('Supprimer', 'red', () => userActs.remove(u), superWhy));
-    return out;
+    items.push(item('Réactiver le compte', 'green', () => userActs.unban(u), superWhy));
+    items.push(item('Supprimer le compte', 'red', () => userActs.remove(u), superWhy));
+    return items;
   }
   if (u.is_super_admin) {
-    out.push(btn('Retirer le rang', 'amber', () => userActs.superOff(u), superWhy || (state.superCount <= 1 ? 'C’est le dernier super admin.' : null)));
-    out.push(btn('Retirer admin', 'violet', () => userActs.demote(u), superWhy || (state.superCount <= 1 ? 'C’est le dernier super admin.' : null)));
+    const lastSuper = state.superCount <= 1 ? 'C’est le dernier super admin.' : null;
+    items.push(item('Retirer le rang de super admin', 'amber', () => userActs.superOff(u), superWhy || lastSuper));
+    items.push(item('Retirer les droits admin', 'violet', () => userActs.demote(u), superWhy || lastSuper));
   } else if (u.role === 'admin') {
-    out.push(btn('Retirer admin', 'violet', () => userActs.demote(u), state.adminCount <= 1 ? 'C’est le dernier administrateur.' : null));
-    out.push(btn('Nommer super admin', 'amber', () => userActs.superOn(u), superWhy));
+    items.push(item('Retirer les droits admin', 'violet', () => userActs.demote(u), state.adminCount <= 1 ? 'C’est le dernier administrateur.' : null));
+    items.push(item('Nommer super admin', 'amber', () => userActs.superOn(u), superWhy));
   } else {
-    out.push(btn('Passer admin', 'violet', () => userActs.promote(u)));
+    items.push(item('Passer admin', 'violet', () => userActs.promote(u)));
   }
-  if (!u.is_super_admin) out.push(btn('Avertir', 'violet', () => userActs.warn(u), self ? 'C’est ton compte.' : null));
   if (!u.is_super_admin) {
-    out.push(btn('Bannir', 'red', () => userActs.ban(u), self ? 'C’est ton compte.' : superWhy));
-    out.push(btn('Supprimer', 'red', () => userActs.remove(u), self ? 'Passe par la page de suppression.' : superWhy));
+    items.push(item('Avertir', 'violet', () => userActs.warn(u), self ? 'C’est ton compte.' : null));
+    items.push(item('Bannir', 'red', () => userActs.ban(u), self ? 'C’est ton compte.' : superWhy));
+    items.push(item('Supprimer le compte', 'red', () => userActs.remove(u), self ? 'Passe par la page de suppression.' : superWhy));
   }
-  return out;
+  return items;
+}
+
+// LE MENU « … ».
+//
+// Attaché à <body> en position fixe, et non dans la ligne : le tableau défile
+// dans son propre conteneur (overflow), qui couperait un menu posé à l'intérieur.
+// Un seul ouvert à la fois ; il se ferme au clic dehors, sur Échap, quand son
+// bouton quitte l'écran et à chaque redessin de la console.
+let openMenu = null;
+
+function closeActionMenu(restoreFocus = false) {
+  if (!openMenu) return;
+  const { node, anchor, cleanup } = openMenu;
+  openMenu = null;
+  cleanup();
+  node.remove();
+  anchor.setAttribute('aria-expanded', 'false');
+  if (restoreFocus && anchor.isConnected) anchor.focus({ preventScroll: true });
+}
+
+function openActionMenu(anchor, title, items) {
+  const wasOpenHere = openMenu && openMenu.anchor === anchor;
+  closeActionMenu();
+  if (wasOpenHere) return;
+
+  const buttons = [];
+  const menu = el('div', { class: 'bz-menu', role: 'menu', 'aria-label': title },
+    el('div', { class: 'bz-menu-title', text: title }),
+    items.length
+      ? items.map((it) => {
+        const b = el('button', {
+          class: 'bz-menu-item is-' + it.tone,
+          type: 'button',
+          role: 'menuitem',
+          disabled: !!it.why,
+          onclick: () => { closeActionMenu(); it.run(); }
+        },
+        el('span', { class: 'bz-menu-label', text: it.label }),
+        it.why ? el('span', { class: 'bz-menu-why', text: it.why }) : null);
+        buttons.push(b);
+        return b;
+      })
+      : el('p', { class: 'bz-menu-why', style: { padding: '6px 10px', margin: '0' }, text: 'Aucune action possible sur un compte supprimé.' })
+  );
+  document.body.append(menu);
+
+  // Sous le bouton, aligné à droite ; au-dessus s'il ne tient pas en dessous.
+  // Rejoué à chaque défilement : le menu suit son bouton, et ne se ferme que
+  // quand le bouton sort de l'écran. Fermer au moindre défilement le refermait
+  // aussitôt ouvert, dès qu'un focus ou un doigt faisait bouger la page.
+  const place = () => {
+    const r = anchor.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return false;
+    const m = menu.getBoundingClientRect();
+    const left = Math.max(8, Math.min(innerWidth - m.width - 8, r.right - m.width));
+    const below = r.bottom + 6;
+    const top = below + m.height > innerHeight - 8 ? Math.max(8, r.top - m.height - 6) : below;
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+    return true;
+  };
+  place();
+
+  const onPointer = (e) => { if (!menu.contains(e.target) && !anchor.contains(e.target)) closeActionMenu(); };
+  const onKey = (e) => {
+    const enabled = buttons.filter((b) => !b.disabled);
+    const i = enabled.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); closeActionMenu(true); }
+    else if (e.key === 'ArrowDown' && enabled.length) { e.preventDefault(); enabled[(i + 1) % enabled.length].focus(); }
+    else if (e.key === 'ArrowUp' && enabled.length) { e.preventDefault(); enabled[(i - 1 + enabled.length) % enabled.length].focus(); }
+    else if (e.key === 'Tab') closeActionMenu();
+  };
+  const onMove = (e) => {
+    if (e && e.type === 'scroll' && menu.contains(e.target)) return;
+    if (!place()) closeActionMenu();
+  };
+  document.addEventListener('pointerdown', onPointer, true);
+  document.addEventListener('keydown', onKey, true);
+  window.addEventListener('scroll', onMove, true);
+  window.addEventListener('resize', onMove);
+  openMenu = {
+    node: menu,
+    anchor,
+    cleanup: () => {
+      document.removeEventListener('pointerdown', onPointer, true);
+      document.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
+    }
+  };
+  anchor.setAttribute('aria-expanded', 'true');
+  const first = buttons.find((b) => !b.disabled);
+  if (first) first.focus({ preventScroll: true });
 }
 
 function statusPills(u) {
@@ -310,6 +398,80 @@ function statusPills(u) {
   else pills.push(el('span', { class: rolePillClass(u), text: roleLabel(u) }));
   if (!u.deleted && !u.is_adult) pills.push(el('span', { class: 'bz-pill is-amber', text: 'Mineur' }));
   return pills;
+}
+
+// « il y a 3 h » sous la date exacte : la date dit quand, la durée dit si le
+// membre est encore là.
+function sinceFr(iso) {
+  if (!iso) return '';
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return 'à l’instant';
+  if (min < 60) return 'il y a ' + min + ' min';
+  const h = Math.floor(min / 60);
+  if (h < 24) return 'il y a ' + h + ' h';
+  const d = Math.floor(h / 24);
+  if (d === 1) return 'hier';
+  if (d < 31) return 'il y a ' + d + ' j';
+  const mo = Math.floor(d / 30);
+  return 'il y a ' + mo + ' mois';
+}
+
+// Trois points dessinés : le caractère « … » dépend de la police et reste
+// minuscule dans la plupart d'entre elles.
+function dotsIcon() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '18');
+  svg.setAttribute('height', '18');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'currentColor');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const cx of [5, 12, 19]) {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', String(cx));
+    c.setAttribute('cy', '12');
+    c.setAttribute('r', '2.1');
+    svg.append(c);
+  }
+  return svg;
+}
+
+const cell2 = (main, sub, attrs = {}) => el('td', attrs,
+  el('div', { style: { whiteSpace: 'nowrap' } }, main),
+  sub ? el('div', { class: 'bz-tiny', style: { whiteSpace: 'nowrap', marginTop: '2px' } }, sub) : null
+);
+
+function ageCell(u) {
+  if (u.deleted) return cell2('—');
+  if (u.declared_age !== null && u.declared_age !== undefined) {
+    const changed = u.current_age !== null && u.current_age !== u.declared_age;
+    return cell2(el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.declared_age + ' ans' }), changed ? u.current_age + ' ans aujourd’hui' : null);
+  }
+  if (u.current_age !== null && u.current_age !== undefined) {
+    return cell2(el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.current_age + ' ans' }), 'âge actuel');
+  }
+  return cell2(el('span', { class: 'bz-muted', text: 'Non déclaré' }));
+}
+
+function declaredAtCell(u) {
+  if (u.deleted) return cell2('—');
+  if (!u.birth_date_declared_at) {
+    return cell2(el('span', { class: 'bz-muted', text: u.current_age !== null && u.current_age !== undefined ? 'Non enregistrée' : '—' }));
+  }
+  if (u.birth_date_declared_estimated) {
+    return cell2(
+      el('span', { title: 'Estimée d’après la fin de l’onboarding : la date exacte n’était pas enregistrée avant le 14 septembre 2026.', text: '≈ ' + dateTimeShort(u.birth_date_declared_at) }),
+      'estimée'
+    );
+  }
+  return cell2(el('span', { text: dateTimeShort(u.birth_date_declared_at) }));
+}
+
+function lastSeenCell(u) {
+  if (u.deleted) return cell2('—');
+  if (!u.last_app_seen_at) return cell2(el('span', { class: 'bz-muted', text: 'Aucune' }), 'depuis le 14 sept. 2026');
+  return cell2(el('span', { text: dateTimeShort(u.last_app_seen_at) }), sinceFr(u.last_app_seen_at));
 }
 
 // ---------- Onglet Utilisateurs ----------
@@ -339,20 +501,37 @@ function renderUsers() {
   }
   filter.addEventListener('change', () => { state.userFilter = filter.value; render(); });
 
-  const rows = shown.map((u) => el('tr', { class: u.deleted ? 'is-deleted' : (u.banned_at ? 'is-banned' : '') },
-    el('td', {},
-      el('div', { class: 'bz-row', style: { gap: '9px', flexWrap: 'nowrap' } },
-        el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(u) }),
-        el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.pseudo || '—' })
-      )
-    ),
-    el('td', { class: 'bz-muted', title: u.email, style: { whiteSpace: 'nowrap', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis' }, text: u.email }),
-    el('td', { class: 'bz-muted', style: { whiteSpace: 'nowrap' }, text: dateShort(u.created_date) }),
-    el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
-    el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
-    el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px' } }, statusPills(u)), u.banned_reason && !u.deleted ? el('div', { class: 'bz-tiny', title: u.banned_reason, style: { marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, text: 'Motif : ' + u.banned_reason }) : null),
-    el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px', justifyContent: 'flex-end' } }, userButtons(u)))
-  ));
+  const rows = shown.map((u) => {
+    const name = u.pseudo || u.email || 'ce compte';
+    const more = el('button', {
+      class: 'bz-more',
+      type: 'button',
+      'aria-haspopup': 'menu',
+      'aria-expanded': 'false',
+      'aria-label': 'Actions pour ' + name,
+      title: 'Actions'
+    }, dotsIcon());
+    more.addEventListener('click', () => openActionMenu(more, name, userMenuItems(u)));
+    return el('tr', { class: u.deleted ? 'is-deleted' : (u.banned_at ? 'is-banned' : '') },
+      el('td', {},
+        el('div', { class: 'bz-row', style: { gap: '9px', flexWrap: 'nowrap' } },
+          el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(u) }),
+          el('div', { style: { minWidth: '0' } },
+            el('b', { style: { fontFamily: 'var(--font-ui)', display: 'block', whiteSpace: 'nowrap' }, text: u.pseudo || '—' }),
+            el('span', { class: 'bz-tiny', title: u.email, style: { display: 'block', whiteSpace: 'nowrap', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }, text: u.email })
+          )
+        )
+      ),
+      cell2(el('span', { class: 'bz-muted', text: dateShort(u.created_date) })),
+      ageCell(u),
+      declaredAtCell(u),
+      lastSeenCell(u),
+      el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
+      el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
+      el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px' } }, statusPills(u)), u.banned_reason && !u.deleted ? el('div', { class: 'bz-tiny', title: u.banned_reason, style: { marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, text: 'Motif : ' + u.banned_reason }) : null),
+      el('td', { style: { textAlign: 'right' } }, u.deleted ? el('span', { class: 'bz-tiny', text: '—' }) : more)
+    );
+  });
 
   return el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden', marginTop: '16px' } },
     el('div', { class: 'bz-row', style: { padding: '14px 16px', borderBottom: '1px solid var(--line)' } },
@@ -360,11 +539,12 @@ function renderUsers() {
       el('span', { class: 'bz-small bz-muted', style: { whiteSpace: 'nowrap' }, text: shown.length + (shown.length > 1 ? ' comptes' : ' compte') })
     ),
     el('div', { class: 'bz-table-wrap' },
-      el('table', { class: 'bz-table' },
+      el('table', { class: 'bz-table is-compact', style: { minWidth: '1040px' } },
         el('thead', {}, el('tr', {},
-          el('th', { text: 'Pseudo' }), el('th', { text: 'E-mail' }), el('th', { text: 'Inscription' }),
+          el('th', { text: 'Membre' }), el('th', { text: 'Inscription' }),
+          el('th', { text: 'Âge déclaré' }), el('th', { text: 'Déclaré le' }), el('th', { text: 'Dernière utilisation' }),
           el('th', { style: { textAlign: 'center' }, text: 'Reçus' }), el('th', { style: { textAlign: 'center' }, text: 'Émis' }),
-          el('th', { text: 'Statut' }), el('th', { style: { textAlign: 'right' }, text: 'Actions' })
+          el('th', { text: 'Statut' }), el('th', { style: { textAlign: 'right' } }, el('span', { class: 'bz-sr', text: 'Actions' }))
         )),
         el('tbody', {}, rows)
       )
@@ -636,6 +816,7 @@ function kpi(label, value, color) {
 
 function render() {
   if (!state.loaded) return;
+  closeActionMenu();
   const tab = (id, label, count) => el('button', {
     class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(state.tab === id),
     onclick: () => { state.tab = id; render(); }
