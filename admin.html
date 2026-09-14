@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#08070B">
 <title>Administration — boostZ</title>
 <!-- Jamais indexée. Publique au sens où GitHub Pages sert tout ce qu'il héberge,
@@ -105,11 +106,15 @@
     }
     .adm-nav-item {
       display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 0; border: 0; background: transparent; cursor: pointer;
-      color: var(--text-muted); font-family: var(--font-ui); font-weight: 700; font-size: 10.5px; -webkit-tap-highlight-color: transparent;
+      color: rgba(255,255,255,.5); font-family: var(--font-ui); font-weight: 700; font-size: 10.5px; -webkit-tap-highlight-color: transparent;
     }
-    .adm-nav-item[aria-current="page"] { color: var(--soft-violet-text); }
-    .adm-nav-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 52px; height: 28px; border-radius: 999px; transition: background-color .2s; }
-    .adm-nav-item[aria-current="page"] .adm-nav-icon { background: var(--soft-violet-fill); }
+    /* L'onglet actif doit se voir d'un coup d'œil, même écran baissé ou en plein
+       soleil : pastille violette pleine, icône blanche, libellé clair. Le violet
+       à 16 % d'avant disparaissait sur le fond presque noir de la barre. */
+    .adm-nav-item[aria-current="page"] { color: #fff; }
+    .adm-nav-item[aria-current="page"] .adm-nav-label { color: #E4D7FF; }
+    .adm-nav-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 56px; height: 30px; border-radius: 999px; transition: background-color .2s, box-shadow .2s; }
+    .adm-nav-item[aria-current="page"] .adm-nav-icon { background: #7431E0; box-shadow: 0 4px 14px rgba(116,49,224,.45), inset 0 0 0 1px rgba(196,181,253,.35); }
     .adm-nav-badge {
       position: absolute; top: -3px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
       background: var(--brand-rose); color: #fff; font-size: 9.5px; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px #0C0912;
