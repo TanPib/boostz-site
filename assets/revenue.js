@@ -7,15 +7,21 @@
 // dit « pas encore branché » et propose un aperçu avec des chiffres d'exemple,
 // marqué comme tel à chaque instant.
 //
+// DEUX OFFRES, TOUTES DEUX À RENOUVELLEMENT AUTOMATIQUE : au mois et à l'année.
+// Un abonnement se renouvelle donc toujours à son échéance, sauf résiliation ;
+// la console parle d'échéance, jamais d'un « renouvellement oui / non ».
+//
 // 1) GET /admin/users : chaque compte porte `boostz_pass` - null s'il n'a jamais
 //    été abonné. La clé absente de toutes les lignes = données pas branchées.
 //    boostz_pass: {
-//      status,               // active | canceled (résilié, actif jusqu'à la fin de période)
-//                            // | grace (paiement en échec, accès maintenu) | expired
-//      plan,                 // monthly | annual
+//      status,               // active (se renouvellera à l'échéance)
+//                            // | canceled (résilié : actif jusqu'à l'échéance, puis s'arrête)
+//                            // | grace (paiement de renouvellement en échec, accès maintenu)
+//                            // | expired
+//      plan,                 // monthly (renouvelé chaque mois) | annual (renouvelé chaque année)
 //      subscribed_since,     // début de l'abonnement continu en cours (ISO)
-//      current_period_end,   // expiration de la période payée (ISO)
-//      will_renew,           // renouvellement automatique prévu
+//      current_period_end,   // échéance : fin de la période payée (ISO)
+//      will_renew,           // false dès que la résiliation est demandée
 //      store,                // app_store | google_play | web | null
 //      price_cents, currency // prix de la formule, ex. 499 / "EUR"
 //    }
@@ -205,7 +211,7 @@ function demoSubscribers() {
         status, plan,
         subscribed_since: new Date(now - sinceDays * DAY).toISOString(),
         current_period_end: new Date(now + (periodDays - elapsed) * DAY).toISOString(),
-        will_renew: status === 'active',
+        will_renew: status !== 'canceled',
         store: i % 2 ? 'app_store' : 'google_play',
         price_cents: plan === 'annual' ? 4990 : 499,
         currency: 'EUR'
@@ -533,6 +539,14 @@ function cohortCard(d, phone) {
   );
 }
 
+// Ce qui arrive à l'échéance : renouvellement automatique, arrêt après une
+// résiliation, ou renouvellement bloqué par un paiement refusé.
+function dueText(s) {
+  const when = s.expiresIn || 'à l’échéance';
+  if (s.statusLabel === 'Paiement en échec') return 'paiement à régulariser, échéance ' + when;
+  return (s.willRenew ? 'renouvellement auto ' : 'se termine ') + when;
+}
+
 function subscribersCard(list, phone) {
   const now = new Date();
   const rows = list
@@ -542,7 +556,7 @@ function subscribersCard(list, phone) {
 
   const head = el('div', { class: 'rv-card-head' }, el('div', {},
     el('h3', { class: 'bz-h3' }, el('span', { text: 'Abonnés Boostz Pass' }), exampleTag()),
-    el('p', { class: 'bz-tiny', text: int(rows.length) + ' abonnement' + (rows.length > 1 ? 's' : '') + ' en cours · du plus proche de son expiration au plus lointain' })));
+    el('p', { class: 'bz-tiny', text: int(rows.length) + ' abonnement' + (rows.length > 1 ? 's' : '') + ' en cours · de la plus proche échéance à la plus lointaine' })));
   if (!rows.length) return el('section', { class: 'bz-card rv-card' }, head, el('p', { class: 'bz-small bz-muted', style: { margin: '10px 0 0' }, text: 'Aucun abonnement en cours.' }));
 
   const name = (u) => (u.pseudo || 'Membre') + (u.deleted ? ' (supprimé)' : '');
@@ -553,20 +567,19 @@ function subscribersCard(list, phone) {
         el('div', { class: 'rv-sub-meta' },
           el('span', { class: s.statusCls, text: s.statusLabel }),
           el('span', { text: 'depuis ' + s.sinceSpan }),
-          el('span', { text: (s.willRenew ? 'renouvelé ' : 'expire ') + s.expiresIn })))))
+          el('span', { text: dueText(s) })))))
     );
   }
   return el('section', { class: 'bz-card rv-card rv-subs' }, head,
     el('div', { class: 'bz-table-wrap' },
       el('table', { class: 'bz-table rv-table' },
-        el('thead', {}, el('tr', {}, ['Membre', 'Formule', 'Statut', 'Abonné depuis', 'Fin de période', 'Renouvellement'].map((t) => el('th', { text: t })))),
+        el('thead', {}, el('tr', {}, ['Membre', 'Formule', 'Statut', 'Abonné depuis', 'Échéance'].map((t) => el('th', { text: t })))),
         el('tbody', {}, rows.map(({ user, s }) => el('tr', {},
           el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: name(user) })),
           el('td', {}, el('span', { class: 'rv-plan' }, el('span', { class: 'rv-swatch', style: { background: PLAN_COLORS[s.plan] } }), el('span', { text: s.planLabel + (s.price ? ' · ' + s.price : '') }))),
           el('td', {}, el('span', { class: s.statusCls, text: s.statusLabel })),
           el('td', {}, el('div', { text: s.since }), el('div', { class: 'bz-tiny', text: s.sinceSpan })),
-          el('td', {}, el('div', { text: s.expires }), el('div', { class: 'bz-tiny', text: s.expiresIn })),
-          el('td', { class: 'bz-muted', text: s.willRenew ? 'Automatique' : 'Non' })
+          el('td', {}, el('div', { text: s.expires }), el('div', { class: 'bz-tiny', text: dueText(s) }))
         )))
       ))
   );
@@ -605,7 +618,7 @@ export function renderRevenue({ users, phone, rerender }) {
       el('b', { text: 'Revenus : données pas encore branchées' }),
       el('p', { class: 'bz-small bz-muted', text: 'Le Boostz Pass n’est pas encore vendu : ni abonnement ni paiement n’existe côté serveur. Dès que l’API les fournira, cette vue montrera les abonnés, le revenu récurrent, la rétention et les revenus par formule.' }),
       el('ul', { class: 'rv-absent-list' },
-        el('li', { text: 'Par membre : formule mensuelle ou annuelle, date de début, fin de la période payée, renouvellement.' }),
+        el('li', { text: 'Par membre : offre au mois ou à l’année (renouvelées automatiquement), date de début, échéance, résiliation éventuelle.' }),
         el('li', { text: 'Par mois : revenus encaissés, abonnés actifs, arrivées et départs, pour chaque formule.' }),
         el('li', { text: 'Par cohorte : la part des abonnés encore là après 1, 3, 6 et 12 mois.' })),
       el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Voir un aperçu avec des données d’exemple', onclick: () => { rv.demo = true; rerender(); } })

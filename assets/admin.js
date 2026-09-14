@@ -551,7 +551,9 @@ function passInfo(u) {
   if (!p.active) return [el('span', { class: 'bz-muted', text: 'Expiré' }), 'le ' + p.expires];
   return [
     el('span', { class: 'adm-pass' }, el('b', { text: p.planLabel }), p.statusLabel !== 'Actif' ? el('span', { class: p.statusCls, text: p.statusLabel }) : null),
-    'depuis ' + p.sinceSpan + ' · ' + (p.willRenew ? 'renouvelé le ' : 'expire le ') + p.expires
+    // Les deux offres se renouvellent seules : la date est un renouvellement,
+    // sauf résiliation, où elle devient la fin de l'abonnement.
+    'depuis ' + p.sinceSpan + ' · ' + (p.willRenew ? 'renouvellement le ' : 'se termine le ') + p.expires
   ];
 }
 
