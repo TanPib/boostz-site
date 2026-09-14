@@ -177,7 +177,10 @@ select.bz-input option { background: #1B1025; color: var(--text); }
 .bz-tab .bz-count { margin-left: 6px; opacity: .75; }
 
 /* ---------- Tableaux ---------- */
-.bz-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* position: relative fait du conteneur le repère des éléments en position
+   absolue du tableau (.bz-sr). Sans lui, ils se placent par rapport à la page,
+   échappent au défilement et élargissent toute la page sur téléphone. */
+.bz-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; position: relative; }
 .bz-table { width: 100%; border-collapse: collapse; min-width: 860px; font-size: 12.5px; }
 .bz-table th {
   text-align: left; font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
@@ -267,6 +270,23 @@ select.bz-input option { background: #1B1025; color: var(--text); }
 .bz-menu-item:disabled .bz-menu-label { color: var(--text-disabled); }
 .bz-menu-why { font-family: var(--font-body); font-weight: 400; font-size: 11.5px; color: var(--text-disabled); }
 
+/* Liste « Comptes affichés » : le bouton ressemble au champ qu'il remplace. */
+.bz-filter-btn { width: auto; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; font-family: var(--font-body); }
+.bz-filter-btn svg { color: var(--text-muted); transition: transform .2s; }
+.bz-filter-btn[aria-expanded="true"] { border-color: var(--brand-violet); }
+.bz-filter-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.bz-filter-btn:focus-visible { outline: 2px solid var(--brand-violet); outline-offset: 2px; }
+.bz-check {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; cursor: pointer;
+  font-family: var(--font-ui); font-weight: 700; font-size: 12.5px; color: var(--text);
+}
+.bz-check:hover { background: rgba(255,255,255,.06); }
+.bz-check input { width: 16px; height: 16px; margin: 0; flex: none; accent-color: var(--brand-violet); cursor: pointer; }
+.bz-check input:focus-visible { outline: 2px solid var(--brand-violet); outline-offset: 2px; }
+.bz-check-count { margin-left: auto; font-weight: 500; font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.bz-menu-foot { display: flex; gap: 6px; margin-top: 4px; padding: 8px 4px 2px; border-top: 1px solid var(--line); }
+.bz-menu-foot .bz-btn { flex: 1; }
+
 /* Lisible par un lecteur d'écran, invisible à l'œil. */
 .bz-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
@@ -279,4 +299,6 @@ select.bz-input option { background: #1B1025; color: var(--text); }
   .bz-thumbs a { width: 96px; height: 96px; }
   .bz-more { width: 42px; height: 42px; }
   .bz-menu-item { min-height: 44px; justify-content: center; }
+  .bz-check { min-height: 44px; }
+  .bz-check input { width: 20px; height: 20px; }
 }

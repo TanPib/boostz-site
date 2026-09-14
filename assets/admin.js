@@ -58,7 +58,7 @@ const state = {
   reports: [], reportId: null,
   tickets: [], ticketCounts: { PENDING: 0, OPEN: 0, CLOSED: 0 }, ticketFilter: '', ticketId: null, ticket: null,
   actions: [],
-  q: '', userFilter: 'all',
+  q: '', userKinds: new Set(['members', 'admins', 'supers', 'banned']),
   loaded: false
 };
 
@@ -298,12 +298,13 @@ function userMenuItems(u) {
   return items;
 }
 
-// LE MENU « … ».
+// LES FENÊTRES SURGISSANTES : le menu « … » d'une ligne et la liste des comptes
+// affichés.
 //
-// Attaché à <body> en position fixe, et non dans la ligne : le tableau défile
-// dans son propre conteneur (overflow), qui couperait un menu posé à l'intérieur.
-// Un seul ouvert à la fois ; il se ferme au clic dehors, sur Échap, quand son
-// bouton quitte l'écran et à chaque redessin de la console.
+// Attachées à <body> en position fixe, et non dans la ligne : le tableau défile
+// dans son propre conteneur (overflow), qui couperait une fenêtre posée à
+// l'intérieur. Une seule ouverte à la fois ; elle se ferme au clic dehors, sur
+// Échap, quand son bouton quitte l'écran et à chaque redessin de la console.
 let openMenu = null;
 
 function closeActionMenu(restoreFocus = false) {
@@ -317,12 +318,8 @@ function closeActionMenu(restoreFocus = false) {
 }
 
 function openActionMenu(anchor, title, items) {
-  const wasOpenHere = openMenu && openMenu.anchor === anchor;
-  closeActionMenu();
-  if (wasOpenHere) return;
-
   const buttons = [];
-  const menu = el('div', { class: 'bz-menu', role: 'menu', 'aria-label': title },
+  togglePopover(anchor, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': title },
     el('div', { class: 'bz-menu-title', text: title }),
     items.length
       ? items.map((it) => {
@@ -339,7 +336,18 @@ function openActionMenu(anchor, title, items) {
         return b;
       })
       : el('p', { class: 'bz-menu-why', style: { padding: '6px 10px', margin: '0' }, text: 'Aucune action possible sur un compte supprimé.' })
-  );
+  ));
+}
+
+// `focusables` : les éléments que les flèches parcourent, dans l'ordre. Rempli
+// par `build`, qui construit la fenêtre.
+function togglePopover(anchor, focusables, build) {
+  const wasOpenHere = openMenu && openMenu.anchor === anchor;
+  closeActionMenu();
+  if (wasOpenHere) return;
+
+  const menu = build();
+  const buttons = focusables;
   document.body.append(menu);
 
   // Sous le bouton, aligné à droite ; au-dessus s'il ne tient pas en dessous.
@@ -475,68 +483,112 @@ function lastSeenCell(u) {
 }
 
 // ---------- Onglet Utilisateurs ----------
+// Chaque compte tombe dans exactement une catégorie, dans cet ordre de priorité :
+// un admin banni se range avec les bannis, un super admin n'est pas compté deux
+// fois. La liste à cocher peut ainsi montrer un total juste par case.
+const USER_KINDS = [
+  ['members', 'Membres'],
+  ['admins', 'Admins'],
+  ['supers', 'Super admins'],
+  ['banned', 'Bannis'],
+  ['deleted', 'Supprimés']
+];
+const DEFAULT_KINDS = ['members', 'admins', 'supers', 'banned'];
+
+function userKind(u) {
+  if (u.deleted) return 'deleted';
+  if (u.banned_at) return 'banned';
+  if (u.is_super_admin) return 'supers';
+  if (u.role === 'admin') return 'admins';
+  return 'members';
+}
+
+function kindsLabel(kinds) {
+  if (kinds.size === USER_KINDS.length) return 'Tous les comptes';
+  if (kinds.size === 0) return 'Aucun compte';
+  if (kinds.size === DEFAULT_KINDS.length && DEFAULT_KINDS.every((k) => kinds.has(k))) return 'Tous sauf supprimés';
+  if (kinds.size === 1) return USER_KINDS.find(([k]) => kinds.has(k))[1];
+  return kinds.size + ' catégories';
+}
+
+function caretIcon() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', '12');
+  svg.setAttribute('height', '12');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2.6');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  const p = document.createElementNS(NS, 'path');
+  p.setAttribute('d', 'M6 9l6 6 6-6');
+  svg.append(p);
+  return svg;
+}
+
+// La liste « Comptes affichés ». Cocher une case redessine le tableau sur
+// place, sans fermer la liste : on en coche souvent plusieurs d'affilée.
+function openKindsList(anchor, onChange) {
+  const boxes = [];
+  const counts = Object.fromEntries(USER_KINDS.map(([k]) => [k, 0]));
+  for (const u of state.users) counts[userKind(u)]++;
+  const sync = () => { for (const b of boxes) if (b.type === 'checkbox') b.checked = state.userKinds.has(b.value); };
+  const setAll = (kinds) => { state.userKinds = new Set(kinds); sync(); onChange(); };
+
+  togglePopover(anchor, boxes, () => el('div', { class: 'bz-menu', role: 'dialog', 'aria-label': 'Comptes affichés' },
+    el('div', { class: 'bz-menu-title', text: 'Comptes affichés' }),
+    USER_KINDS.map(([kind, label]) => {
+      const box = el('input', { type: 'checkbox', value: kind, checked: state.userKinds.has(kind) });
+      box.addEventListener('change', () => {
+        if (box.checked) state.userKinds.add(kind); else state.userKinds.delete(kind);
+        onChange();
+      });
+      boxes.push(box);
+      return el('label', { class: 'bz-check' }, box,
+        el('span', { text: label }),
+        el('span', { class: 'bz-check-count', text: String(counts[kind]) }));
+    }),
+    el('div', { class: 'bz-menu-foot' },
+      (() => { const b = el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Tout cocher', onclick: () => setAll(USER_KINDS.map(([k]) => k)) }); boxes.push(b); return b; })(),
+      (() => { const b = el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Par défaut', onclick: () => setAll(DEFAULT_KINDS) }); boxes.push(b); return b; })()
+    )
+  ));
+}
+
 function renderUsers() {
-  const q = state.q.trim().toLowerCase();
-  const filters = {
-    all: () => true,
-    members: (u) => !u.deleted && !u.banned_at && u.role !== 'admin',
-    admins: (u) => !u.deleted && u.role === 'admin',
-    banned: (u) => !!u.banned_at && !u.deleted,
-    deleted: (u) => u.deleted
-  };
-  const shown = state.users.filter(filters[state.userFilter]).filter((u) =>
-    !q || (u.pseudo || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q));
-
   const search = el('input', { class: 'bz-input', type: 'search', value: state.q, placeholder: 'Rechercher un pseudo ou une adresse…', 'aria-label': 'Rechercher un compte', style: { flex: '1', minWidth: '200px' } });
-  search.addEventListener('input', () => {
-    state.q = search.value;
-    const pos = search.selectionStart;
-    render();
-    const again = host.querySelector('input[type=search]');
-    if (again) { again.focus(); again.setSelectionRange(pos, pos); }
-  });
-  const filter = el('select', { class: 'bz-input', 'aria-label': 'Filtrer par statut', style: { width: 'auto' } });
-  for (const [value, label] of [['all', 'Tous les comptes'], ['members', 'Membres'], ['admins', 'Admins'], ['banned', 'Bannis'], ['deleted', 'Supprimés']]) {
-    filter.append(el('option', { value, text: label, selected: state.userFilter === value }));
-  }
-  filter.addEventListener('change', () => { state.userFilter = filter.value; render(); });
+  search.addEventListener('input', () => { state.q = search.value; update(); });
 
-  const rows = shown.map((u) => {
-    const name = u.pseudo || u.email || 'ce compte';
-    const more = el('button', {
-      class: 'bz-more',
-      type: 'button',
-      'aria-haspopup': 'menu',
-      'aria-expanded': 'false',
-      'aria-label': 'Actions pour ' + name,
-      title: 'Actions'
-    }, dotsIcon());
-    more.addEventListener('click', () => openActionMenu(more, name, userMenuItems(u)));
-    return el('tr', { class: u.deleted ? 'is-deleted' : (u.banned_at ? 'is-banned' : '') },
-      el('td', {},
-        el('div', { class: 'bz-row', style: { gap: '9px', flexWrap: 'nowrap' } },
-          el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(u) }),
-          el('div', { style: { minWidth: '0' } },
-            el('b', { style: { fontFamily: 'var(--font-ui)', display: 'block', whiteSpace: 'nowrap' }, text: u.pseudo || '—' }),
-            el('span', { class: 'bz-tiny', title: u.email, style: { display: 'block', whiteSpace: 'nowrap', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }, text: u.email })
-          )
-        )
-      ),
-      cell2(el('span', { class: 'bz-muted', text: dateShort(u.created_date) })),
-      ageCell(u),
-      declaredAtCell(u),
-      lastSeenCell(u),
-      el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
-      el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
-      el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px' } }, statusPills(u)), u.banned_reason && !u.deleted ? el('div', { class: 'bz-tiny', title: u.banned_reason, style: { marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, text: 'Motif : ' + u.banned_reason }) : null),
-      el('td', { style: { textAlign: 'right' } }, u.deleted ? el('span', { class: 'bz-tiny', text: '—' }) : more)
-    );
-  });
+  const filterLabel = el('span');
+  const filter = el('button', { class: 'bz-input bz-filter-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Choisir les comptes affichés' }, filterLabel, caretIcon());
+  filter.addEventListener('click', () => openKindsList(filter, update));
+
+  const count = el('span', { class: 'bz-small bz-muted', style: { whiteSpace: 'nowrap' } });
+  const tbody = el('tbody');
+  const empty = el('p', { class: 'bz-small bz-muted', style: { padding: '20px 16px', margin: '0', textAlign: 'center' } });
+
+  // Redessine les lignes, le compteur et le libellé du bouton, sans toucher au
+  // reste : la recherche garde son focus, la liste à cocher reste ouverte.
+  function update() {
+    const q = state.q.trim().toLowerCase();
+    const matching = state.users.filter((u) =>
+      !q || (u.pseudo || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q));
+    const shown = matching.filter((u) => state.userKinds.has(userKind(u)));
+    const hidden = matching.length - shown.length;
+    filterLabel.textContent = kindsLabel(state.userKinds);
+    count.textContent = shown.length + (shown.length > 1 ? ' comptes' : ' compte') + (hidden ? ' · ' + hidden + (hidden > 1 ? ' masqués' : ' masqué') : '');
+    put(clear(tbody), shown.map(userRow));
+    empty.hidden = shown.length > 0;
+    empty.textContent = state.userKinds.size ? 'Aucun compte ne correspond.' : 'Aucune catégorie cochée.';
+  }
+  update();
 
   return el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden', marginTop: '16px' } },
     el('div', { class: 'bz-row', style: { padding: '14px 16px', borderBottom: '1px solid var(--line)' } },
-      search, filter,
-      el('span', { class: 'bz-small bz-muted', style: { whiteSpace: 'nowrap' }, text: shown.length + (shown.length > 1 ? ' comptes' : ' compte') })
+      search, filter, count
     ),
     el('div', { class: 'bz-table-wrap' },
       el('table', { class: 'bz-table is-compact', style: { minWidth: '1040px' } },
@@ -546,10 +598,42 @@ function renderUsers() {
           el('th', { style: { textAlign: 'center' }, text: 'Reçus' }), el('th', { style: { textAlign: 'center' }, text: 'Émis' }),
           el('th', { text: 'Statut' }), el('th', { style: { textAlign: 'right' } }, el('span', { class: 'bz-sr', text: 'Actions' }))
         )),
-        el('tbody', {}, rows)
+        tbody
       )
     ),
-    shown.length ? null : el('p', { class: 'bz-small bz-muted', style: { padding: '20px 16px', margin: '0', textAlign: 'center' }, text: 'Aucun compte ne correspond.' })
+    empty
+  );
+}
+
+function userRow(u) {
+  const name = u.pseudo || u.email || 'ce compte';
+  const more = el('button', {
+    class: 'bz-more',
+    type: 'button',
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'false',
+    'aria-label': 'Actions pour ' + name,
+    title: 'Actions'
+  }, dotsIcon());
+  more.addEventListener('click', () => openActionMenu(more, name, userMenuItems(u)));
+  return el('tr', { class: u.deleted ? 'is-deleted' : (u.banned_at ? 'is-banned' : '') },
+    el('td', {},
+      el('div', { class: 'bz-row', style: { gap: '9px', flexWrap: 'nowrap' } },
+        el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(u) }),
+        el('div', { style: { minWidth: '0' } },
+          el('b', { style: { fontFamily: 'var(--font-ui)', display: 'block', whiteSpace: 'nowrap' }, text: u.pseudo || '—' }),
+          el('span', { class: 'bz-tiny', title: u.email, style: { display: 'block', whiteSpace: 'nowrap', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }, text: u.email })
+        )
+      )
+    ),
+    cell2(el('span', { class: 'bz-muted', text: dateShort(u.created_date) })),
+    ageCell(u),
+    declaredAtCell(u),
+    lastSeenCell(u),
+    el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
+    el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
+    el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px' } }, statusPills(u)), u.banned_reason && !u.deleted ? el('div', { class: 'bz-tiny', title: u.banned_reason, style: { marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, text: 'Motif : ' + u.banned_reason }) : null),
+    el('td', { style: { textAlign: 'right' } }, u.deleted ? el('span', { class: 'bz-tiny', text: '—' }) : more)
   );
 }
 
