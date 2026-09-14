@@ -112,6 +112,95 @@
   .adm-agent-empty p { max-width: 460px; margin: 0; }
   .adm-agent-ticket { gap: 8px; margin-top: 10px; }
 
+  /* ---------- Revenus (assets/revenue.js) ---------- */
+  .rv { margin-top: 16px; }
+  .rv-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .rv-filters .bz-tab { display: inline-flex; align-items: center; gap: 7px; }
+  .rv-swatch { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 3px; }
+  /* L'aperçu ne doit jamais passer pour de vraies données : bandeau collé, pointillé ambre. */
+  .rv-demo {
+    position: sticky; top: 62px; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+    margin-bottom: 12px; padding: 10px 14px; border-radius: 13px; border: 1.5px dashed rgba(245,166,35,.75);
+    background: rgba(38,27,9,.94); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  .rv-demo b { font-family: var(--font-ui); font-size: 13px; color: #F8C46A; }
+  .rv-demo .bz-btn { margin-left: auto; }
+  .rv-body { transition: opacity .2s; }
+  .rv-body.is-refreshing { opacity: .55; }
+  .rv-kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .rv-delta { display: block; margin-top: 2px; font-family: var(--font-ui); font-weight: 700; font-size: 11.5px; }
+  .rv-delta.is-up { color: var(--text-success); }
+  .rv-delta.is-down { color: var(--text-danger); }
+  .rv-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); margin-top: 12px; }
+  .rv-grid.is-split { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; }
+  .rv-card .bz-h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .rv-example { padding: 1px 7px; border-radius: 999px; border: 1px dashed rgba(245,166,35,.75); color: #F8C46A; font-family: var(--font-ui); font-weight: 700; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+  @media (max-width: 1000px) { .rv-grid.is-split { grid-template-columns: minmax(0, 1fr); } }
+  .rv-card { min-width: 0; padding: 14px 16px 12px; }
+  .rv-card-head { display: flex; align-items: flex-start; gap: 12px; }
+  .rv-card-head > div { flex: 1; min-width: 0; }
+  .rv-card-head .bz-tiny { margin: 2px 0 0; }
+  .rv-table-btn { flex: none; }
+  .rv-legend { list-style: none; display: flex; gap: 14px; margin: 10px 0 0; padding: 0; font-size: 12px; color: var(--text-muted); }
+  .rv-legend li { display: inline-flex; align-items: center; gap: 6px; }
+  .rv-chart { position: relative; min-height: 190px; margin-top: 8px; }
+  .rv-chart svg { display: block; overflow: visible; }
+  .rv-gridline { stroke: rgba(255,255,255,.07); stroke-width: 1; shape-rendering: crispEdges; }
+  .rv-base { stroke: rgba(255,255,255,.2); stroke-width: 1; shape-rendering: crispEdges; }
+  .rv-tick { fill: #8f889e; font-family: var(--font-ui); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+  .rv-value, .rv-endlabel { fill: var(--text); font-family: var(--font-ui); font-weight: 700; font-size: 11.5px; }
+  .rv-endlabel { fill: var(--text-muted); }
+  .rv-dot { stroke: #171221; stroke-width: 2; }
+  .rv-cross { stroke: rgba(255,255,255,.35); stroke-width: 1; shape-rendering: crispEdges; }
+  .rv-hit, .rv-overlay { fill: transparent; cursor: crosshair; outline: none; }
+  .rv-hit.is-on { fill: rgba(255,255,255,.05); }
+  .rv-hit:focus-visible, .rv-overlay:focus-visible { stroke: var(--soft-violet-border); stroke-width: 1.5; }
+  .rv-tip {
+    position: absolute; z-index: 5; min-width: 130px; padding: 8px 10px; pointer-events: none;
+    border-radius: 10px; border: 1px solid var(--line-strong); background: #231c2e; box-shadow: 0 10px 24px rgba(0,0,0,.45); font-size: 12px;
+  }
+  .rv-tip-title { display: block; margin-bottom: 4px; font-family: var(--font-ui); font-size: 11px; color: var(--text-muted); }
+  .rv-tip-row { display: flex; align-items: center; gap: 7px; line-height: 1.65; white-space: nowrap; }
+  .rv-tip-row strong { font-family: var(--font-ui); color: var(--text); }
+  .rv-tip-row span:last-child { color: var(--text-muted); }
+  .rv-tip-key { flex: none; width: 12px; height: 2px; border-radius: 1px; }
+  .rv-table .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rv-card .bz-table { min-width: 0; }
+  .rv-split { display: flex; gap: 2px; height: 12px; margin-top: 14px; }
+  .rv-split span { display: block; height: 100%; }
+  .rv-split span:first-child { border-radius: 4px 0 0 4px; }
+  .rv-split span:last-child { border-radius: 0 4px 4px 0; }
+  .rv-split span:only-child { border-radius: 4px; }
+  .rv-split-legend { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 12px 0 0; padding: 0; font-size: 12.5px; }
+  .rv-split-legend li { display: flex; align-items: center; gap: 8px; }
+  .rv-split-legend b { font-family: var(--font-ui); }
+  .rv-split-legend li span:last-child { margin-left: auto; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .rv-heat { margin-top: 10px; border-collapse: separate; border-spacing: 2px; font-size: 11.5px; }
+  .rv-heat th { padding: 4px 6px; text-align: left; white-space: nowrap; font-family: var(--font-ui); font-weight: 700; font-size: 10.5px; color: var(--text-muted); }
+  .rv-heat .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rv-heat td { padding: 5px 6px; white-space: nowrap; }
+  .rv-cell { min-width: 42px; border-radius: 4px; text-align: center !important; color: var(--text); font-variant-numeric: tabular-nums; }
+  .rv-cell.is-strong { color: #0B1020; font-weight: 700; }
+  .rv-subs .bz-table td { vertical-align: top; }
+  .rv-plan { display: inline-flex; align-items: center; gap: 7px; }
+  .rv-sub-list { list-style: none; margin: 8px 0 0; padding: 0; }
+  .rv-sub-list li { padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .rv-sub-list li:last-child { border-bottom: 0; }
+  .rv-sub-top { display: flex; align-items: center; gap: 8px; }
+  .rv-sub-top b { flex: 1; min-width: 0; font-family: var(--font-ui); font-size: 13.5px; overflow-wrap: anywhere; }
+  .rv-sub-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 3px; font-size: 11.5px; color: var(--text-muted); }
+  .rv-absent { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px; padding: 34px 22px; text-align: center; }
+  .rv-absent-icon {
+    display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px;
+    border: 1px solid rgba(245,166,35,.6); background: rgba(245,166,35,.1); color: #F8C46A; font-family: var(--font-display); font-weight: 700; font-size: 20px;
+  }
+  .rv-absent p { max-width: 520px; margin: 0; }
+  .rv-absent-list { max-width: 520px; margin: 4px 0 8px; padding-left: 18px; text-align: left; font-size: 12.5px; line-height: 1.55; color: var(--text-muted); }
+  .adm-pass { display: inline-flex; align-items: center; gap: 6px; }
+  .adm-pass b { font-family: var(--font-ui); }
+  .adm-more-item .bz-menu-label { display: inline-flex; align-items: center; gap: 10px; }
+  .adm-more-item[aria-current="page"] .bz-menu-label { color: var(--soft-violet-text); }
+
   /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement. */
   @media (max-width: 860px) {
     .adm-split { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -250,6 +339,24 @@
     .adm-agent-foot { padding-inline: 14px; }
     .adm-agent-title { margin: 18px 0 8px; }
     .adm-agent-empty { padding: 26px 18px; }
+
+    /* Revenus. */
+    .rv { margin-top: 4px; }
+    /* Sur téléphone, le bandeau ne suit pas le défilement : il masquerait les
+       graphiques. Chaque carte porte alors son repère « Exemple ». */
+    .rv-demo { position: static; flex-wrap: nowrap; gap: 8px; padding: 8px 10px; margin-bottom: 10px; }
+    .rv-demo b { font-size: 12px; flex: 1; min-width: 0; }
+    .rv-demo .bz-tiny { display: none; }
+    .rv-demo .bz-btn { margin-left: 0; flex: none; }
+    .rv-filters { flex-direction: column; align-items: stretch; gap: 6px; }
+    .rv-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    .rv-kpis .adm-kpi-value { font-size: 15px; white-space: nowrap; }
+    .rv-kpis .rv-delta { font-size: 10px; }
+    .rv-grid { gap: 10px; margin-top: 10px; }
+    .rv-card { padding: 12px 12px 10px; }
+    .rv-chart { min-height: 180px; }
+    .rv-heat { font-size: 11px; }
+    .rv-cell { min-width: 36px; }
 
     .adm-status-btn { position: relative; flex: none; display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; }
     /* La pastille fait 22 px : sa zone de toucher, elle, en fait 44. */

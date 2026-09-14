@@ -6,6 +6,7 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -113,7 +114,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', reports: 'Signalements', support: 'Support', agent: 'Agent', journal: 'Journal' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', agent: 'Agent', journal: 'Journal', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -126,7 +127,9 @@ const ICONS = {
   filter: 'M4 6h16M7 12h10M10 18h4',
   send: 'M5 12h13M13 6l6 6-6 6',
   chevron: 'M9 6l6 6-6 6',
-  back: 'M15 6l-6 6 6 6'
+  back: 'M15 6l-6 6 6 6',
+  revenue: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  more: 'M5 12h.01M12 12h.01M19 12h.01'
 };
 function icon(name, size = 20) {
   const NS = 'http://www.w3.org/2000/svg';
@@ -540,6 +543,18 @@ function lastSeenInfo(u) {
   return [el('span', { text: dateTimeShort(u.last_app_seen_at) }), sinceFr(u.last_app_seen_at)];
 }
 
+// ---------- Boostz Pass d'un compte ----------
+// Rien tant que /admin/users ne porte pas `boostz_pass` (voir revenue.js).
+function passInfo(u) {
+  const p = passSummary(u.boostz_pass);
+  if (!p) return [el('span', { class: 'bz-muted', text: '—' })];
+  if (!p.active) return [el('span', { class: 'bz-muted', text: 'Expiré' }), 'le ' + p.expires];
+  return [
+    el('span', { class: 'adm-pass' }, el('b', { text: p.planLabel }), p.statusLabel !== 'Actif' ? el('span', { class: p.statusCls, text: p.statusLabel }) : null),
+    'depuis ' + p.sinceSpan + ' · ' + (p.willRenew ? 'renouvelé le ' : 'expire le ') + p.expires
+  ];
+}
+
 // ---------- Onglet Utilisateurs ----------
 // Chaque compte tombe dans exactement une catégorie, dans cet ordre de priorité :
 // un admin banni se range avec les bannis, un super admin n'est pas compté deux
@@ -668,10 +683,11 @@ function renderUsers() {
     // Téléphone : des fiches. Un tableau de neuf colonnes cachait le statut et le
     // bouton « … » derrière un défilement horizontal.
     phone ? cards : el('div', { class: 'bz-table-wrap' },
-      el('table', { class: 'bz-table is-compact', style: { minWidth: '1040px' } },
+      el('table', { class: 'bz-table is-compact', style: { minWidth: hasPassData(state.users) ? '1220px' : '1040px' } },
         el('thead', {}, el('tr', {},
           el('th', { text: 'Membre' }), el('th', { text: 'Inscription' }),
           el('th', { text: 'Âge déclaré' }), el('th', { text: 'Déclaré le' }), el('th', { text: 'Dernière utilisation' }),
+          hasPassData(state.users) ? el('th', { text: 'Boostz Pass' }) : null,
           el('th', { style: { textAlign: 'center' }, text: 'Reçus' }), el('th', { style: { textAlign: 'center' }, text: 'Émis' }),
           el('th', { text: 'Statut' }), el('th', { style: { textAlign: 'right' } }, el('span', { class: 'bz-sr', text: 'Actions' }))
         )),
@@ -690,7 +706,8 @@ function userLine(u) {
   const meta = u.deleted ? 'Compte supprimé' : [
     age !== null && age !== undefined ? age + ' ans' : 'âge non déclaré',
     u.last_app_seen_at ? 'vu ' + sinceFr(u.last_app_seen_at) : 'jamais vu dans l’app',
-    u.reports_received ? u.reports_received + ' signalement' + (u.reports_received > 1 ? 's' : '') : null
+    u.reports_received ? u.reports_received + ' signalement' + (u.reports_received > 1 ? 's' : '') : null,
+    passSummary(u.boostz_pass) && passSummary(u.boostz_pass).active ? 'Pass ' + passSummary(u.boostz_pass).planLabel.toLowerCase() : null
   ].filter(Boolean).join(' · ');
   const row = el('button', {
     class: 'bz-cardrow adm-urow' + (u.deleted ? ' is-deleted' : (u.banned_at ? ' is-banned' : '')),
@@ -724,7 +741,8 @@ function openUserSheet(anchor, u) {
       el('div', {}, el('dt', { text: 'Dernière utilisation' }), dd2(lastSeenInfo(u))),
       el('div', {}, el('dt', { text: 'Inscription' }), dd2([dateShort(u.created_date)])),
       el('div', { class: 'is-full' }, el('dt', { text: 'Signalements' }), dd2([el('span', {}, received, ' · ' + u.reports_sent + ' émis')])),
-      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif du bannissement' }), dd2([u.banned_reason])) : null
+      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif du bannissement' }), dd2([u.banned_reason])) : null,
+      hasPassData(state.users) ? el('div', { class: 'is-full' }, el('dt', { text: 'Boostz Pass' }), dd2(passInfo(u))) : null
     ),
     items.length ? el('div', { class: 'adm-usheet-label', text: 'Actions' }) : null,
     items.map((it) => {
@@ -793,6 +811,7 @@ function userRow(u) {
     cell2(ageInfo(u)),
     cell2(declaredAtInfo(u)),
     cell2(lastSeenInfo(u)),
+    hasPassData(state.users) ? cell2(passInfo(u)) : null,
     el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
     el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
     el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px' } }, statusPills(u)), u.banned_reason && !u.deleted ? el('div', { class: 'bz-tiny', title: u.banned_reason, style: { marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, text: 'Motif : ' + u.banned_reason }) : null),
@@ -1422,14 +1441,31 @@ function goTo(tab) {
 }
 
 // Téléphone : la navigation de la console, collée en bas, comme celle de l'app.
+// Cinq entrées au plus : Agent et Journal passent sous « Plus », qui les
+// ouvre en panneau et reste allumé quand l'une des deux est affichée.
+const MORE_TABS = ['agent', 'journal'];
 function bottomNav(openReports, pending) {
-  const item = (id, badge) => el('button', {
-    class: 'adm-nav-item', type: 'button', 'aria-current': state.tab === id ? 'page' : null, onclick: () => goTo(id)
+  const item = (id, badge, onclick) => el('button', {
+    class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
+    'aria-current': (id === 'more' ? MORE_TABS.includes(state.tab) : state.tab === id) ? 'page' : null
   },
   el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
   el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
+  const more = item('more', 0, () => {
+    const buttons = [];
+    togglePopover(more, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': 'Autres sections' },
+      el('div', { class: 'bz-menu-title', text: 'Autres sections' }),
+      MORE_TABS.map((id) => {
+        const b = el('button', { class: 'bz-menu-item adm-more-item', type: 'button', role: 'menuitem', 'aria-current': state.tab === id ? 'page' : null, onclick: () => { closePopover(); goTo(id); } },
+          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] })));
+        buttons.push(b);
+        return b;
+      })
+    ));
+  });
+  more.setAttribute('aria-haspopup', 'menu');
   return el('nav', { class: 'adm-nav', 'aria-label': 'Sections de la console' },
-    item('users', 0), item('reports', openReports), item('support', pending), item('agent', 0), item('journal', 0));
+    item('users', 0), item('revenue', 0), item('reports', openReports), item('support', pending), more);
 }
 
 // `short` : le libellé des chiffres clés sur téléphone, où ils tiennent en une
@@ -1460,6 +1496,7 @@ function render() {
     : state.tab === 'reports' ? renderReports()
       : state.tab === 'support' ? renderSupport()
         : state.tab === 'agent' ? renderAgent()
+          : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
           : renderJournal();
 
   const scrollY = window.scrollY;
@@ -1467,7 +1504,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && state.tab === 'agent') ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1475,6 +1512,7 @@ function render() {
     ),
     phone ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginTop: '22px' } },
       tab('users', 'Utilisateurs'),
+      tab('revenue', 'Revenus'),
       tab('reports', 'Signalements', openReports),
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
       tab('agent', 'Agent'),
