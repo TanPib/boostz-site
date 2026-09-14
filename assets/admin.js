@@ -35,6 +35,41 @@ const REPORT_STATUS = {
   RESOLVED: ['Traité', 'bz-pill is-green'],
   DISMISSED: ['Classé sans suite', 'bz-pill is-grey']
 };
+// L'analyse automatique des demandes (agent du support). L'API rend les clés
+// brutes ; les libellés sont ceux de la console.
+const AGENT_VERDICTS = {
+  solution: ['Solution proposée', 'bz-pill is-violet'],
+  ticket: ['Transmise par l’agent', 'bz-pill is-grey'],
+  indisponible: ['Agent indisponible', 'bz-pill is-red']
+};
+const AGENT_REASONS = {
+  desactive: 'Agent coupé',
+  sans_cle: 'Clé Gemini absente',
+  limite_membre: 'Limite du membre atteinte (5 / 24 h)',
+  plafond_global: 'Plafond global atteint (200 / 24 h)',
+  delai: 'Délai dépassé',
+  quota: 'Quota Gemini épuisé',
+  erreur: 'Erreur serveur',
+  reponse_invalide: 'Réponse du modèle illisible'
+};
+// Ce qu'il y a à faire quand une raison revient. Les limites, elles, protègent
+// la facture et n'appellent aucune action.
+const AGENT_REASON_HINTS = {
+  quota: 'Vérifier le palier de facturation du projet Gemini (AI Studio).',
+  sans_cle: 'Renseigner GEMINI_API_KEY sur Render.',
+  desactive: 'SUPPORT_AGENT_ENABLED vaut false sur Render.',
+  plafond_global: '200 analyses en 24 h : le reste part en ticket direct.',
+  delai: 'Le modèle a dépassé 10 s : surveiller si cela se répète.',
+  erreur: 'Consulter les journaux du serveur sur Render.',
+  reponse_invalide: 'Consulter les journaux du serveur sur Render.'
+};
+const AGENT_RESULTS = {
+  propose: ['En attente de réponse', 'bz-pill is-amber'],
+  regle: ['Réglée par l’agent', 'bz-pill is-green'],
+  ticket: ['Devenue un ticket', 'bz-pill is-violet'],
+  abandonne: ['Abandonnée', 'bz-pill is-grey']
+};
+
 const TICKET_STATUS = {
   PENDING: ['En attente', 'bz-pill is-amber'],
   OPEN: ['En cours', 'bz-pill is-violet'],
@@ -59,6 +94,13 @@ const state = {
   tickets: [], ticketCounts: { PENDING: 0, OPEN: 0, CLOSED: 0 }, ticketFilter: '', ticketId: null, ticket: null,
   actions: [],
   pane: null,
+  // Vue « Agent » : chargée à la première ouverture de l'onglet, puis à chaque
+  // changement de période ou de filtre. `seq` écarte une réponse dépassée.
+  agent: { days: 7, result: '', stats: null, list: null, loading: false, error: null, selId: null, seq: 0 },
+  // Encarts repliés, et sections « Ce que l'agent a lu » dépliées, par analyse :
+  // un redessin de la console ne doit pas rouvrir ce qu'on vient de fermer.
+  aiClosed: new Set(),
+  aiMore: new Set(),
   q: '', userKinds: new Set(['members', 'admins', 'supers', 'banned']),
   loaded: false
 };
@@ -71,7 +113,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', reports: 'Signalements', support: 'Support', journal: 'Journal' };
+const SECTIONS = { users: 'Comptes', reports: 'Signalements', support: 'Support', agent: 'Agent', journal: 'Journal' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -79,6 +121,8 @@ const ICONS = {
   reports: 'M5 21V4M5 4h11.5l-2 4 2 4H5',
   support: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4V5.5Z',
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
+  agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
+  caret: 'M6 9l6 6 6-6',
   filter: 'M4 6h16M7 12h10M10 18h4',
   send: 'M5 12h13M13 6l6 6-6 6',
   chevron: 'M9 6l6 6-6 6',
@@ -227,6 +271,28 @@ async function loadTickets() {
   state.tickets = data.tickets;
   state.ticketCounts = data.counts;
 }
+async function loadAgent({ withStats = true } = {}) {
+  const a = state.agent;
+  const seq = ++a.seq;
+  a.loading = true;
+  a.error = null;
+  const q = '?days=' + a.days;
+  try {
+    const [stats, list] = await Promise.all([
+      withStats || !a.stats ? call('/admin/support/analyses/stats' + q) : Promise.resolve(a.stats),
+      call('/admin/support/analyses' + q + (a.result ? '&result=' + encodeURIComponent(a.result) : ''))
+    ]);
+    if (seq !== a.seq) return;
+    a.stats = stats;
+    a.list = list.analyses || [];
+    if (a.selId && !a.list.some((x) => x.id === a.selId)) a.selId = null;
+  } catch (e) {
+    if (seq !== a.seq) return;
+    a.error = e.message;
+  }
+  a.loading = false;
+}
+
 async function loadActions() {
   state.actions = (await call('/admin/actions')).actions;
 }
@@ -935,6 +1001,7 @@ function renderSupport() {
       el('div', { class: 'bz-small bz-muted', style: { marginTop: '4px' } },
         el('span', { text: (t.user.pseudo || '—') + ' · ' + (t.user.email || '') + ' · ' + t.topic_label + (t.when_label ? ' · ' + t.when_label : '') })),
       statusRow,
+      t.automatic_analysis ? analysisPanel(t.automatic_analysis) : null,
       el('div', { class: 'adm-quote' },
         el('span', { class: 'bz-eyebrow', text: 'Demande' }),
         el('p', { text: t.description }),
@@ -1034,6 +1101,7 @@ function renderTicketChat(t) {
 
   return el('div', { class: 'adm-chat' },
     paneHead('Tous les tickets', t.subject, (t.user.pseudo || t.user.email || '—') + ' · ' + t.topic_label, statusBtn),
+    t.automatic_analysis ? analysisPanel(t.automatic_analysis) : null,
     el('div', { class: 'adm-quote adm-chat-fiche' },
       el('span', { class: 'bz-eyebrow', text: 'Demande' + (t.when_label ? ' · ' + t.when_label : '') }),
       el('p', { text: t.description }),
@@ -1043,6 +1111,251 @@ function renderTicketChat(t) {
     ),
     thread,
     el('div', { class: 'adm-composer' }, reply, send)
+  );
+}
+
+// ---------- Analyse automatique ----------
+const agentPill = (map, key) => {
+  const [label, cls] = map[key] || [key || '—', 'bz-pill is-grey'];
+  return el('span', { class: cls, text: label });
+};
+
+function durationFr(ms) {
+  if (typeof ms !== 'number') return null;
+  return ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1).replace('.', ',') + ' s';
+}
+
+// Une fiche du guide : son titre, ou son identifiant quand le guide ne la
+// connaît plus (titre null).
+function articleChips(list) {
+  return el('ul', { class: 'adm-ai-chips' }, list.map((f) => el('li', { title: f.chapitre ? 'Chapitre ' + f.chapitre : '' },
+    f.titre ? el('span', { text: f.titre }) : el('code', { text: f.id }))));
+}
+
+// Ce qui s'est passé, en une ligne. Dans la fiche d'un ticket, une solution
+// proposée a forcément été écartée ; dans la vue Agent, le résultat le précise.
+function agentHeadline(a, inTicket) {
+  if (a.verdict === 'ticket') return 'L’agent a transmis sans proposer de solution';
+  if (a.verdict === 'indisponible') return 'L’agent n’a pas pu répondre' + (a.reason ? ' : ' + (AGENT_REASONS[a.reason] || a.reason) : '');
+  if (inTicket || a.result === 'ticket') return 'Le membre a déjà reçu cette proposition et l’a écartée';
+  if (a.result === 'regle') return 'Le membre a jugé la proposition utile : aucun ticket';
+  if (a.result === 'abandonne') return 'Proposition restée sans réponse plus d’une heure';
+  return 'Proposition envoyée, le membre n’a pas encore répondu';
+}
+
+// L'encart « Analyse automatique ». Tout texte vient d'un membre ou du modèle :
+// il passe par el() et textContent, jamais par du HTML.
+function analysisPanel(a, { inTicket = true } = {}) {
+  const tone = a.verdict === 'indisponible' ? 'is-red' : a.verdict === 'ticket' ? 'is-grey' : 'is-violet';
+  const facts = Array.isArray(a.facts) ? a.facts : [];
+  const cited = Array.isArray(a.cited_articles) ? a.cited_articles : [];
+  const sent = Array.isArray(a.guide_articles_sent) ? a.guide_articles_sent : [];
+  const tech = [a.model ? 'Modèle ' + a.model : 'Modèle non appelé', durationFr(a.duration_ms), a.created_date ? 'analysée le ' + dateTime(a.created_date) : null].filter(Boolean).join(' · ');
+
+  const more = el('details', { class: 'adm-ai-more', open: state.aiMore.has(a.id) },
+    el('summary', {}, icon('caret', 14), 'Ce que l’agent a lu'),
+    el('div', { class: 'adm-ai-more-body' },
+      el('span', { class: 'bz-eyebrow', text: 'Faits du compte' }),
+      facts.length
+        ? el('ul', { class: 'adm-ai-facts' }, facts.map((x) => el('li', { text: String(x) })))
+        : el('p', { class: 'bz-tiny', text: 'Aucun fait relevé.' }),
+      el('span', { class: 'bz-eyebrow', text: 'Fiches envoyées au modèle' + (sent.length ? ' · ' + sent.length : '') }),
+      sent.length ? articleChips(sent) : el('p', { class: 'bz-tiny', text: 'Aucune : le modèle n’a pas été appelé.' }),
+      el('p', { class: 'bz-tiny adm-ai-tech', text: tech })
+    )
+  );
+  more.addEventListener('toggle', () => { if (more.open) state.aiMore.add(a.id); else state.aiMore.delete(a.id); });
+
+  const box = el('details', { class: 'adm-ai ' + tone, open: !state.aiClosed.has(a.id) },
+    el('summary', { class: 'adm-ai-sum' },
+      el('span', { class: 'adm-ai-icon' }, icon('agent', 16)),
+      el('b', { text: 'Analyse automatique' }),
+      agentPill(AGENT_VERDICTS, a.verdict),
+      el('span', { class: 'adm-ai-caret' }, icon('caret', 16))
+    ),
+    el('div', { class: 'adm-ai-body' },
+      el('p', { class: 'adm-ai-headline', text: agentHeadline(a, inTicket) }),
+      a.verdict === 'solution' && a.answer ? el('blockquote', { class: 'adm-ai-answer' },
+        el('span', { class: 'bz-eyebrow', text: 'Ce que le membre a lu' }),
+        el('p', { text: a.answer })
+      ) : null,
+      a.support_note ? el('div', { class: 'adm-ai-note' },
+        el('span', { class: 'bz-eyebrow', text: 'Note de l’agent pour le support' }),
+        el('p', { text: a.support_note })
+      ) : null,
+      cited.length ? el('div', { class: 'adm-ai-sec' },
+        el('span', { class: 'bz-eyebrow', text: 'Fiches citées' }),
+        articleChips(cited)
+      ) : null,
+      more
+    )
+  );
+  box.addEventListener('toggle', () => { if (box.open) state.aiClosed.delete(a.id); else state.aiClosed.add(a.id); });
+  return box;
+}
+
+// ---------- Onglet Agent ----------
+function renderAgent() {
+  const a = state.agent;
+  const phone = PHONE.matches;
+  const narrow = NARROW.matches;
+  if (!a.stats && !a.loading && !a.error) loadAgent().then(() => { if (state.tab === 'agent') render(); });
+
+  const periods = el('div', { class: 'bz-tabs adm-agent-periods', role: 'tablist', 'aria-label': 'Période' },
+    [7, 30, 90].map((d) => el('button', {
+      class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(a.days === d),
+      onclick: () => { if (a.days === d) return; a.days = d; a.selId = null; state.pane = null; render(); loadAgent().then(() => { if (state.tab === 'agent') render(); }); }
+    }, d + ' jours')));
+
+  const wrap = (...children) => el('div', { class: 'adm-agent' }, ...children);
+  // Une mise à jour ratée garde les chiffres précédents, mais le dit.
+  const staleError = a.error && a.stats ? el('div', { class: 'bz-msg is-err', role: 'alert', style: { marginTop: '10px' }, text: 'Mise à jour impossible : ' + a.error }) : null;
+
+  if (a.error && !a.stats) {
+    return wrap(periods, el('div', { class: 'bz-msg is-err', role: 'alert', style: { marginTop: '12px' } },
+      el('span', { text: 'Statistiques indisponibles : ' + a.error + ' ' }),
+      el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Réessayer', onclick: () => { a.error = null; render(); } })));
+  }
+  if (!a.stats) {
+    return wrap(periods, el('div', { class: 'adm-agent-kpis' }, [1, 2, 3, 4].map(() => el('div', { class: 'bz-skeleton', style: { height: '62px' } }))));
+  }
+
+  const st = a.stats;
+  const r = st.by_result || {};
+  const v = st.by_verdict || {};
+  const periodLabel = a.days === 7 ? 'les 7 derniers jours' : 'les ' + a.days + ' derniers jours';
+
+  // Pane « analyse » ouvert sur écran étroit : le détail seul.
+  const sel = (a.list || []).find((x) => x.id === a.selId) || (!narrow ? (a.list || [])[0] : null);
+  if (narrow && state.pane === 'analysis' && sel) {
+    return wrap(
+      phone ? paneHead('Toutes les analyses', sel.subject, (sel.user && sel.user.pseudo || 'Membre') + ' · ' + sel.topic_label, agentPill(AGENT_RESULTS, sel.result)) : backButton('Toutes les analyses'),
+      analysisDetail(sel)
+    );
+  }
+
+  if (!st.total) {
+    return wrap(periods, el('section', { class: 'bz-card adm-agent-empty' },
+      el('span', { class: 'adm-agent-empty-icon' }, icon('agent', 22)),
+      el('b', { text: 'Aucune analyse sur ' + periodLabel }),
+      el('p', { class: 'bz-small bz-muted', text: 'Chaque demande envoyée depuis une application à jour passe d’abord par l’agent. Ses analyses apparaîtront ici, avec leurs résultats et les fiches du guide qu’il cite.' })
+    ));
+  }
+
+  const tile = (label, short, value, sub, color) => el('div', { class: 'bz-card is-tight adm-kpi' },
+    el('span', { class: 'bz-eyebrow' }, el('span', { class: 'bz-hide-sm', text: label }), el('span', { class: 'bz-show-sm', text: short })),
+    el('div', { class: 'adm-kpi-value', style: { color: color || 'var(--text)' }, text: String(value) }),
+    sub ? el('span', { class: 'adm-kpi-sub', text: sub }) : null
+  );
+  const kpis = el('div', { class: 'adm-agent-kpis' },
+    tile('Analyses', 'Analyses', st.total, r.propose ? r.propose + ' en attente' : null),
+    tile('Réglées par l’agent', 'Réglées', r.regle || 0, null, r.regle ? 'var(--soft-green-text)' : null),
+    tile('Devenues tickets', 'Tickets', r.ticket || 0, null, r.ticket ? 'var(--soft-violet-text)' : null),
+    tile('Abandonnées', 'Abandon.', r.abandonne || 0),
+    tile('Agent indisponible', 'Indispo.', v.indisponible || 0, null, v.indisponible ? 'var(--text-danger)' : null),
+    tile('Taux de résolution', 'Résolution', st.resolution_rate === null || st.resolution_rate === undefined ? '—' : st.resolution_rate + ' %', 'des propositions'),
+    tile('Durée médiane', 'Durée', durationFr(st.median_duration_ms) || '—')
+  );
+
+  const reasons = Object.entries(st.by_reason || {}).sort((x, y) => y[1] - x[1]);
+  const reasonsBox = reasons.length ? el('section', { class: 'adm-agent-alert', role: 'status' },
+    el('b', { text: 'L’agent a été indisponible ' + reasons.reduce((n, [, c]) => n + c, 0) + ' fois sur ' + periodLabel }),
+    el('ul', {}, reasons.map(([key, count]) => el('li', { class: key === 'quota' ? 'is-urgent' : '' },
+      el('span', { class: 'adm-agent-alert-count', text: '× ' + count }),
+      el('span', {}, el('b', { text: AGENT_REASONS[key] || key }), AGENT_REASON_HINTS[key] ? el('small', { text: AGENT_REASON_HINTS[key] }) : null)
+    )))
+  ) : null;
+
+  const zones = (st.by_topic || []).filter((z) => z.total > 0).sort((x, y) => (y.tickets - x.tickets) || (y.total - x.total));
+  const zonesCard = el('section', { class: 'bz-card adm-agent-card' },
+    el('div', { class: 'adm-list-head', text: 'Zones qui finissent en ticket' }),
+    el('ul', { class: 'adm-agent-zones' }, zones.map((z) => el('li', {},
+      el('div', { class: 'adm-agent-zone-top' }, el('b', { text: z.label }), el('span', { text: z.tickets + ' ticket' + (z.tickets > 1 ? 's' : '') + ' / ' + z.total })),
+      el('div', { class: 'adm-agent-bar', role: 'presentation' },
+        el('span', { class: 'is-ticket', style: { width: (z.total ? (z.tickets / z.total) * 100 : 0) + '%' } }),
+        el('span', { class: 'is-regle', style: { width: (z.total ? (z.regles / z.total) * 100 : 0) + '%' } })),
+      el('span', { class: 'bz-tiny', text: z.regles + ' réglée' + (z.regles > 1 ? 's' : '') + ' par l’agent' })
+    ))),
+    el('p', { class: 'bz-tiny adm-agent-foot', text: 'Une zone qui finit souvent en ticket appelle une fiche du guide.' })
+  );
+
+  const top = st.top_cited_articles || [];
+  const topCard = el('section', { class: 'bz-card adm-agent-card' },
+    el('div', { class: 'adm-list-head', text: 'Fiches les plus citées' }),
+    top.length
+      ? el('ol', { class: 'adm-agent-top' }, top.map((t) => el('li', {},
+        t.titre ? el('span', { text: t.titre }) : el('code', { text: t.id }),
+        el('span', { class: 'bz-tiny', text: t.count + ' fois' }))))
+      : el('p', { class: 'bz-small bz-muted', style: { padding: '14px 16px', margin: '0' }, text: 'Aucune fiche citée sur la période.' })
+  );
+
+  // La liste des analyses, filtrable par résultat.
+  const filterBtn = (key, label) => el('button', {
+    class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(a.result === key),
+    onclick: () => { if (a.result === key) return; a.result = key; a.selId = null; render(); loadAgent({ withStats: false }).then(() => { if (state.tab === 'agent') render(); }); }
+  }, label, key && r[key] ? el('span', { class: 'bz-count', text: String(r[key]) }) : null);
+  const filters = el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Filtrer les analyses' },
+    filterBtn('', 'Toutes'), filterBtn('propose', 'En attente'), filterBtn('regle', 'Réglées'), filterBtn('ticket', 'Tickets'), filterBtn('abandonne', 'Abandonnées'));
+
+  const list = el('div', { class: 'adm-list' });
+  for (const x of a.list || []) {
+    list.append(el('button', {
+      class: 'adm-item', type: 'button', 'aria-current': sel && x.id === sel.id ? 'true' : 'false',
+      onclick: () => { a.selId = x.id; openPane('analysis'); render(); paneTop(); }
+    },
+    el('div', { class: 'bz-row', style: { gap: '8px', flexWrap: 'nowrap' } },
+      el('b', { style: { fontFamily: 'var(--font-ui)', fontSize: '12.5px', flex: '1', minWidth: '0', overflowWrap: 'anywhere' }, text: x.subject }),
+      agentPill(AGENT_RESULTS, x.result)
+    ),
+    el('div', { class: 'bz-small bz-muted', style: { marginTop: '5px' } },
+      el('span', { text: dateTimeShort(x.created_date) + ' · ' + (x.user ? (x.user.pseudo || 'Membre') + (x.user.deleted ? ' (supprimé)' : '') : '—') + ' · ' + x.topic_label })
+    ),
+    el('div', { style: { marginTop: '6px' } }, agentPill(AGENT_VERDICTS, x.verdict))
+    ));
+  }
+  if (a.list && !a.list.length) list.append(el('p', { class: 'bz-small bz-muted', style: { padding: '16px', margin: '0' }, text: 'Aucune analyse avec ce résultat sur la période.' }));
+  if (!a.list) list.append(el('div', { class: 'bz-skeleton', style: { height: '120px', margin: '14px' } }));
+
+  const showDetail = !narrow && sel;
+  return wrap(
+    periods,
+    staleError,
+    kpis,
+    reasonsBox,
+    el('div', { class: 'adm-agent-grid' }, zonesCard, topCard),
+    el('h2', { class: 'bz-h3 adm-agent-title', text: 'Analyses' }),
+    filters,
+    el('div', { class: 'adm-split', style: { marginTop: '10px' } },
+      el('section', { class: 'bz-card adm-list-card' },
+        el('div', { class: 'adm-list-head', text: 'Analyses · ' + (a.list ? a.list.length : '…') + (a.loading ? ' · mise à jour…' : '') }),
+        list),
+      showDetail ? analysisDetail(sel) : null
+    )
+  );
+}
+
+// Le détail d'une analyse dans la vue Agent : la demande, puis l'encart.
+function analysisDetail(x) {
+  const ctx = x.context || {};
+  const ctxText = [ctx.app_version && 'app ' + ctx.app_version, ctx.platform, ctx.os_version && 'OS ' + ctx.os_version, ctx.update_id && 'OTA ' + String(ctx.update_id).slice(0, 8)].filter(Boolean).join(' · ');
+  return el('div', { class: 'bz-card adm-detail adm-agent-detail' },
+    PHONE.matches ? null : el('div', { class: 'bz-row' },
+      el('b', { style: { fontFamily: 'var(--font-display)', fontSize: '15px', flex: '1', minWidth: '0', overflowWrap: 'anywhere' }, text: x.subject }),
+      agentPill(AGENT_RESULTS, x.result)),
+    el('div', { class: 'bz-small bz-muted', style: { marginTop: '4px' } },
+      el('span', { text: (x.user ? (x.user.pseudo || 'Membre') + (x.user.deleted ? ' (compte supprimé)' : '') : '—') + ' · ' + x.topic_label + ' · ' + dateTime(x.created_date) })),
+    x.ticket_id ? el('div', { class: 'bz-row adm-agent-ticket' },
+      el('button', { class: 'bz-btn is-sm is-violet', type: 'button', text: 'Ouvrir le ticket', onclick: () => { state.tab = 'support'; state.pane = null; openTicket(x.ticket_id); } }),
+      el('span', { class: 'bz-tiny', text: 'L’ouvrir le prend en charge, comme depuis l’onglet Support.' })
+    ) : null,
+    el('div', { class: 'adm-quote' },
+      el('span', { class: 'bz-eyebrow', text: 'Demande' }),
+      el('p', { text: x.description || '—' }),
+      x.steps ? el('p', { class: 'bz-muted', text: 'Étapes : ' + x.steps }) : null,
+      thumbs(x.images),
+      ctxText ? el('p', { class: 'bz-tiny', text: ctxText }) : null
+    ),
+    analysisPanel(x, { inTicket: false })
   );
 }
 
@@ -1116,7 +1429,7 @@ function bottomNav(openReports, pending) {
   el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
   el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
   return el('nav', { class: 'adm-nav', 'aria-label': 'Sections de la console' },
-    item('users', 0), item('reports', openReports), item('support', pending), item('journal', 0));
+    item('users', 0), item('reports', openReports), item('support', pending), item('agent', 0), item('journal', 0));
 }
 
 // `short` : le libellé des chiffres clés sur téléphone, où ils tiennent en une
@@ -1146,14 +1459,15 @@ function render() {
   const panel = state.tab === 'users' ? renderUsers()
     : state.tab === 'reports' ? renderReports()
       : state.tab === 'support' ? renderSupport()
-        : renderJournal();
+        : state.tab === 'agent' ? renderAgent()
+          : renderJournal();
 
   const scrollY = window.scrollY;
   const chat = phone && state.pane === 'ticket';
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    phone && state.pane ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && state.tab === 'agent') ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1163,6 +1477,7 @@ function render() {
       tab('users', 'Utilisateurs'),
       tab('reports', 'Signalements', openReports),
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
+      tab('agent', 'Agent'),
       tab('journal', 'Journal')
     ),
     panel,

@@ -47,6 +47,71 @@
   .adm-back span { width: 30px; height: 30px; border-radius: 10px; border: 1px solid var(--line-strong); display: inline-flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; padding-bottom: 2px; color: var(--text-muted); }
   .adm-back:hover span { border-color: rgba(255,255,255,.3); color: var(--text); }
 
+  /* ---------- Analyse automatique (encart d'un ticket, détail de la vue Agent) ---------- */
+  .adm-ai { margin-top: 14px; border: 1px solid rgba(217,196,251,.55); border-radius: 14px; background: rgba(139,61,255,.07); overflow: hidden; }
+  .adm-ai.is-red { border-color: rgba(243,196,196,.6); background: rgba(255,107,107,.06); }
+  .adm-ai.is-grey { border-color: var(--line-strong); background: rgba(255,255,255,.03); }
+  .adm-ai-sum { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; list-style: none; font-family: var(--font-ui); font-size: 13px; }
+  .adm-ai-sum::-webkit-details-marker { display: none; }
+  .adm-ai-icon { display: inline-flex; color: var(--soft-violet-text); }
+  .adm-ai.is-red .adm-ai-icon { color: var(--text-danger); }
+  .adm-ai.is-grey .adm-ai-icon { color: var(--text-muted); }
+  .adm-ai-caret { margin-left: auto; display: inline-flex; color: var(--text-muted); transition: transform .2s; }
+  .adm-ai[open] > .adm-ai-sum .adm-ai-caret { transform: rotate(180deg); }
+  .adm-ai-body { display: flex; flex-direction: column; gap: 10px; padding: 0 12px 12px; }
+  .adm-ai-headline { margin: 0; font-family: var(--font-ui); font-weight: 700; font-size: 13px; color: var(--text); }
+  .adm-ai-answer { margin: 0; padding: 10px 12px; border-left: 3px solid var(--soft-violet-border); border-radius: 0 10px 10px 0; background: rgba(8,6,14,.45); }
+  .adm-ai-answer p, .adm-ai-note p { margin: 5px 0 0; font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* La note de l'agent est ce qui fait gagner du temps : elle ressort. */
+  .adm-ai-note { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(245,166,35,.5); background: rgba(245,166,35,.1); }
+  .adm-ai-note .bz-eyebrow { color: #F8C46A; }
+  .adm-ai-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; padding: 0; }
+  .adm-ai-chips li { max-width: 100%; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(255,255,255,.04); font-size: 12px; overflow-wrap: anywhere; }
+  .adm-ai-chips code { font-size: 11.5px; color: var(--text-muted); }
+  .adm-ai-more { padding-top: 8px; border-top: 1px solid var(--line); }
+  .adm-ai-more > summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; font-family: var(--font-ui); font-weight: 700; font-size: 12px; color: var(--text-muted); }
+  .adm-ai-more > summary::-webkit-details-marker { display: none; }
+  .adm-ai-more > summary svg { transform: rotate(-90deg); transition: transform .2s; }
+  .adm-ai-more[open] > summary svg { transform: none; }
+  .adm-ai-more-body { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .adm-ai-facts { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.5; }
+  .adm-ai-facts li { overflow-wrap: anywhere; }
+  .adm-ai-tech { margin: 4px 0 0; }
+
+  /* ---------- Vue Agent ---------- */
+  .adm-agent { margin-top: 16px; }
+  .adm-agent-kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-top: 12px; }
+  .adm-kpi-sub { display: block; margin-top: 1px; font-size: 11px; color: var(--text-muted); }
+  .adm-agent-alert { margin-top: 12px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--soft-red-border); background: var(--soft-red-fill); }
+  .adm-agent-alert > b { font-family: var(--font-ui); font-size: 13px; color: var(--soft-red-text); }
+  .adm-agent-alert ul { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 8px 0 0; padding: 0; }
+  .adm-agent-alert li { display: flex; align-items: baseline; gap: 10px; font-size: 13px; }
+  .adm-agent-alert li small { display: block; font-size: 12px; color: var(--text-muted); }
+  .adm-agent-alert-count { flex: none; min-width: 34px; font-family: var(--font-display); font-weight: 700; color: var(--soft-red-text); }
+  .adm-agent-alert li.is-urgent b { color: #FFB4C0; }
+  .adm-agent-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); margin-top: 12px; }
+  .adm-agent-card { padding: 0; overflow: hidden; }
+  .adm-agent-zones, .adm-agent-top { list-style: none; margin: 0; padding: 4px 16px 8px; }
+  .adm-agent-zones li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .adm-agent-zones li:last-child, .adm-agent-top li:last-child { border-bottom: 0; }
+  .adm-agent-zone-top { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; }
+  .adm-agent-zone-top b { flex: 1; min-width: 0; font-family: var(--font-ui); }
+  .adm-agent-zone-top span { white-space: nowrap; color: var(--text-muted); }
+  .adm-agent-bar { display: flex; height: 6px; margin: 6px 0 3px; border-radius: 6px; background: rgba(255,255,255,.07); overflow: hidden; }
+  .adm-agent-bar .is-ticket { background: #7431E0; }
+  .adm-agent-bar .is-regle { background: var(--fill-success); }
+  .adm-agent-foot { margin: 0; padding: 0 16px 12px; }
+  .adm-agent-top { counter-reset: top; }
+  .adm-agent-top li { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 12.5px; counter-increment: top; }
+  .adm-agent-top li::before { content: counter(top); min-width: 16px; font-family: var(--font-display); font-weight: 700; color: var(--text-muted); }
+  .adm-agent-top li > :first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .adm-agent-top code { font-size: 12px; color: var(--text-muted); }
+  .adm-agent-title { margin: 22px 0 8px; }
+  .adm-agent-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px; padding: 34px 22px; text-align: center; }
+  .adm-agent-empty-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--soft-violet-border); background: var(--soft-violet-fill); color: var(--soft-violet-text); }
+  .adm-agent-empty p { max-width: 460px; margin: 0; }
+  .adm-agent-ticket { gap: 8px; margin-top: 10px; }
+
   /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement. */
   @media (max-width: 860px) {
     .adm-split { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -100,7 +165,7 @@
     body.adm-with-composer .bz-page { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
     body.adm-with-nav #toast, body.adm-with-composer #toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
     .adm-nav {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 65; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 65; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
       padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
       background: rgba(12,9,18,.93); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid rgba(255,255,255,.07);
     }
@@ -112,6 +177,8 @@
        soleil : pastille violette pleine, icône blanche, libellé clair. Le violet
        à 16 % d'avant disparaissait sur le fond presque noir de la barre. */
     .adm-nav-item[aria-current="page"] { color: #fff; }
+    .adm-nav-label { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @media (max-width: 360px) { .adm-nav-label { font-size: 9.5px; } .adm-nav-icon { width: 46px; } }
     .adm-nav-item[aria-current="page"] .adm-nav-label { color: #E4D7FF; }
     .adm-nav-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 56px; height: 30px; border-radius: 999px; transition: background-color .2s, box-shadow .2s; }
     .adm-nav-item[aria-current="page"] .adm-nav-icon { background: #7431E0; box-shadow: 0 4px 14px rgba(116,49,224,.45), inset 0 0 0 1px rgba(196,181,253,.35); }
@@ -165,6 +232,25 @@
     .adm-phead-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .adm-phead-text b { font-family: var(--font-display); font-size: 14.5px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .adm-phead-text span { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Analyse automatique et vue Agent. */
+    .adm-ai-sum { padding: 9px 11px; }
+    .adm-ai-body { padding: 0 11px 11px; }
+    .adm-chat .adm-ai { margin: 0 0 10px; }
+    .adm-agent { margin-top: 4px; }
+    .adm-agent:has(> .adm-phead) { margin-top: 0; }
+    .adm-agent-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .adm-kpi-sub { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .adm-ai-sum { flex-wrap: wrap; row-gap: 4px; }
+    .adm-ai-sum b { white-space: nowrap; }
+    .adm-agent-alert { padding: 10px 12px; }
+    .adm-agent-alert li { font-size: 12.5px; }
+    .adm-agent-alert li small { font-size: 11.5px; }
+    .adm-agent-grid { gap: 10px; margin-top: 10px; }
+    .adm-agent-zones, .adm-agent-top { padding-inline: 14px; }
+    .adm-agent-foot { padding-inline: 14px; }
+    .adm-agent-title { margin: 18px 0 8px; }
+    .adm-agent-empty { padding: 26px 18px; }
+
     .adm-status-btn { position: relative; flex: none; display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; }
     /* La pastille fait 22 px : sa zone de toucher, elle, en fait 44. */
     .adm-status-btn::after { content: ''; position: absolute; inset: -11px -6px; }
