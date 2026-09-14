@@ -70,6 +70,38 @@ const pill = (map, key) => {
 
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
+// Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
+const SECTIONS = { users: 'Comptes', reports: 'Signalements', support: 'Support', journal: 'Journal' };
+
+// Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
+const ICONS = {
+  users: 'M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM20 20v-1.3a3.2 3.2 0 0 0-2.4-3.1M15.5 4.7a3.4 3.4 0 0 1 0 6.6',
+  reports: 'M5 21V4M5 4h11.5l-2 4 2 4H5',
+  support: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4V5.5Z',
+  journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
+  filter: 'M4 6h16M7 12h10M10 18h4',
+  send: 'M5 12h13M13 6l6 6-6 6',
+  chevron: 'M9 6l6 6-6 6',
+  back: 'M15 6l-6 6 6 6'
+};
+function icon(name, size = 20) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  const p = document.createElementNS(NS, 'path');
+  p.setAttribute('d', ICONS[name]);
+  svg.append(p);
+  return svg;
+}
+
 // Téléphone (640 px et moins) : des fiches au lieu des tableaux. Écran étroit
 // (860 px et moins) : la liste OU le détail d'un signalement ou d'un ticket,
 // jamais l'un sous l'autre. Posé sous la liste, le détail obligeait à redescendre
@@ -87,15 +119,29 @@ function openPane(pane) {
 // Après avoir ouvert un détail : on le montre depuis son haut, sous les onglets.
 function paneTop() {
   if (!NARROW.matches || !state.pane) return;
+  if (PHONE.matches) return window.scrollTo({ top: 0, behavior: 'instant' });
   const anchor = host.querySelector('.adm-back');
   if (anchor) window.scrollTo({ top: Math.max(0, anchor.getBoundingClientRect().top + window.scrollY - 72), behavior: 'instant' });
 }
 
+function closePane() {
+  state.pane = null;
+  render();
+  window.scrollTo({ top: listScroll, behavior: 'instant' });
+}
+
 function backButton(label) {
-  return el('button', {
-    class: 'adm-back', type: 'button',
-    onclick: () => { state.pane = null; render(); window.scrollTo({ top: listScroll, behavior: 'instant' }); }
-  }, el('span', { 'aria-hidden': 'true', text: '‹' }), label);
+  return el('button', { class: 'adm-back', type: 'button', onclick: closePane }, el('span', { 'aria-hidden': 'true', text: '‹' }), label);
+}
+
+// Téléphone : l'en-tête d'un détail, collé sous la barre du site. Retour carré,
+// titre sur une ligne, sous-titre, et une commande à droite (statut).
+function paneHead(backLabel, title, sub, side) {
+  return el('div', { class: 'adm-phead' },
+    el('button', { class: 'adm-back is-square', type: 'button', 'aria-label': backLabel, onclick: closePane }, icon('back', 18)),
+    el('div', { class: 'adm-phead-text' }, el('b', { text: title }), sub ? el('span', { text: sub }) : null),
+    side || null
+  );
 }
 
 let host, topHost, toastHost, toastTimer;
@@ -508,15 +554,18 @@ function renderUsers() {
   const search = el('input', { class: 'bz-input', type: 'search', value: state.q, placeholder: 'Rechercher un pseudo ou une adresse…', 'aria-label': 'Rechercher un compte', style: { flex: '1', minWidth: '200px' } });
   search.addEventListener('input', () => { state.q = search.value; update(); });
 
-  const filterLabel = el('span');
-  const filter = el('button', { class: 'bz-input bz-filter-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Choisir les comptes affichés' }, filterLabel, caretIcon());
+  const phone = PHONE.matches;
+  const filterLabel = el('span', { class: phone ? 'bz-sr' : null });
+  const filterDot = el('span', { class: 'adm-filter-dot', hidden: true });
+  const filter = phone
+    ? el('button', { class: 'bz-filter-btn adm-filter-icon', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Choisir les comptes affichés' }, icon('filter', 18), filterDot, filterLabel)
+    : el('button', { class: 'bz-input bz-filter-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Choisir les comptes affichés' }, filterLabel, caretIcon());
   filter.addEventListener('click', () => openKindsList(filter, update));
 
   const count = el('span', { class: 'bz-small bz-muted adm-count', style: { whiteSpace: 'nowrap' } });
   const tbody = el('tbody');
   const cards = el('div', { class: 'bz-cards' });
-  const phone = PHONE.matches;
-  const empty = el('p', { class: 'bz-small bz-muted', style: { padding: '20px 16px', margin: '0', textAlign: 'center' } });
+  const empty = el('p', { class: 'bz-small bz-muted adm-empty', style: { padding: '20px 16px', margin: '0', textAlign: 'center' } });
 
   // Redessine les lignes, le compteur et le libellé du bouton, sans toucher au
   // reste : la recherche garde son focus, la liste à cocher reste ouverte.
@@ -527,13 +576,24 @@ function renderUsers() {
     const shown = matching.filter((u) => state.userKinds.has(userKind(u)));
     const hidden = matching.length - shown.length;
     filterLabel.textContent = kindsLabel(state.userKinds);
+    // Un point sur le filtre dès qu'on s'écarte du réglage par défaut.
+    filterDot.hidden = state.userKinds.size === DEFAULT_KINDS.length && DEFAULT_KINDS.every((k) => state.userKinds.has(k));
     count.textContent = shown.length + (shown.length > 1 ? ' comptes' : ' compte') + (hidden ? ' · ' + hidden + (hidden > 1 ? ' masqués' : ' masqué') : '');
-    if (phone) put(clear(cards), shown.map(userCard));
+    if (phone) put(clear(cards), shown.map(userLine));
     else put(clear(tbody), shown.map(userRow));
     empty.hidden = shown.length > 0;
     empty.textContent = state.userKinds.size ? 'Aucun compte ne correspond.' : 'Aucune catégorie cochée.';
   }
   update();
+
+  if (phone) {
+    search.style.minWidth = '0';
+    return el('div', { class: 'adm-users-phone' },
+      el('div', { class: 'adm-toolbar' }, search, filter),
+      el('div', { class: 'adm-count' }, count),
+      el('section', { class: 'bz-card adm-ulist' }, cards, empty)
+    );
+  }
 
   return el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden', marginTop: '16px' } },
     el('div', { class: 'bz-row adm-users-bar', style: { padding: '14px 16px', borderBottom: '1px solid var(--line)' } },
@@ -554,6 +614,64 @@ function renderUsers() {
     ),
     empty
   );
+}
+
+// Téléphone : une ligne par compte. Toucher la ligne ouvre sa fiche, qui porte
+// tout le détail et les actions. La fiche d'avant tenait 230 px par compte.
+function userLine(u) {
+  const name = nameOf(u);
+  const age = u.declared_age ?? u.current_age;
+  const meta = u.deleted ? 'Compte supprimé' : [
+    age !== null && age !== undefined ? age + ' ans' : 'âge non déclaré',
+    u.last_app_seen_at ? 'vu ' + sinceFr(u.last_app_seen_at) : 'jamais vu dans l’app',
+    u.reports_received ? u.reports_received + ' signalement' + (u.reports_received > 1 ? 's' : '') : null
+  ].filter(Boolean).join(' · ');
+  const row = el('button', {
+    class: 'bz-cardrow adm-urow' + (u.deleted ? ' is-deleted' : (u.banned_at ? ' is-banned' : '')),
+    type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-label': 'Fiche de ' + name
+  },
+  el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(u) }),
+  el('span', { class: 'adm-urow-main' },
+    el('span', { class: 'adm-urow-top' }, el('b', { text: u.pseudo || '—' }), el('span', { class: 'bz-cardrow-pills' }, statusPills(u))),
+    el('span', { class: 'adm-urow-mail', text: u.email }),
+    el('span', { class: 'adm-urow-meta' + (u.reports_received >= 3 ? ' is-alert' : ''), text: meta })
+  ),
+  el('span', { class: 'adm-urow-chev' }, icon('chevron', 16)));
+  row.addEventListener('click', () => openUserSheet(row, u));
+  return row;
+}
+
+function openUserSheet(anchor, u) {
+  const name = nameOf(u);
+  const items = userMenuItems(u);
+  const buttons = [];
+  const received = el('span', { style: { fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'inherit' }, text: u.reports_received + ' reçu' + (u.reports_received > 1 ? 's' : '') });
+  togglePopover(anchor, buttons, () => el('div', { class: 'bz-menu adm-usheet', role: 'dialog', 'aria-label': 'Fiche de ' + name },
+    el('div', { class: 'bz-menu-account' },
+      el('span', { class: 'bz-avatar is-lg', 'aria-hidden': 'true', text: initialOf(u) }),
+      el('span', { style: { minWidth: '0', flex: '1' } }, el('b', { text: u.pseudo || '—' }), el('span', { text: u.email })),
+      el('div', { class: 'bz-cardrow-pills adm-usheet-pills' }, statusPills(u))
+    ),
+    el('dl', { class: 'bz-dl adm-usheet-dl' },
+      el('div', {}, el('dt', { text: 'Âge déclaré' }), dd2(ageInfo(u))),
+      el('div', {}, el('dt', { text: 'Déclaré le' }), dd2(declaredAtInfo(u))),
+      el('div', {}, el('dt', { text: 'Dernière utilisation' }), dd2(lastSeenInfo(u))),
+      el('div', {}, el('dt', { text: 'Inscription' }), dd2([dateShort(u.created_date)])),
+      el('div', { class: 'is-full' }, el('dt', { text: 'Signalements' }), dd2([el('span', {}, received, ' · ' + u.reports_sent + ' émis')])),
+      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif du bannissement' }), dd2([u.banned_reason])) : null
+    ),
+    items.length ? el('div', { class: 'adm-usheet-label', text: 'Actions' }) : null,
+    items.map((it) => {
+      const b = el('button', {
+        class: 'bz-menu-item is-' + it.tone, type: 'button', role: 'menuitem', disabled: !!it.why,
+        onclick: () => { closePopover(); it.run(); }
+      },
+      el('span', { class: 'bz-menu-label', text: it.label }),
+      it.why ? el('span', { class: 'bz-menu-why', text: it.why }) : null);
+      buttons.push(b);
+      return b;
+    })
+  ));
 }
 
 function moreButton(u) {
@@ -659,7 +777,7 @@ function renderReports() {
     const banWhy = cannotAct || (r.reported.banned_at ? 'Déjà banni.' : null) || (r.reported.is_super_admin ? 'Retire-lui d’abord le rang de super admin.' : null) || (isSuper ? null : SUPER_ONLY);
 
     put(detail,
-      el('div', { class: 'bz-row' }, el('b', { style: { fontFamily: 'var(--font-display)', fontSize: '16px' }, text: 'Signalement ' + shortId(r.id) }), pill(REPORT_STATUS, r.status)),
+      PHONE.matches ? null : el('div', { class: 'bz-row' }, el('b', { style: { fontFamily: 'var(--font-display)', fontSize: '16px' }, text: 'Signalement ' + shortId(r.id) }), pill(REPORT_STATUS, r.status)),
       el('div', { class: 'bz-stack', style: { gap: '8px', marginTop: '14px' } },
         line('Date', dateTime(r.created_date)),
         line('Motif', REASONS[r.reason] || r.reason),
@@ -695,7 +813,9 @@ function renderReports() {
       el('div', { class: 'adm-list-head', text: 'Signalements · ' + state.reports.length }),
       list
     ) : null,
-    showDetail && narrow ? backButton('Tous les signalements') : null,
+    showDetail && narrow ? (PHONE.matches && r
+      ? paneHead('Tous les signalements', 'Signalement ' + shortId(r.id), REASONS[r.reason] || r.reason, pill(REPORT_STATUS, r.status))
+      : backButton('Tous les signalements')) : null,
     showDetail ? detail : null
   );
 }
@@ -759,8 +879,9 @@ function renderSupport() {
   }
   if (!state.tickets.length) list.append(el('p', { class: 'bz-small bz-muted', style: { padding: '16px', margin: '0' }, text: 'Aucun ticket dans cette file.' }));
 
-  const detail = el('div', { class: 'bz-card adm-detail' });
   const t = state.ticket;
+  if (PHONE.matches && showDetail) return renderTicketChat(t);
+  const detail = el('div', { class: 'bz-card adm-detail' });
   if (!state.ticketId) {
     detail.append(el('p', { class: 'bz-small bz-muted', style: { margin: '0' }, text: 'Sélectionne un ticket pour ouvrir la conversation. L’ouvrir le prend en charge.' }));
   } else if (!t) {
@@ -838,6 +959,93 @@ function renderSupport() {
   );
 }
 
+// Téléphone : la conversation d'un ticket comme une messagerie. En-tête collé
+// avec retour et statut, la demande en tête du fil, et la zone de réponse
+// collée au bas de l'écran avec un bouton d'envoi rond, comme dans l'app.
+function renderTicketChat(t) {
+  if (!t) {
+    return el('div', { class: 'adm-chat' },
+      paneHead('Tous les tickets', 'Chargement…', null, null),
+      el('div', { class: 'bz-skeleton', style: { height: '140px', marginTop: '12px' } })
+    );
+  }
+  const statusBtn = el('button', { class: 'adm-status-btn', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': 'Changer le statut du ticket' },
+    pill(TICKET_STATUS, t.status));
+  statusBtn.addEventListener('click', () => {
+    const buttons = [];
+    togglePopover(statusBtn, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': 'Statut du ticket' },
+      el('div', { class: 'bz-menu-title', text: 'Statut du ticket' }),
+      ['PENDING', 'OPEN', 'CLOSED'].map((s) => {
+        const b = el('button', {
+          class: 'bz-menu-item', type: 'button', role: 'menuitem', disabled: t.status === s,
+          onclick: () => {
+            closePopover();
+            run(async () => {
+              const { ticket } = await call(`/admin/support/tickets/${t.id}`, { method: 'PATCH', body: { status: s } });
+              state.ticket = ticket;
+              await loadTickets();
+              render();
+              toast('Ticket ' + shortId(t.id) + ' : ' + TICKET_STATUS[s][0].toLowerCase() + '.');
+            });
+          }
+        }, el('span', { class: 'bz-menu-label', text: TICKET_STATUS[s][0] }), t.status === s ? el('span', { class: 'bz-menu-why', text: 'Statut actuel' }) : null);
+        buttons.push(b);
+        return b;
+      })
+    ));
+  });
+
+  const ctx = t.context || {};
+  const ctxText = [ctx.app_version && 'app ' + ctx.app_version, ctx.platform, ctx.os_version && 'OS ' + ctx.os_version, ctx.update_id && 'OTA ' + String(ctx.update_id).slice(0, 8)].filter(Boolean).join(' · ');
+  const thread = el('div', { class: 'bz-thread adm-thread' });
+  for (const m of t.messages || []) {
+    if (m.kind === 'system') {
+      thread.append(el('span', { class: 'bz-system', text: m.body + ' · ' + dateShort(m.created_date) }));
+      continue;
+    }
+    const mine = m.kind === 'support';
+    thread.append(el('div', { class: 'bz-bubble-wrap' + (mine ? ' is-mine' : '') },
+      el('span', { class: 'bz-bubble-meta', text: (mine ? 'Support boostZ' : (t.user.pseudo || 'Membre')) + ' · ' + dateTime(m.created_date) }),
+      m.body ? el('span', { class: 'bz-bubble', text: m.body }) : null,
+      thumbs(m.images)
+    ));
+  }
+
+  const reply = el('textarea', { class: 'adm-composer-input', rows: '1', maxlength: '4000', 'aria-label': 'Réponse au membre', placeholder: 'Répondre au membre…' });
+  const send = el('button', { class: 'adm-send', type: 'button', 'aria-label': 'Envoyer la réponse', disabled: true }, icon('send', 18));
+  // La zone grandit avec le texte, jusqu'à cinq lignes environ.
+  reply.addEventListener('input', () => {
+    reply.style.height = 'auto';
+    reply.style.height = Math.min(reply.scrollHeight, 120) + 'px';
+    send.disabled = !reply.value.trim();
+  });
+  send.addEventListener('click', () => run(async () => {
+    if (!reply.value.trim()) return;
+    send.disabled = true;
+    await call(`/admin/support/tickets/${t.id}/messages`, { method: 'POST', body: { message: reply.value.trim() } });
+    const { ticket } = await call(`/admin/support/tickets/${t.id}`);
+    state.ticket = ticket;
+    await loadTickets();
+    render();
+    // Le message envoyé est en bas du fil : on y va.
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+    toast('Réponse envoyée.');
+  }));
+
+  return el('div', { class: 'adm-chat' },
+    paneHead('Tous les tickets', t.subject, (t.user.pseudo || t.user.email || '—') + ' · ' + t.topic_label, statusBtn),
+    el('div', { class: 'adm-quote adm-chat-fiche' },
+      el('span', { class: 'bz-eyebrow', text: 'Demande' + (t.when_label ? ' · ' + t.when_label : '') }),
+      el('p', { text: t.description }),
+      t.steps ? el('p', { class: 'bz-muted', text: 'Étapes : ' + t.steps }) : null,
+      thumbs(t.images),
+      el('p', { class: 'bz-tiny', text: [t.user.email, ctxText].filter(Boolean).join(' · ') })
+    ),
+    thread,
+    el('div', { class: 'adm-composer' }, reply, send)
+  );
+}
+
 // ---------- Onglet Journal ----------
 function detailText(a) {
   const d = a.details || {};
@@ -854,20 +1062,16 @@ function detailText(a) {
 }
 
 function journalCard(a) {
-  const detail = detailText(a);
-  return el('article', { class: 'bz-cardrow' },
-    el('div', { class: 'bz-cardrow-head' },
-      el('div', { class: 'bz-cardrow-name' },
-        el('b', { text: ACTIONS[a.action] || a.action }),
-        el('span', { text: dateTime(a.created_date) })
-      )
+  const detail = [a.reason, detailText(a)].filter(Boolean).join(' · ');
+  return el('article', { class: 'bz-cardrow adm-jrow' },
+    el('div', { class: 'adm-jrow-top' },
+      el('b', { text: ACTIONS[a.action] || a.action }),
+      el('span', { text: dateTimeShort(a.created_date) })
     ),
-    el('dl', { class: 'bz-dl' },
-      el('div', {}, el('dt', { text: 'Auteur' }), dd2([a.actor.pseudo || '—'])),
-      el('div', {}, el('dt', { text: 'Compte visé' }), dd2([a.target ? (a.target.pseudo || a.target.email || '—') : '—'])),
-      a.reason ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif' }), dd2([a.reason])) : null,
-      detail ? el('div', { class: 'is-full' }, el('dt', { text: 'Détail' }), dd2([detail])) : null
-    )
+    el('div', { class: 'adm-jrow-who' },
+      el('span', { text: a.actor.pseudo || '—' }), ' → ', el('span', { text: a.target ? (a.target.pseudo || a.target.email || '—') : '—' })
+    ),
+    detail ? el('div', { class: 'adm-jrow-detail', text: detail }) : null
   );
 }
 
@@ -894,13 +1098,32 @@ function renderJournal() {
 
 // ---------- Rendu général ----------
 function renderHeader() {
-  renderTop(topHost, { label: 'ADMINISTRATION', next: 'admin', adminLabel: true });
+  renderTop(topHost, { label: 'ADMINISTRATION', next: 'admin', adminLabel: true, title: state.loaded ? SECTIONS[state.tab] : '' });
+}
+
+function goTo(tab) {
+  state.tab = tab;
+  state.pane = null;
+  render();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// Téléphone : la navigation de la console, collée en bas, comme celle de l'app.
+function bottomNav(openReports, pending) {
+  const item = (id, badge) => el('button', {
+    class: 'adm-nav-item', type: 'button', 'aria-current': state.tab === id ? 'page' : null, onclick: () => goTo(id)
+  },
+  el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
+  el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
+  return el('nav', { class: 'adm-nav', 'aria-label': 'Sections de la console' },
+    item('users', 0), item('reports', openReports), item('support', pending), item('journal', 0));
 }
 
 // `short` : le libellé des chiffres clés sur téléphone, où ils tiennent en une
 // rangée au lieu de manger le premier écran.
-function kpi(label, short, value, color) {
-  return el('div', { class: 'bz-card is-tight adm-kpi' },
+// Sur téléphone, chaque chiffre est un raccourci : il ouvre la liste qu'il compte.
+function kpi(label, short, value, color, go) {
+  return el(PHONE.matches && go ? 'button' : 'div', { class: 'bz-card is-tight adm-kpi', type: PHONE.matches && go ? 'button' : null, onclick: PHONE.matches ? go : null },
     el('span', { class: 'bz-eyebrow' }, el('span', { class: 'bz-hide-sm', text: label }), el('span', { class: 'bz-show-sm', text: short })),
     el('div', { class: 'adm-kpi-value', style: { color: color || 'var(--text)' }, text: String(value) })
   );
@@ -909,6 +1132,8 @@ function kpi(label, short, value, color) {
 function render() {
   if (!state.loaded) return;
   closePopover();
+  const phone = PHONE.matches;
+  renderHeader();
   const tab = (id, label, count) => el('button', {
     class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(state.tab === id),
     onclick: () => { state.tab = id; state.pane = null; render(); }
@@ -924,28 +1149,32 @@ function render() {
         : renderJournal();
 
   const scrollY = window.scrollY;
+  const chat = phone && state.pane === 'ticket';
+  document.body.classList.toggle('adm-with-nav', phone && !chat);
+  document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    el('div', { class: 'bz-grid adm-kpis' },
-      kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length),
-      kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null),
-      kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null),
-      kpi('Comptes bannis', 'Bannis', banned)
+    phone && state.pane ? null : el('div', { class: 'bz-grid adm-kpis' },
+      kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
+      kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
+      kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
+      kpi('Comptes bannis', 'Bannis', banned, null, () => { state.userKinds = new Set(['banned']); state.q = ''; goTo('users'); })
     ),
-    el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginTop: '22px' } },
+    phone ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginTop: '22px' } },
       tab('users', 'Utilisateurs'),
       tab('reports', 'Signalements', openReports),
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
       tab('journal', 'Journal')
     ),
     panel,
-    el('p', { class: 'bz-tiny', style: { marginTop: '12px' },
+    phone ? null : el('p', { class: 'bz-tiny', style: { marginTop: '12px' },
       text: state.me.is_super_admin
         ? 'Tu es super admin : tu peux bannir, supprimer un compte et nommer un super admin. Chaque geste est inscrit au journal.'
         : 'Seul un super admin peut bannir, supprimer un compte ou nommer un super admin. Chaque geste est inscrit au journal.' }),
-    el('nav', { class: 'bz-foot' },
+    phone ? null : el('nav', { class: 'bz-foot' },
       el('a', { href: 'compte.html', text: 'Mon compte' }),
       el('a', { href: 'index.html', class: 'push', text: '← Retour au site' })
-    )
+    ),
+    phone && !chat ? bottomNav(openReports, state.ticketCounts.PENDING || 0) : null
   );
   // Sans animation : html défile en douceur, et le redessin repartait du haut.
   window.scrollTo({ top: scrollY, behavior: 'instant' });

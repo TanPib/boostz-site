@@ -76,7 +76,9 @@ export function rolePillClass(user) {
 
 // L'en-tête des pages de démarche. `next` est la page où revenir après
 // connexion ; `label` l'étiquette de la page ; `adminLabel` l'habille en ambre.
-export function renderTop(host, { label = '', next = '', adminLabel = false, onLogout } = {}) {
+// `title` : le nom de l'écran, montré à côté du logo sur téléphone seulement
+// (la console y met sa section courante, comme l'en-tête d'un écran de l'app).
+export function renderTop(host, { label = '', next = '', adminLabel = false, onLogout, title = '' } = {}) {
   const s = session();
   const user = s && s.user;
   const right = el('div', { class: 'bz-top-right' });
@@ -109,6 +111,7 @@ export function renderTop(host, { label = '', next = '', adminLabel = false, onL
 
   const bar = el('header', { class: 'bz-top' },
     logo(),
+    title ? el('span', { class: 'bz-top-title bz-show-sm', text: title }) : null,
     label ? el('span', { class: 'bz-top-label' + (adminLabel ? ' is-admin' : ''), text: label }) : null,
     right
   );
