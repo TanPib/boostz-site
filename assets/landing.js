@@ -4,8 +4,8 @@
 // et écrit directement les styles : pas de framework, pas de rendu. Quand le
 // système demande moins de mouvement, les scènes sont posées d'emblée dans leur
 // état final, sans curseur personnalisé, sans confettis ni son.
-import { session, refreshMe, isVerifiedAdmin } from './api.js';
-import { el, put, clear, initialOf, lockIcon } from './chrome.js';
+import { session, refreshMe, isVerifiedAdmin, clearSession } from './api.js';
+import { el, put, clear, initialOf, lockIcon, accountButton } from './chrome.js';
 import { TCGS, emblemSvg } from './tcg.js';
 import { FRANCE_VIEWBOX, FRANCE_D, FRANCE_PINS } from './france.js';
 
@@ -29,9 +29,11 @@ function renderAccount() {
   const locks = document.querySelectorAll('[data-lock]');
   if (s && s.user) {
     put(nav,
-      el('a', { class: 'bz-top-link', href: 'compte.html', 'data-cur': '1', text: 'Mon compte' }),
-      isVerifiedAdmin() ? el('a', { class: 'bz-btn is-violet is-sm', href: 'admin.html', 'data-cur': '1', text: 'Admin' }) : null,
-      el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(s.user) })
+      el('a', { class: 'bz-top-link bz-hide-sm', href: 'compte.html', 'data-cur': '1', text: 'Mon compte' }),
+      isVerifiedAdmin() ? el('a', { class: 'bz-btn is-violet is-sm bz-hide-sm', href: 'admin.html', 'data-cur': '1', text: 'Admin' }) : null,
+      el('span', { class: 'bz-avatar bz-hide-sm', 'aria-hidden': 'true', text: initialOf(s.user) }),
+      // Téléphone : le menu du compte, comme sur les autres pages du site.
+      accountButton(s.user, { logout: () => { clearSession(); renderAccount(); } })
     );
     for (const slot of locks) slot.hidden = true;
     $('foot-note').hidden = true;
@@ -583,9 +585,20 @@ function frame() {
   }
 }
 
+// L'en-tête est transparent sur le héros, puis prend un fond dès qu'on défile :
+// sans lui, les titres des sections passaient sous le logo et le bouton.
+function setupTopBar() {
+  const bar = document.querySelector('.lp-top');
+  if (!bar) return;
+  const sync = () => bar.classList.toggle('is-scrolled', window.scrollY > 8);
+  window.addEventListener('scroll', sync, { passive: true });
+  sync();
+}
+
 function start() {
   renderAccount();
   verifyAccount();
+  setupTopBar();
   setupCursor();
   setupPack();
   setupScan();

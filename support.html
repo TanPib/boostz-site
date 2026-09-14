@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08070B">
 <title>Contacter le support — boostZ</title>
 <meta name="description" content="Ouvre une demande au support boostZ et suis les réponses.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -20,6 +21,26 @@
   .two { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-top: 22px; }
   .two > .left { flex: 1 1 360px; min-width: 0; }
   .two > .right { flex: 1 1 340px; min-width: 0; }
+  .tk-back { display: none; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px 8px 8px; margin: -6px 0 6px -8px;
+    border: 0; border-radius: 12px; background: transparent; color: var(--text-accent); cursor: pointer; font-family: var(--font-ui); font-weight: 700; font-size: 15px; }
+  .tk-back span { font-size: 26px; line-height: 1; margin-top: -3px; }
+
+  /* Écran étroit : une colonne. Les demandes en cours passent avant le formulaire,
+     et ouvrir une demande affiche sa conversation seule, avec un retour à la liste
+     (classe is-reading posée par openTicket), au lieu de l'empiler dessous. */
+  @media (max-width: 760px) {
+    .two { flex-direction: column; align-items: stretch; margin-top: 18px; }
+    .two > .left, .two > .right { flex: none; width: 100%; }
+    main.has-tickets .two > .right { order: -1; }
+    main.is-reading .two > .left, main.is-reading #mine-title, main.is-reading .tk-listhost, main.is-reading .tk-sep, main.is-reading .bz-lead { display: none; }
+    main.is-reading .tk-back { display: inline-flex; }
+    main:not(.is-reading) .tk-sep, main:not(.is-reading) .tk-threadhost { display: none; }
+    .tk-item { padding: 14px; min-height: 60px; gap: 8px 10px; }
+    .tk-subject { font-size: 15px; min-width: 0; flex-basis: calc(100% - 110px); }
+    .tk-date { font-size: 12.5px; }
+    .fiche p { font-size: 15px; }
+    .fiche .bz-eyebrow { font-size: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -98,7 +119,7 @@ function newTicketCard() {
       field('Ta demande', description),
       field('Étapes pour reproduire', steps, 'facultatif'),
       msg,
-      el('div', { class: 'bz-row' }, submit, el('span', { class: 'bz-tiny', text: 'Tu retrouves la réponse ici et dans l’application.' }))
+      el('div', { class: 'bz-row bz-actions' }, submit, el('span', { class: 'bz-tiny', text: 'Tu retrouves la réponse ici et dans l’application.' }))
     );
 
     form.addEventListener('submit', async (e) => {
@@ -140,8 +161,16 @@ function newTicketCard() {
 }
 
 // ---------- Mes demandes ----------
-const listHost = el('div');
-const threadHost = el('div');
+const listHost = el('div', { class: 'tk-listhost' });
+const NARROW = window.matchMedia('(max-width: 760px)');
+let listScroll = 0;
+
+function closeReading() {
+  main.classList.remove('is-reading');
+  window.scrollTo({ top: listScroll, behavior: 'instant' });
+}
+const threadHost = el('div', { class: 'tk-threadhost' });
+const mineCard = el('section', { class: 'bz-card', 'aria-labelledby': 'mine-title' });
 
 function renderList() {
   clear(listHost);
@@ -209,7 +238,7 @@ function renderThread() {
         send.disabled = false;
       }
     });
-    composer = el('div', { class: 'bz-stack', style: { marginTop: '14px', gap: '8px' } }, input, el('div', {}, send));
+    composer = el('div', { class: 'bz-stack', style: { marginTop: '14px', gap: '8px' } }, input, el('div', { class: 'bz-row bz-actions' }, send));
   } else if (t.can_reopen) {
     const input = el('textarea', { class: 'bz-input', rows: '2', maxlength: '4000', 'aria-label': 'Pourquoi rouvrir', placeholder: 'Explique en quelques mots pourquoi tu rouvres cette demande.' });
     const reopen = el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Rouvrir la demande' });
@@ -225,7 +254,7 @@ function renderThread() {
       }
     });
     composer = el('div', { class: 'bz-stack', style: { marginTop: '14px', gap: '8px' } },
-      el('span', { class: 'bz-small bz-muted', text: 'Cette demande est clôturée.' }), input, el('div', {}, reopen));
+      el('span', { class: 'bz-small bz-muted', text: 'Cette demande est clôturée.' }), input, el('div', { class: 'bz-row bz-actions' }, reopen));
   } else if (t.status === 'PENDING') {
     composer = el('p', { class: 'bz-small bz-muted', style: { marginTop: '14px' }, text: 'Ta demande n’a pas encore été prise en charge. Tu pourras répondre dès que le support l’aura ouverte.' });
   }
@@ -250,8 +279,12 @@ async function openTicket(id) {
     if (row) row.has_unread = false;
     renderList();
     renderThread();
-    // Sur téléphone, la conversation est sous la liste : on l'amène à l'écran.
-    if (changed && window.matchMedia('(max-width: 760px)').matches) threadHost.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Écran étroit : la conversation remplace la liste, montrée depuis son haut.
+    if (NARROW.matches) {
+      if (!main.classList.contains('is-reading')) listScroll = window.scrollY;
+      main.classList.add('is-reading');
+      if (changed) window.scrollTo({ top: Math.max(0, mineCard.getBoundingClientRect().top + window.scrollY - 72), behavior: 'instant' });
+    }
   } catch (err) {
     clear(threadHost).append(el('div', { class: 'bz-msg is-err', role: 'alert', text: err.message }));
   }
@@ -260,6 +293,7 @@ async function openTicket(id) {
 async function loadTickets(openId) {
   const { tickets } = await call('/support/tickets');
   state.tickets = tickets;
+  main.classList.toggle('has-tickets', tickets.length > 0);
   renderList();
   if (openId) await openTicket(openId);
   else renderThread();
@@ -283,10 +317,12 @@ async function start() {
   }
   renderTop(top, { label: 'SUPPORT', next: 'support' });
 
-  const mine = el('section', { class: 'bz-card', 'aria-labelledby': 'mine-title' },
+  const mine = mineCard;
+  put(clear(mine),
+    el('button', { class: 'tk-back', type: 'button', onclick: closeReading }, el('span', { 'aria-hidden': 'true', text: '‹' }), 'Mes demandes'),
     el('h2', { id: 'mine-title', class: 'bz-h3', text: 'Mes demandes' }),
     listHost,
-    el('hr', { style: { border: '0', borderTop: '1px solid var(--line)', margin: '16px 0' } }),
+    el('hr', { class: 'tk-sep', style: { border: '0', borderTop: '1px solid var(--line)', margin: '16px 0' } }),
     threadHost
   );
 

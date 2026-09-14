@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08070B">
 <title>Politique de confidentialité — Boostz</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
@@ -18,6 +19,22 @@
   .doc td { padding: 11px 12px; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--text-muted); vertical-align: top; }
   .doc .table-wrap { overflow-x: auto; }
   .doc .note { border: 1px dashed rgba(245,166,35,.5); border-radius: 13px; padding: 4px 16px; margin-top: 18px; }
+
+  /* Téléphone : chaque ligne des tableaux devient une fiche, libellés au-dessus. */
+  @media (max-width: 640px) {
+    .doc p, .doc li { font-size: 15.5px; }
+    .doc h2 { font-size: 19px; }
+    .doc h3 { font-size: 16.5px; }
+    .doc .table-wrap { overflow: visible; }
+    .doc table { min-width: 0; font-size: 15px; }
+    .doc table, .doc tbody, .doc tr, .doc td { display: block; width: auto; }
+    .doc tr:has(th) { display: none; }
+    .doc tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .doc td { padding: 0; border: 0; }
+    .doc td:first-child { color: var(--text); font-weight: 600; font-size: 15.5px; }
+    .doc td + td { margin-top: 6px; }
+    .doc td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 2px; }
+  }
 </style>
 </head>
 <body>
@@ -53,13 +70,13 @@ obligatoire au regard de la nature et du volume des traitements réalisés.</p>
 
 <div class="table-wrap"><table>
 <tr><th>Données</th><th>Finalité</th><th>Base légale</th></tr>
-<tr><td>Adresse e-mail, mot de passe (jamais stocké en clair, uniquement son empreinte)</td><td>Créer et sécuriser votre compte</td><td>Exécution du contrat</td></tr>
-<tr><td>Date de naissance</td><td>Vérifier la condition d'âge de 18 ans exigée par les CGU pour les échanges et la messagerie</td><td>Obligation légale et intérêt légitime</td></tr>
-<tr><td>Pseudo, biographie, avatar, photo de profil</td><td>Vous identifier auprès des autres utilisateurs lorsque votre profil est public</td><td>Exécution du contrat</td></tr>
-<tr><td>Votre collection : cartes, produits scellés, liste de recherche, alertes de prix</td><td>Fournir la fonction principale de l'application</td><td>Exécution du contrat</td></tr>
-<tr><td><strong>Photographies de vos cartes</strong></td><td>Illustrer votre collection et, si vous le demandez, estimer l'état d'une carte</td><td>Exécution du contrat</td></tr>
-<tr><td>Messages d'échange, rendez-vous, notations, signalements</td><td>Permettre la mise en relation entre collectionneurs et traiter les litiges</td><td>Exécution du contrat et intérêt légitime</td></tr>
-<tr><td>Messages de forum</td><td>Animer les espaces de discussion publics</td><td>Exécution du contrat</td></tr>
+<tr><td>Adresse e-mail, mot de passe (jamais stocké en clair, uniquement son empreinte)</td><td data-label="Finalité">Créer et sécuriser votre compte</td><td data-label="Base légale">Exécution du contrat</td></tr>
+<tr><td>Date de naissance</td><td data-label="Finalité">Vérifier la condition d'âge de 18 ans exigée par les CGU pour les échanges et la messagerie</td><td data-label="Base légale">Obligation légale et intérêt légitime</td></tr>
+<tr><td>Pseudo, biographie, avatar, photo de profil</td><td data-label="Finalité">Vous identifier auprès des autres utilisateurs lorsque votre profil est public</td><td data-label="Base légale">Exécution du contrat</td></tr>
+<tr><td>Votre collection : cartes, produits scellés, liste de recherche, alertes de prix</td><td data-label="Finalité">Fournir la fonction principale de l'application</td><td data-label="Base légale">Exécution du contrat</td></tr>
+<tr><td><strong>Photographies de vos cartes</strong></td><td data-label="Finalité">Illustrer votre collection et, si vous le demandez, estimer l'état d'une carte</td><td data-label="Base légale">Exécution du contrat</td></tr>
+<tr><td>Messages d'échange, rendez-vous, notations, signalements</td><td data-label="Finalité">Permettre la mise en relation entre collectionneurs et traiter les litiges</td><td data-label="Base légale">Exécution du contrat et intérêt légitime</td></tr>
+<tr><td>Messages de forum</td><td data-label="Finalité">Animer les espaces de discussion publics</td><td data-label="Base légale">Exécution du contrat</td></tr>
 </table></div>
 
 <h3>Ce que nous ne collectons pas</h3>
@@ -72,10 +89,10 @@ n'appelle aucune ressource externe.</p>
 
 <div class="table-wrap"><table>
 <tr><th>Prestataire</th><th>Rôle</th><th>Localisation</th></tr>
-<tr><td>Supabase</td><td>Base de données et stockage des photos</td><td>Union européenne — Paris</td></tr>
-<tr><td>Render</td><td>Hébergement de l'interface de programmation</td><td>Union européenne — Francfort</td></tr>
-<tr><td>Expo (EAS)</td><td>Distribution des mises à jour de l'application</td><td>Hors Union européenne</td></tr>
-<tr><td>Anthropic</td><td>Comparaison visuelle d'une annonce, uniquement si vous déclenchez cette fonction. Cette fonction est actuellement inactive en production.</td><td>Hors Union européenne</td></tr>
+<tr><td>Supabase</td><td data-label="Rôle">Base de données et stockage des photos</td><td data-label="Localisation">Union européenne — Paris</td></tr>
+<tr><td>Render</td><td data-label="Rôle">Hébergement de l'interface de programmation</td><td data-label="Localisation">Union européenne — Francfort</td></tr>
+<tr><td>Expo (EAS)</td><td data-label="Rôle">Distribution des mises à jour de l'application</td><td data-label="Localisation">Hors Union européenne</td></tr>
+<tr><td>Anthropic</td><td data-label="Rôle">Comparaison visuelle d'une annonce, uniquement si vous déclenchez cette fonction. Cette fonction est actuellement inactive en production.</td><td data-label="Localisation">Hors Union européenne</td></tr>
 </table></div>
 
 <p>La base de données, les photographies et l'interface de programmation sont donc hébergées <strong>au sein de l'Union européenne</strong>. Seules la distribution des mises à jour et, le cas échéant, la comparaison visuelle d'annonces font intervenir un prestataire situé hors de l'Union ; ces transferts sont encadrés par les garanties contractuelles de ces prestataires.</p>

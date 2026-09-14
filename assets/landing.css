@@ -16,9 +16,13 @@
 .lp-confetti span { position: absolute; left: 50%; top: 34%; border-radius: 2px; transform: translate(-50%,-50%); animation: bzConf var(--d) cubic-bezier(.2,.6,.3,1) forwards; }
 
 /* ---------- En-tête ---------- */
-.lp-top { position: fixed; top: 0; left: 0; right: 0; z-index: 300; display: flex; align-items: center; gap: 10px; padding: 13px 22px; background: linear-gradient(180deg, rgba(8,7,11,.78), transparent); }
+.lp-top { position: fixed; top: 0; left: 0; right: 0; z-index: 300; display: flex; align-items: center; gap: 10px; padding: 13px 22px; background: linear-gradient(180deg, rgba(8,7,11,.78), transparent); border-bottom: 1px solid transparent; transition: background-color .25s, border-color .25s; }
+/* Posé par landing.js dès qu'on quitte le haut de page. */
+.lp-top.is-scrolled { background: rgba(8,7,11,.86); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom-color: rgba(255,255,255,.06); }
 .lp-top-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 @media (max-width: 480px) { .lp-top { padding-inline: 16px; } }
+.lp-on-touch { display: none; }
+@media (pointer: coarse) { .lp-on-fine { display: none; } .lp-on-touch { display: inline; } }
 
 /* ---------- Commun ---------- */
 .lp-wrap { max-width: 1080px; margin: 0 auto; padding-inline: 24px; }
@@ -352,5 +356,53 @@
 
 @media (pointer: coarse) {
   .lp-opt { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
-  .lp-title-opt { min-height: 40px; }
+  .lp-title-opt { min-height: 44px; }
+  .lp-foot-nav a { min-height: 44px; }
+}
+
+/* ---------- Téléphone ----------
+   Le rythme d'une page d'ordinateur (110 px entre sections, six cartes hautes
+   empilées) donnait sur téléphone plus de douze écrans et de grands vides. */
+@media (max-width: 640px) {
+  .lp-top { min-height: 56px; padding: 6px 16px; }
+  .lp-top .bz-logo-boost, .lp-top .bz-logo-z { font-size: 19px; }
+  .lp-hero { min-height: 100svh; padding: 76px 16px 40px; }
+  .lp-baseline { font-size: 12.5px; letter-spacing: .18em; }
+  .lp-hero-facts { font-size: 13px; }
+  .lp-stage { margin-top: 24px; }
+  .lp-hint { font-size: 13px; padding: 11px 18px; }
+
+  .lp-section { padding: 64px 16px; }
+  .lp-sticky { padding-block: 52px; }
+  .lp-sticky.is-column { padding-block: 52px 28px; }
+  /* En vw sous 390 px : à 320 px, l'inclinaison du grand titre dépassait de 3 px. */
+  .lp-title { font-size: clamp(28px, 8.6vw, 34px); }
+  .lp-title.is-big { font-size: clamp(30px, 9.4vw, 38px); }
+  .lp-body { font-size: 16px; line-height: 1.65; }
+  .lp-body.is-small { font-size: 15px; }
+  .lp-body.is-center, .lp-center-head { padding-inline: 0; }
+  .lp-chips span { font-size: 12.5px; padding: 7px 12px; }
+
+  /* Les six usages : une liste qu'on parcourt du pouce, pas six cartes hautes. */
+  .lp-usages { grid-template-columns: 1fr; gap: 8px; margin-top: 22px; }
+  .lp-usage {
+    display: grid; grid-template-columns: 24px minmax(0, 1fr) 14px; column-gap: 14px; row-gap: 3px; align-items: center;
+    padding: 14px 14px 14px 16px; border-radius: 16px;
+  }
+  .lp-usage > svg { grid-row: 1 / span 2; align-self: start; margin-top: 2px; }
+  .lp-usage b { grid-column: 2; font-size: 15.5px; }
+  .lp-usage p { grid-column: 2; font-size: 14px; line-height: 1.45; }
+  .lp-usage > span { grid-column: 3; grid-row: 1 / span 2; font-size: 0; margin: 0; }
+  .lp-usage > span::after { content: '›'; font-size: 24px; line-height: 1; color: var(--text-muted); }
+  .lp-usage:hover { transform: none; }
+
+  .lp-marquee-track span { font-size: 13px; }
+  .lp-stores { flex-direction: column; }
+  .lp-store { justify-content: center; min-height: 52px; }
+
+  .lp-footer .lp-wrap { padding-inline: 16px; padding-block: 28px calc(36px + env(safe-area-inset-bottom)) !important; }
+  .lp-foot-copy { margin-left: 0; width: 100%; }
+  .lp-foot-nav { flex-direction: column; align-items: stretch; gap: 8px; }
+  .lp-foot-nav a { justify-content: center; min-height: 48px; font-size: 14px; border-radius: 14px; }
+  .lp-legal p { font-size: 13px; }
 }

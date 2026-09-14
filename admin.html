@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08070B">
 <title>Administration — boostZ</title>
 <!-- Jamais indexée. Publique au sens où GitHub Pages sert tout ce qu'il héberge,
      mais tout ce qu'on y voit vient de l'API, qui ne répond qu'à un compte admin.
@@ -35,6 +36,53 @@
   .adm-quote p { margin: 7px 0 0; font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
   .adm-quote.is-red { border-left: 3px solid var(--soft-red-border); background: var(--soft-red-fill); border-radius: 0 13px 13px 0; }
   .adm-thread { margin-top: 14px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+  .adm-kpi-value { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin-top: 3px; }
+  .adm-back {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px 8px 10px; margin: 0 0 4px -4px;
+    border: 0; border-radius: 12px; background: transparent; color: var(--text-accent); cursor: pointer;
+    font-family: var(--font-ui); font-weight: 700; font-size: 15px;
+  }
+  .adm-back span { font-size: 26px; line-height: 1; margin-top: -3px; }
+  .adm-back:hover { background: rgba(255,255,255,.05); }
+
+  /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement. */
+  @media (max-width: 860px) {
+    .adm-split { flex-direction: column; align-items: stretch; gap: 8px; }
+    .adm-list-card, .adm-detail { flex: none; width: 100%; }
+    .adm-list, .adm-thread { max-height: none; overflow: visible; }
+  }
+
+  @media (max-width: 640px) {
+    /* Les quatre chiffres clés en une rangée : ils prenaient 60 % du premier écran. */
+    .adm-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .adm-kpi { padding: 9px 8px; border-radius: 12px; text-align: center; }
+    .adm-kpi .bz-eyebrow { font-size: 10px; letter-spacing: .04em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .adm-kpi-value { font-size: 20px; margin-top: 1px; }
+    .bz-tabs[aria-label="Sections de la console"] { margin-top: 14px !important; }
+
+    /* Le retour d'une action : en bas, au-dessus du pouce, plutôt que sous l'en-tête. */
+    #toast { position: fixed; top: auto; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 70; margin: 0; }
+    #toast .bz-msg { box-shadow: 0 12px 32px rgba(0,0,0,.5); background-color: #1E1729; }
+
+    .adm-users-bar { gap: 8px; }
+    .adm-users-bar input[type="search"] { flex: 1 1 100% !important; min-width: 0 !important; }
+    .adm-users-bar .bz-filter-btn { flex: 1; justify-content: space-between; }
+    .adm-count { width: 100%; }
+
+    .adm-item { padding: 14px 16px; min-height: 64px; }
+    .adm-item b { font-size: 14.5px !important; }
+    .adm-item .bz-small { font-size: 13px; }
+    .adm-list-head { font-size: 13px; }
+    .adm-line { font-size: 14px; flex-direction: column; gap: 1px; }
+    .adm-line > span { width: auto; font-size: 12px; }
+    .adm-quote p { font-size: 15px; }
+    .adm-actions { display: grid !important; grid-template-columns: 1fr 1fr; }
+    .adm-actions .bz-btn { width: 100%; }
+    .adm-status { display: grid !important; grid-template-columns: 1fr 1fr; }
+    .adm-status:not(:has(.bz-tiny)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .adm-status .bz-tiny { grid-column: 1 / -1; }
+    .adm-status .bz-btn { width: 100%; }
+  }
 </style>
 </head>
 <body>

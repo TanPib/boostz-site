@@ -247,7 +247,7 @@ select.bz-input option { background: #1B1025; color: var(--text); }
 .bz-more:hover, .bz-more[aria-expanded="true"] { color: var(--text); border-color: var(--soft-violet-border); background: var(--soft-violet-fill); }
 .bz-more:focus-visible, .bz-menu-item:focus-visible { outline: 2px solid var(--brand-violet); outline-offset: 2px; }
 .bz-menu {
-  position: fixed; z-index: 50; width: min(260px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow-y: auto;
+  position: fixed; z-index: 460; width: min(260px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow-y: auto;
   padding: 6px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--surface-modal);
   box-shadow: 0 18px 40px rgba(0,0,0,.45); animation: bzFade .14s ease;
 }
@@ -294,11 +294,141 @@ select.bz-input option { background: #1B1025; color: var(--text); }
    Les petits boutons de la console et de l'en-tête (27 px) se ratent au doigt.
    Sur un écran tactile, toute cible passe à 40 px de haut au moins. */
 @media (pointer: coarse) {
-  .bz-btn, .bz-btn.is-sm, .bz-tab, .bz-top-link { min-height: 40px; }
-  .bz-btn.is-sm { padding-inline: 12px; }
+  .bz-btn, .bz-btn.is-sm, .bz-tab, .bz-top-link { min-height: 44px; }
+  .bz-btn.is-sm { padding-inline: 14px; }
   .bz-thumbs a { width: 96px; height: 96px; }
-  .bz-more { width: 42px; height: 42px; }
-  .bz-menu-item { min-height: 44px; justify-content: center; }
-  .bz-check { min-height: 44px; }
+  .bz-more { width: 44px; height: 44px; }
+  .bz-menu-item { min-height: 48px; justify-content: center; }
+  .bz-check { min-height: 48px; }
   .bz-check input { width: 20px; height: 20px; }
+  /* Un retour visible sous le doigt, sans le flash gris par défaut de WebKit. */
+  a, button, [role="button"], label, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .bz-btn:active:not(:disabled), .bz-tab:active, .bz-more:active, .bz-account-btn:active { transform: scale(.97); }
+  .bz-menu-item:active:not(:disabled), .bz-check:active, .adm-item:active, .tk-item:active { background: rgba(255,255,255,.08); }
+}
+
+/* ---------- Menu du compte (téléphone) ---------- */
+.bz-show-sm { display: none !important; }
+.bz-account-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-right: -6px;
+  padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; transition: transform .15s;
+}
+.bz-account-btn .bz-avatar { width: 34px; height: 34px; font-size: 14px; }
+.bz-account-btn[aria-expanded="true"] .bz-avatar { box-shadow: 0 0 0 3px rgba(139,61,255,.45); }
+.bz-avatar.is-lg { width: 42px; height: 42px; font-size: 17px; }
+.bz-menu-account { display: flex; align-items: center; gap: 12px; padding: 6px 10px 14px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.bz-menu-account b { display: block; font-family: var(--font-display); font-size: 15px; overflow-wrap: anywhere; }
+.bz-menu-account span > span { display: block; font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.bz-menu-account .bz-pill { margin-left: auto; }
+a.bz-menu-item { text-decoration: none; }
+.bz-menu-item[aria-current="page"] .bz-menu-label { color: var(--soft-violet-text); }
+.bz-menu-item.is-separated { margin-top: 6px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; }
+
+/* ---------- Panneau du bas (fenêtres sur téléphone) ---------- */
+/* Au-dessus de tout en-tête fixe, y compris celui de la landing (300). */
+.bz-scrim { position: fixed; inset: 0; z-index: 450; background: rgba(4,3,8,.62); animation: bzFadeIn .18s ease; }
+.bz-menu.is-sheet {
+  left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-height: min(82vh, 640px); max-height: min(82dvh, 640px);
+  padding: 8px max(10px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  border-radius: 22px 22px 0 0; border-width: 1px 0 0; box-shadow: 0 -18px 48px rgba(0,0,0,.5);
+  animation: bzSheetUp .24s cubic-bezier(.2,.8,.3,1);
+}
+/* La poignée : le signe qu'il s'agit d'un panneau posé sur la page. */
+.bz-menu.is-sheet::before { content: ''; display: block; width: 38px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.22); margin: 2px auto 10px; }
+.bz-menu.is-sheet .bz-menu-title { font-size: 12px; padding: 4px 12px 12px; white-space: normal; }
+.bz-menu.is-sheet .bz-menu-item { min-height: 52px; justify-content: center; padding: 10px 14px; font-size: 15px; border-radius: 12px; }
+.bz-menu.is-sheet .bz-menu-why { font-size: 13px; }
+.bz-menu.is-sheet .bz-check { min-height: 52px; padding: 10px 14px; font-size: 15px; border-radius: 12px; }
+.bz-menu.is-sheet .bz-check input { width: 22px; height: 22px; }
+.bz-menu.is-sheet .bz-check-count { font-size: 14px; }
+.bz-menu.is-sheet .bz-menu-foot .bz-btn { min-height: 48px; font-size: 13px; }
+.bz-sheet-close {
+  display: block; width: 100%; min-height: 50px; margin-top: 8px; border: 1px solid var(--line-strong); border-radius: 14px;
+  background: rgba(255,255,255,.05); color: var(--text); font-family: var(--font-ui); font-weight: 700; font-size: 15px; cursor: pointer;
+}
+@keyframes bzSheetUp { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes bzFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- Fiches (tableaux repliés sur téléphone) ---------- */
+.bz-cards { display: flex; flex-direction: column; }
+.bz-cardrow { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.bz-cardrow:last-child { border-bottom: 0; }
+.bz-cardrow.is-banned { background: rgba(255,107,107,.05); }
+.bz-cardrow.is-deleted { opacity: .6; }
+.bz-cardrow-head { display: flex; align-items: flex-start; gap: 12px; }
+.bz-cardrow-head .bz-avatar { width: 38px; height: 38px; font-size: 15px; }
+.bz-cardrow-name { flex: 1; min-width: 0; }
+.bz-cardrow-name b { display: block; font-family: var(--font-display); font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
+.bz-cardrow-name span { display: block; font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.bz-cardrow-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.bz-dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; margin: 12px 0 0; }
+.bz-dl > div { min-width: 0; }
+.bz-dl dt { font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.bz-dl dd { margin: 2px 0 0; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.bz-dl dd small { display: block; font-size: 12.5px; color: var(--text-disabled); }
+.bz-dl .is-full { grid-column: 1 / -1; }
+
+/* ---------- Téléphone ----------
+   Tout ce qui suit ne vaut que sous 640 px. Principes : une seule colonne, le
+   contenu d'abord, des cibles de 44 à 52 px, pas de défilement horizontal dans
+   la page, et des champs en 16 px pour qu'iOS ne zoome pas à chaque saisie. */
+@media (max-width: 640px) {
+  body { font-size: 16px; min-height: 100dvh; }
+  .bz-show-sm { display: inline-flex !important; }
+  .bz-hide-sm, .bz-top-label { display: none !important; }
+
+  .bz-top {
+    min-height: 56px; padding: 6px max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
+    padding-top: calc(6px + env(safe-area-inset-top));
+  }
+  .bz-top .bz-logo-boost, .bz-top .bz-logo-z { font-size: 19px; }
+
+  .bz-page { padding-inline: max(16px, env(safe-area-inset-left)); padding-block: 20px calc(48px + env(safe-area-inset-bottom)); }
+  .bz-h1 { font-size: 30px; }
+  .bz-lead { font-size: 15px; }
+  .bz-small { font-size: 13px; }
+  .bz-tiny { font-size: 12.5px; }
+  .bz-card { padding: 16px; border-radius: 18px; }
+
+  .bz-input { font-size: 16px; min-height: 48px; padding: 12px 14px; border-radius: 13px; }
+  textarea.bz-input { min-height: 120px; }
+  .bz-label { font-size: 12px; }
+  .bz-btn { min-height: 48px; font-size: 14px; padding: 12px 18px; border-radius: 13px; }
+  .bz-btn.is-sm { min-height: 44px; font-size: 13px; }
+  .bz-msg { font-size: 14px; }
+
+  /* Les actions d'un formulaire : pleine largeur, empilées, la principale en haut. */
+  .bz-actions { flex-direction: column; align-items: stretch; }
+  .bz-actions > .bz-btn { width: 100%; }
+
+  /* Onglets et filtres : une seule rangée qui défile, bord à bord. */
+  .bz-tabs {
+    flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+    margin-inline: -16px; padding: 2px 16px 4px; scroll-padding-inline: 16px;
+  }
+  .bz-tabs::-webkit-scrollbar { display: none; }
+  .bz-tab { flex: none; scroll-snap-align: start; min-height: 44px; font-size: 14px; padding: 10px 16px; border-radius: 13px; }
+
+  .bz-bubble { font-size: 15px; max-width: 90%; }
+  .bz-bubble-meta { font-size: 12px; }
+  .bz-system { font-size: 12px; }
+
+  /* Pied de page : des lignes qu'on touche sans viser. */
+  .bz-foot { flex-direction: column; align-items: stretch; gap: 0; margin-top: 28px; padding-top: 8px; }
+  .bz-foot a { display: flex; align-items: center; min-height: 48px; font-size: 15px; color: rgba(255,255,255,.72); border-bottom: 1px solid rgba(255,255,255,.06); }
+  .bz-foot a:hover { text-decoration: none; }
+  .bz-foot .push { margin-left: 0; border-bottom: 0; color: var(--text-accent); }
+
+  /* Boîtes de dialogue : panneau du bas, boutons empilés sous le pouce. */
+  .bz-dialog {
+    width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 22px 22px 0 0; border-width: 1px 0 0;
+    padding: 18px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    max-height: 92dvh; overflow-y: auto; animation: bzSheetUp .24s cubic-bezier(.2,.8,.3,1);
+  }
+  .bz-dialog form > .bz-row:last-child { flex-direction: column-reverse; align-items: stretch; }
+  .bz-dialog form > .bz-row:last-child .bz-btn { width: 100%; }
+
+  .bz-gate { padding: 56px 16px 80px; }
+  .bz-gate .bz-btn { width: 100%; }
+  .bz-thumbs a { width: 30%; max-width: 110px; height: auto; aspect-ratio: 1; }
 }

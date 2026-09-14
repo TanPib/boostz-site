@@ -5,7 +5,7 @@
 // grisées ne font qu'annoncer un refus certain, avec sa raison. Tout
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
-import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs } from './chrome.js';
+import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -58,6 +58,7 @@ const state = {
   reports: [], reportId: null,
   tickets: [], ticketCounts: { PENDING: 0, OPEN: 0, CLOSED: 0 }, ticketFilter: '', ticketId: null, ticket: null,
   actions: [],
+  pane: null,
   q: '', userKinds: new Set(['members', 'admins', 'supers', 'banned']),
   loaded: false
 };
@@ -69,13 +70,32 @@ const pill = (map, key) => {
 
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
-// Sur un écran étroit, le détail s'affiche sous la liste : sans ce défilement,
-// toucher une ligne semble ne rien faire.
+// Téléphone (640 px et moins) : des fiches au lieu des tableaux. Écran étroit
+// (860 px et moins) : la liste OU le détail d'un signalement ou d'un ticket,
+// jamais l'un sous l'autre. Posé sous la liste, le détail obligeait à redescendre
+// chercher ce qu'on venait de toucher, puis à remonter pour le suivant.
+const PHONE = window.matchMedia('(max-width: 640px)');
 const NARROW = window.matchMedia('(max-width: 860px)');
-function revealDetail() {
+let listScroll = 0;
+
+function openPane(pane) {
   if (!NARROW.matches) return;
-  const detail = host.querySelector('.adm-detail');
-  if (detail) detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!state.pane) listScroll = window.scrollY;
+  state.pane = pane;
+}
+
+// Après avoir ouvert un détail : on le montre depuis son haut, sous les onglets.
+function paneTop() {
+  if (!NARROW.matches || !state.pane) return;
+  const anchor = host.querySelector('.adm-back');
+  if (anchor) window.scrollTo({ top: Math.max(0, anchor.getBoundingClientRect().top + window.scrollY - 72), behavior: 'instant' });
+}
+
+function backButton(label) {
+  return el('button', {
+    class: 'adm-back', type: 'button',
+    onclick: () => { state.pane = null; render(); window.scrollTo({ top: listScroll, behavior: 'instant' }); }
+  }, el('span', { 'aria-hidden': 'true', text: '‹' }), label);
 }
 
 let host, topHost, toastHost, toastTimer;
@@ -298,25 +318,8 @@ function userMenuItems(u) {
   return items;
 }
 
-// LES FENÊTRES SURGISSANTES : le menu « … » d'une ligne et la liste des comptes
-// affichés.
-//
-// Attachées à <body> en position fixe, et non dans la ligne : le tableau défile
-// dans son propre conteneur (overflow), qui couperait une fenêtre posée à
-// l'intérieur. Une seule ouverte à la fois ; elle se ferme au clic dehors, sur
-// Échap, quand son bouton quitte l'écran et à chaque redessin de la console.
-let openMenu = null;
-
-function closeActionMenu(restoreFocus = false) {
-  if (!openMenu) return;
-  const { node, anchor, cleanup } = openMenu;
-  openMenu = null;
-  cleanup();
-  node.remove();
-  anchor.setAttribute('aria-expanded', 'false');
-  if (restoreFocus && anchor.isConnected) anchor.focus({ preventScroll: true });
-}
-
+// Le menu « … » d'une ligne. La fenêtre elle-même (placement, panneau sur
+// téléphone, clavier) est dans chrome.js, partagée avec le menu du compte.
 function openActionMenu(anchor, title, items) {
   const buttons = [];
   togglePopover(anchor, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': title },
@@ -328,7 +331,7 @@ function openActionMenu(anchor, title, items) {
           type: 'button',
           role: 'menuitem',
           disabled: !!it.why,
-          onclick: () => { closeActionMenu(); it.run(); }
+          onclick: () => { closePopover(); it.run(); }
         },
         el('span', { class: 'bz-menu-label', text: it.label }),
         it.why ? el('span', { class: 'bz-menu-why', text: it.why }) : null);
@@ -337,66 +340,6 @@ function openActionMenu(anchor, title, items) {
       })
       : el('p', { class: 'bz-menu-why', style: { padding: '6px 10px', margin: '0' }, text: 'Aucune action possible sur un compte supprimé.' })
   ));
-}
-
-// `focusables` : les éléments que les flèches parcourent, dans l'ordre. Rempli
-// par `build`, qui construit la fenêtre.
-function togglePopover(anchor, focusables, build) {
-  const wasOpenHere = openMenu && openMenu.anchor === anchor;
-  closeActionMenu();
-  if (wasOpenHere) return;
-
-  const menu = build();
-  const buttons = focusables;
-  document.body.append(menu);
-
-  // Sous le bouton, aligné à droite ; au-dessus s'il ne tient pas en dessous.
-  // Rejoué à chaque défilement : le menu suit son bouton, et ne se ferme que
-  // quand le bouton sort de l'écran. Fermer au moindre défilement le refermait
-  // aussitôt ouvert, dès qu'un focus ou un doigt faisait bouger la page.
-  const place = () => {
-    const r = anchor.getBoundingClientRect();
-    if (r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return false;
-    const m = menu.getBoundingClientRect();
-    const left = Math.max(8, Math.min(innerWidth - m.width - 8, r.right - m.width));
-    const below = r.bottom + 6;
-    const top = below + m.height > innerHeight - 8 ? Math.max(8, r.top - m.height - 6) : below;
-    menu.style.left = left + 'px';
-    menu.style.top = top + 'px';
-    return true;
-  };
-  place();
-
-  const onPointer = (e) => { if (!menu.contains(e.target) && !anchor.contains(e.target)) closeActionMenu(); };
-  const onKey = (e) => {
-    const enabled = buttons.filter((b) => !b.disabled);
-    const i = enabled.indexOf(document.activeElement);
-    if (e.key === 'Escape') { e.preventDefault(); closeActionMenu(true); }
-    else if (e.key === 'ArrowDown' && enabled.length) { e.preventDefault(); enabled[(i + 1) % enabled.length].focus(); }
-    else if (e.key === 'ArrowUp' && enabled.length) { e.preventDefault(); enabled[(i - 1 + enabled.length) % enabled.length].focus(); }
-    else if (e.key === 'Tab') closeActionMenu();
-  };
-  const onMove = (e) => {
-    if (e && e.type === 'scroll' && menu.contains(e.target)) return;
-    if (!place()) closeActionMenu();
-  };
-  document.addEventListener('pointerdown', onPointer, true);
-  document.addEventListener('keydown', onKey, true);
-  window.addEventListener('scroll', onMove, true);
-  window.addEventListener('resize', onMove);
-  openMenu = {
-    node: menu,
-    anchor,
-    cleanup: () => {
-      document.removeEventListener('pointerdown', onPointer, true);
-      document.removeEventListener('keydown', onKey, true);
-      window.removeEventListener('scroll', onMove, true);
-      window.removeEventListener('resize', onMove);
-    }
-  };
-  anchor.setAttribute('aria-expanded', 'true');
-  const first = buttons.find((b) => !b.disabled);
-  if (first) first.focus({ preventScroll: true });
 }
 
 function statusPills(u) {
@@ -445,41 +388,44 @@ function dotsIcon() {
   return svg;
 }
 
-const cell2 = (main, sub, attrs = {}) => el('td', attrs,
+// Une information du compte sur deux lignes : [principale, précision]. La même
+// paire remplit une cellule du tableau sur ordinateur et une fiche sur téléphone.
+const cell2 = ([main, sub], attrs = {}) => el('td', attrs,
   el('div', { style: { whiteSpace: 'nowrap' } }, main),
   sub ? el('div', { class: 'bz-tiny', style: { whiteSpace: 'nowrap', marginTop: '2px' } }, sub) : null
 );
+const dd2 = ([main, sub]) => el('dd', {}, main, sub ? el('small', {}, sub) : null);
 
-function ageCell(u) {
-  if (u.deleted) return cell2('—');
+function ageInfo(u) {
+  if (u.deleted) return ['—'];
   if (u.declared_age !== null && u.declared_age !== undefined) {
     const changed = u.current_age !== null && u.current_age !== u.declared_age;
-    return cell2(el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.declared_age + ' ans' }), changed ? u.current_age + ' ans aujourd’hui' : null);
+    return [el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.declared_age + ' ans' }), changed ? u.current_age + ' ans aujourd’hui' : null];
   }
   if (u.current_age !== null && u.current_age !== undefined) {
-    return cell2(el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.current_age + ' ans' }), 'âge actuel');
+    return [el('b', { style: { fontFamily: 'var(--font-ui)' }, text: u.current_age + ' ans' }), 'âge actuel'];
   }
-  return cell2(el('span', { class: 'bz-muted', text: 'Non déclaré' }));
+  return [el('span', { class: 'bz-muted', text: 'Non déclaré' })];
 }
 
-function declaredAtCell(u) {
-  if (u.deleted) return cell2('—');
+function declaredAtInfo(u) {
+  if (u.deleted) return ['—'];
   if (!u.birth_date_declared_at) {
-    return cell2(el('span', { class: 'bz-muted', text: u.current_age !== null && u.current_age !== undefined ? 'Non enregistrée' : '—' }));
+    return [el('span', { class: 'bz-muted', text: u.current_age !== null && u.current_age !== undefined ? 'Non enregistrée' : '—' })];
   }
   if (u.birth_date_declared_estimated) {
-    return cell2(
+    return [
       el('span', { title: 'Estimée d’après la fin de l’onboarding : la date exacte n’était pas enregistrée avant le 14 septembre 2026.', text: '≈ ' + dateTimeShort(u.birth_date_declared_at) }),
       'estimée'
-    );
+    ];
   }
-  return cell2(el('span', { text: dateTimeShort(u.birth_date_declared_at) }));
+  return [el('span', { text: dateTimeShort(u.birth_date_declared_at) })];
 }
 
-function lastSeenCell(u) {
-  if (u.deleted) return cell2('—');
-  if (!u.last_app_seen_at) return cell2(el('span', { class: 'bz-muted', text: 'Aucune' }), 'depuis le 14 sept. 2026');
-  return cell2(el('span', { text: dateTimeShort(u.last_app_seen_at) }), sinceFr(u.last_app_seen_at));
+function lastSeenInfo(u) {
+  if (u.deleted) return ['—'];
+  if (!u.last_app_seen_at) return [el('span', { class: 'bz-muted', text: 'Aucune' }), 'depuis le 14 sept. 2026'];
+  return [el('span', { text: dateTimeShort(u.last_app_seen_at) }), sinceFr(u.last_app_seen_at)];
 }
 
 // ---------- Onglet Utilisateurs ----------
@@ -566,8 +512,10 @@ function renderUsers() {
   const filter = el('button', { class: 'bz-input bz-filter-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Choisir les comptes affichés' }, filterLabel, caretIcon());
   filter.addEventListener('click', () => openKindsList(filter, update));
 
-  const count = el('span', { class: 'bz-small bz-muted', style: { whiteSpace: 'nowrap' } });
+  const count = el('span', { class: 'bz-small bz-muted adm-count', style: { whiteSpace: 'nowrap' } });
   const tbody = el('tbody');
+  const cards = el('div', { class: 'bz-cards' });
+  const phone = PHONE.matches;
   const empty = el('p', { class: 'bz-small bz-muted', style: { padding: '20px 16px', margin: '0', textAlign: 'center' } });
 
   // Redessine les lignes, le compteur et le libellé du bouton, sans toucher au
@@ -580,17 +528,20 @@ function renderUsers() {
     const hidden = matching.length - shown.length;
     filterLabel.textContent = kindsLabel(state.userKinds);
     count.textContent = shown.length + (shown.length > 1 ? ' comptes' : ' compte') + (hidden ? ' · ' + hidden + (hidden > 1 ? ' masqués' : ' masqué') : '');
-    put(clear(tbody), shown.map(userRow));
+    if (phone) put(clear(cards), shown.map(userCard));
+    else put(clear(tbody), shown.map(userRow));
     empty.hidden = shown.length > 0;
     empty.textContent = state.userKinds.size ? 'Aucun compte ne correspond.' : 'Aucune catégorie cochée.';
   }
   update();
 
   return el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden', marginTop: '16px' } },
-    el('div', { class: 'bz-row', style: { padding: '14px 16px', borderBottom: '1px solid var(--line)' } },
+    el('div', { class: 'bz-row adm-users-bar', style: { padding: '14px 16px', borderBottom: '1px solid var(--line)' } },
       search, filter, count
     ),
-    el('div', { class: 'bz-table-wrap' },
+    // Téléphone : des fiches. Un tableau de neuf colonnes cachait le statut et le
+    // bouton « … » derrière un défilement horizontal.
+    phone ? cards : el('div', { class: 'bz-table-wrap' },
       el('table', { class: 'bz-table is-compact', style: { minWidth: '1040px' } },
         el('thead', {}, el('tr', {},
           el('th', { text: 'Membre' }), el('th', { text: 'Inscription' }),
@@ -605,7 +556,7 @@ function renderUsers() {
   );
 }
 
-function userRow(u) {
+function moreButton(u) {
   const name = u.pseudo || u.email || 'ce compte';
   const more = el('button', {
     class: 'bz-more',
@@ -616,6 +567,34 @@ function userRow(u) {
     title: 'Actions'
   }, dotsIcon());
   more.addEventListener('click', () => openActionMenu(more, name, userMenuItems(u)));
+  return more;
+}
+
+function userCard(u) {
+  const received = el('span', { style: { fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'inherit' }, text: u.reports_received + ' reçu' + (u.reports_received > 1 ? 's' : '') });
+  return el('article', { class: 'bz-cardrow' + (u.deleted ? ' is-deleted' : (u.banned_at ? ' is-banned' : '')) },
+    el('div', { class: 'bz-cardrow-head' },
+      el('span', { class: 'bz-avatar', 'aria-hidden': 'true', text: initialOf(u) }),
+      el('div', { class: 'bz-cardrow-name' },
+        el('b', { text: u.pseudo || '—' }),
+        el('span', { text: u.email }),
+        el('div', { class: 'bz-cardrow-pills' }, statusPills(u))
+      ),
+      u.deleted ? null : moreButton(u)
+    ),
+    el('dl', { class: 'bz-dl' },
+      el('div', {}, el('dt', { text: 'Âge déclaré' }), dd2(ageInfo(u))),
+      el('div', {}, el('dt', { text: 'Déclaré le' }), dd2(declaredAtInfo(u))),
+      el('div', {}, el('dt', { text: 'Dernière utilisation' }), dd2(lastSeenInfo(u))),
+      el('div', {}, el('dt', { text: 'Inscription' }), dd2([dateShort(u.created_date)])),
+      el('div', { class: 'is-full' }, el('dt', { text: 'Signalements' }), dd2([el('span', {}, received, ' · ' + u.reports_sent + ' émis')])),
+      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif du bannissement' }), dd2([u.banned_reason])) : null
+    )
+  );
+}
+
+function userRow(u) {
+  const more = moreButton(u);
   return el('tr', { class: u.deleted ? 'is-deleted' : (u.banned_at ? 'is-banned' : '') },
     el('td', {},
       el('div', { class: 'bz-row', style: { gap: '9px', flexWrap: 'nowrap' } },
@@ -626,10 +605,10 @@ function userRow(u) {
         )
       )
     ),
-    cell2(el('span', { class: 'bz-muted', text: dateShort(u.created_date) })),
-    ageCell(u),
-    declaredAtCell(u),
-    lastSeenCell(u),
+    cell2([el('span', { class: 'bz-muted', text: dateShort(u.created_date) })]),
+    cell2(ageInfo(u)),
+    cell2(declaredAtInfo(u)),
+    cell2(lastSeenInfo(u)),
     el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
     el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
     el('td', {}, el('div', { class: 'bz-row', style: { gap: '5px' } }, statusPills(u)), u.banned_reason && !u.deleted ? el('div', { class: 'bz-tiny', title: u.banned_reason, style: { marginTop: '4px', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, text: 'Motif : ' + u.banned_reason }) : null),
@@ -639,11 +618,14 @@ function userRow(u) {
 
 // ---------- Onglet Signalements ----------
 function renderReports() {
+  const narrow = NARROW.matches;
+  const showList = !narrow || state.pane !== 'report';
+  const showDetail = !narrow || state.pane === 'report';
   const list = el('div', { class: 'adm-list' });
   for (const r of state.reports) {
     list.append(el('button', {
       class: 'adm-item', type: 'button', 'aria-current': r.id === state.reportId ? 'true' : 'false',
-      onclick: () => { state.reportId = r.id; render(); revealDetail(); }
+      onclick: () => { state.reportId = r.id; openPane('report'); render(); paneTop(); }
     },
     el('div', { class: 'bz-row', style: { gap: '8px' } },
       el('b', { style: { fontFamily: 'var(--font-ui)', fontSize: '12.5px' }, text: REASONS[r.reason] || r.reason }),
@@ -694,11 +676,11 @@ function renderReports() {
         el('p', { text: r.content })
       ) : null,
       r.content_deleted ? el('p', { class: 'bz-small bz-muted', style: { margin: '10px 0 0' }, text: 'Le contenu signalé a été supprimé depuis.' }) : null,
-      el('div', { class: 'bz-row', style: { marginTop: '16px', gap: '7px' } },
+      el('div', { class: 'bz-row adm-actions', style: { marginTop: '16px', gap: '7px' } },
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Avertir', disabled: !!cannotAct || !target, title: cannotAct || '', onclick: () => target && userActs.warn(target, r.id) }),
         el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) })
       ),
-      el('div', { class: 'bz-row', style: { marginTop: '10px', gap: '6px' } },
+      el('div', { class: 'bz-row adm-status', style: { marginTop: '10px', gap: '6px' } },
         el('span', { class: 'bz-tiny', text: 'Statut :' }),
         statusBtn('INVESTIGATING', 'En cours', 'violet'),
         statusBtn('RESOLVED', 'Traité', 'green'),
@@ -709,20 +691,23 @@ function renderReports() {
   }
 
   return el('div', { class: 'adm-split' },
-    el('section', { class: 'bz-card adm-list-card' },
+    showList ? el('section', { class: 'bz-card adm-list-card' },
       el('div', { class: 'adm-list-head', text: 'Signalements · ' + state.reports.length }),
       list
-    ),
-    detail
+    ) : null,
+    showDetail && narrow ? backButton('Tous les signalements') : null,
+    showDetail ? detail : null
   );
 }
 
 // ---------- Onglet Support ----------
 async function openTicket(id) {
-  const changed = state.ticketId !== id;
+  const opening = state.pane !== 'ticket' || state.ticketId !== id;
   state.ticketId = id;
   state.ticket = null;
+  openPane('ticket');
   render();
+  if (opening) paneTop();
   try {
     // Ouvrir, c'est prendre en charge : le serveur passe le ticket en cours et
     // l'écrit dans le fil du membre.
@@ -733,10 +718,12 @@ async function openTicket(id) {
     toast(e.message, 'err');
   }
   render();
-  if (changed) revealDetail();
 }
 
 function renderSupport() {
+  const narrow = NARROW.matches;
+  const showList = !narrow || state.pane !== 'ticket';
+  const showDetail = !narrow || state.pane === 'ticket';
   const filterBtn = (value, label, count) => el('button', {
     class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(state.ticketFilter === value),
     onclick: async () => {
@@ -786,7 +773,7 @@ function renderSupport() {
       render();
       toast('Ticket ' + shortId(t.id) + ' : ' + TICKET_STATUS[status][0].toLowerCase() + '.');
     });
-    const statusRow = el('div', { class: 'bz-row', style: { gap: '6px', marginTop: '10px' } },
+    const statusRow = el('div', { class: 'bz-row adm-status', style: { gap: '6px', marginTop: '10px' } },
       ...['PENDING', 'OPEN', 'CLOSED'].map((s) => el('button', {
         class: 'bz-btn is-sm' + (t.status === s ? ' is-violet' : ''), type: 'button', text: TICKET_STATUS[s][0],
         disabled: t.status === s, onclick: () => setStatus(s)
@@ -835,17 +822,18 @@ function renderSupport() {
         ctxText ? el('p', { class: 'bz-tiny', text: ctxText }) : null
       ),
       thread,
-      el('div', { class: 'bz-stack', style: { gap: '8px', marginTop: '12px' } }, reply, el('div', {}, send))
+      el('div', { class: 'bz-stack', style: { gap: '8px', marginTop: '12px' } }, reply, el('div', { class: 'bz-row bz-actions' }, send))
     );
   }
 
   return el('div', {},
-    filters,
+    showList ? filters : null,
     el('div', { class: 'adm-split', style: { marginTop: '12px' } },
-      el('section', { class: 'bz-card adm-list-card' },
+      showList ? el('section', { class: 'bz-card adm-list-card' },
         el('div', { class: 'adm-list-head', text: 'Tickets · ' + state.tickets.length }),
-        list),
-      detail
+        list) : null,
+      showDetail && narrow ? backButton('Tous les tickets') : null,
+      showDetail ? detail : null
     )
   );
 }
@@ -865,8 +853,26 @@ function detailText(a) {
   }
 }
 
+function journalCard(a) {
+  const detail = detailText(a);
+  return el('article', { class: 'bz-cardrow' },
+    el('div', { class: 'bz-cardrow-head' },
+      el('div', { class: 'bz-cardrow-name' },
+        el('b', { text: ACTIONS[a.action] || a.action }),
+        el('span', { text: dateTime(a.created_date) })
+      )
+    ),
+    el('dl', { class: 'bz-dl' },
+      el('div', {}, el('dt', { text: 'Auteur' }), dd2([a.actor.pseudo || '—'])),
+      el('div', {}, el('dt', { text: 'Compte visé' }), dd2([a.target ? (a.target.pseudo || a.target.email || '—') : '—'])),
+      a.reason ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif' }), dd2([a.reason])) : null,
+      detail ? el('div', { class: 'is-full' }, el('dt', { text: 'Détail' }), dd2([detail])) : null
+    )
+  );
+}
+
 function renderJournal() {
-  const rows = state.actions.map((a) => el('tr', {},
+  const rows = PHONE.matches ? [] : state.actions.map((a) => el('tr', {},
     el('td', { class: 'bz-muted', style: { whiteSpace: 'nowrap' }, text: dateTime(a.created_date) }),
     el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: a.actor.pseudo || '—' })),
     el('td', { text: ACTIONS[a.action] || a.action }),
@@ -876,7 +882,7 @@ function renderJournal() {
   ));
   return el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden', marginTop: '16px' } },
     el('div', { class: 'adm-list-head', text: 'Journal des actions · 200 dernières' }),
-    el('div', { class: 'bz-table-wrap' },
+    PHONE.matches ? el('div', { class: 'bz-cards' }, state.actions.map(journalCard)) : el('div', { class: 'bz-table-wrap' },
       el('table', { class: 'bz-table' },
         el('thead', {}, el('tr', {}, el('th', { text: 'Date' }), el('th', { text: 'Auteur' }), el('th', { text: 'Action' }), el('th', { text: 'Compte visé' }), el('th', { text: 'Motif' }), el('th', { text: 'Détail' }))),
         el('tbody', {}, rows)
@@ -891,19 +897,21 @@ function renderHeader() {
   renderTop(topHost, { label: 'ADMINISTRATION', next: 'admin', adminLabel: true });
 }
 
-function kpi(label, value, color) {
-  return el('div', { class: 'bz-card is-tight' },
-    el('span', { class: 'bz-eyebrow', text: label }),
-    el('div', { style: { fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '22px', marginTop: '3px', color: color || 'var(--text)' }, text: String(value) })
+// `short` : le libellé des chiffres clés sur téléphone, où ils tiennent en une
+// rangée au lieu de manger le premier écran.
+function kpi(label, short, value, color) {
+  return el('div', { class: 'bz-card is-tight adm-kpi' },
+    el('span', { class: 'bz-eyebrow' }, el('span', { class: 'bz-hide-sm', text: label }), el('span', { class: 'bz-show-sm', text: short })),
+    el('div', { class: 'adm-kpi-value', style: { color: color || 'var(--text)' }, text: String(value) })
   );
 }
 
 function render() {
   if (!state.loaded) return;
-  closeActionMenu();
+  closePopover();
   const tab = (id, label, count) => el('button', {
     class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(state.tab === id),
-    onclick: () => { state.tab = id; render(); }
+    onclick: () => { state.tab = id; state.pane = null; render(); }
   }, label, count ? el('span', { class: 'bz-count', text: String(count) }) : null);
 
   const openReports = state.reports.filter((r) => r.status === 'OPEN').length;
@@ -918,10 +926,10 @@ function render() {
   const scrollY = window.scrollY;
   put(clear(host),
     el('div', { class: 'bz-grid adm-kpis' },
-      kpi('Comptes', state.users.filter((u) => !u.deleted).length),
-      kpi('Signalements ouverts', openReports, openReports ? 'var(--text-danger)' : null),
-      kpi('Tickets à traiter', openTickets, openTickets ? 'var(--soft-violet-text)' : null),
-      kpi('Comptes bannis', banned)
+      kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length),
+      kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null),
+      kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null),
+      kpi('Comptes bannis', 'Bannis', banned)
     ),
     el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginTop: '22px' } },
       tab('users', 'Utilisateurs'),
@@ -939,7 +947,8 @@ function render() {
       el('a', { href: 'index.html', class: 'push', text: '← Retour au site' })
     )
   );
-  window.scrollTo(0, scrollY);
+  // Sans animation : html défile en douceur, et le redessin repartait du haut.
+  window.scrollTo({ top: scrollY, behavior: 'instant' });
 }
 
 export async function start() {
@@ -972,4 +981,7 @@ export async function start() {
   await loadAll();
   clearTimeout(wake);
   clear(toastHost);
+  // Tourner le téléphone ou redimensionner la fenêtre change la mise en page.
+  PHONE.addEventListener('change', () => render());
+  NARROW.addEventListener('change', () => { state.pane = null; render(); });
 }

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08070B">
 <title>Supprimer son compte — boostZ</title>
 <meta name="description" content="Comment supprimer votre compte boostZ, ce qui est effacé et ce qui est conservé.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -21,6 +22,23 @@
   .doc td:first-child { color: var(--text); font-weight: 600; width: 38%; }
   .todo { color: var(--amber); font-weight: 600; }
   .confirm-word { font-family: var(--font-ui); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; max-width: 220px; }
+
+  /* Téléphone : chaque ligne du tableau devient une fiche, libellé au-dessus. */
+  @media (max-width: 640px) {
+    .doc p, .doc li { font-size: 15.5px; }
+    .doc h2 { font-size: 19px; }
+    .doc .bz-table-wrap { overflow: visible; }
+    .doc table { min-width: 0; font-size: 15px; }
+    .doc table, .doc tbody, .doc tr, .doc td { display: block; width: auto; }
+    .doc thead { display: none; }
+    .doc tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .doc td { padding: 0; border: 0; }
+    .doc td:first-child { width: auto; font-size: 15.5px; }
+    .doc td + td { margin-top: 6px; }
+    .doc td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 2px; }
+    .confirm-word { max-width: none; }
+    #action .bz-btn { width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -65,10 +83,10 @@
       <table>
         <thead><tr><th>Conservé</th><th>Motif</th></tr></thead>
         <tbody>
-          <tr><td>Échanges passés et leurs messages</td><td>L'autre collectionneur conserve un intérêt légitime à garder la trace d'un échange auquel il a participé</td></tr>
-          <tr><td>Notations que vous avez laissées</td><td>Elles décrivent la réputation d'une autre personne, pas la vôtre</td></tr>
-          <tr><td>Signalements</td><td>Nécessaires à la modération. Supprimer son compte ne doit pas effacer les signalements déposés à son encontre</td></tr>
-          <tr><td>Publications de forum</td><td>Ce sont des conversations publiques auxquelles d'autres ont répondu</td></tr>
+          <tr><td>Échanges passés et leurs messages</td><td data-label="Motif">L'autre collectionneur conserve un intérêt légitime à garder la trace d'un échange auquel il a participé</td></tr>
+          <tr><td>Notations que vous avez laissées</td><td data-label="Motif">Elles décrivent la réputation d'une autre personne, pas la vôtre</td></tr>
+          <tr><td>Signalements</td><td data-label="Motif">Nécessaires à la modération. Supprimer son compte ne doit pas effacer les signalements déposés à son encontre</td></tr>
+          <tr><td>Publications de forum</td><td data-label="Motif">Ce sont des conversations publiques auxquelles d'autres ont répondu</td></tr>
         </tbody>
       </table>
     </div>
@@ -113,7 +131,7 @@ function stepPassword(user) {
   const form = el('form', { class: 'bz-stack', style: { gap: '12px', marginTop: '14px' }, novalidate: true },
     el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', for: 'pwd', text: 'Confirme ton mot de passe' }), password),
     msg,
-    el('div', {}, go)
+    el('div', { class: 'bz-row bz-actions' }, go)
   );
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -172,7 +190,7 @@ function stepConfirm(user) {
     title('Dernière confirmation'),
     el('p', { id: 'word-help', class: 'bz-small bz-muted', style: { margin: '8px 0 0' } },
       'Saisis ', el('b', { style: { color: 'var(--text)' }, text: WORD }), ' pour supprimer le compte ', el('b', { style: { color: 'var(--text)' }, text: user.pseudo || user.email }), '.'),
-    el('div', { class: 'bz-row', style: { marginTop: '14px' } }, word, confirm, cancel),
+    el('div', { class: 'bz-row bz-actions', style: { marginTop: '14px' } }, word, confirm, cancel),
     msg
   );
   word.focus();
