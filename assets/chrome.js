@@ -6,6 +6,17 @@
 // page d'un administrateur.
 import { session, clearSession, isVerifiedAdmin } from './api.js';
 
+// Safari iOS zoome sur la page dès qu'on touche un champ écrit en moins de
+// 16 px. maximum-scale=1 supprime ce zoom automatique, et iOS laisse quand même
+// zoomer au pincement : il ignore cette valeur pour le geste. Réservé à iOS,
+// parce qu'Android, lui, bloquerait vraiment le pincement. Les champs peuvent
+// ainsi garder la taille de ceux de l'app (14 px) au lieu de 16.
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (IOS) {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta && !/maximum-scale/.test(meta.content)) meta.content += ', maximum-scale=1';
+}
+
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attrs || {})) {

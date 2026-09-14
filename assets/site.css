@@ -291,144 +291,158 @@ select.bz-input option { background: #1B1025; color: var(--text); }
 .bz-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* ---------- Écrans tactiles ----------
-   Les petits boutons de la console et de l'en-tête (27 px) se ratent au doigt.
-   Sur un écran tactile, toute cible passe à 40 px de haut au moins. */
+   Les commandes gardent leur taille visuelle ; c'est leur zone de toucher qui
+   s'étend au-delà du dessin (::after), comme le hitSlop des boutons de l'app.
+   Gonfler les boutons eux-mêmes à 44 px rendait l'interface pataude. */
 @media (pointer: coarse) {
-  .bz-btn, .bz-btn.is-sm, .bz-tab, .bz-top-link { min-height: 44px; }
-  .bz-btn.is-sm { padding-inline: 14px; }
-  .bz-thumbs a { width: 96px; height: 96px; }
-  .bz-more { width: 44px; height: 44px; }
-  .bz-menu-item { min-height: 48px; justify-content: center; }
-  .bz-check { min-height: 48px; }
-  .bz-check input { width: 20px; height: 20px; }
-  /* Un retour visible sous le doigt, sans le flash gris par défaut de WebKit. */
+  .bz-btn.is-sm, .bz-more, .bz-tab, .bz-top-link, .bz-account-btn, .bz-filter-btn, .adm-back, .tk-back { position: relative; }
+  .bz-btn.is-sm::after, .bz-more::after, .bz-tab::after, .bz-top-link::after, .bz-account-btn::after, .adm-back::after, .tk-back::after {
+    content: ''; position: absolute; inset: -6px -4px;
+  }
+  .bz-check input { width: 18px; height: 18px; }
   a, button, [role="button"], label, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-  .bz-btn:active:not(:disabled), .bz-tab:active, .bz-more:active, .bz-account-btn:active { transform: scale(.97); }
-  .bz-menu-item:active:not(:disabled), .bz-check:active, .adm-item:active, .tk-item:active { background: rgba(255,255,255,.08); }
+  .bz-btn:active:not(:disabled), .bz-tab:active, .bz-more:active { opacity: .7; }
+  .bz-menu-item:active:not(:disabled), .bz-check:active, .adm-item:active, .tk-item:active, .bz-cardrow:active { background: rgba(255,255,255,.06); }
 }
 
 /* ---------- Menu du compte (téléphone) ---------- */
 .bz-show-sm { display: none !important; }
 .bz-account-btn {
-  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-right: -6px;
-  padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; transition: transform .15s;
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+  padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer;
 }
-.bz-account-btn .bz-avatar { width: 34px; height: 34px; font-size: 14px; }
+.bz-account-btn .bz-avatar { width: 30px; height: 30px; font-size: 12.5px; }
 .bz-account-btn[aria-expanded="true"] .bz-avatar { box-shadow: 0 0 0 3px rgba(139,61,255,.45); }
-.bz-avatar.is-lg { width: 42px; height: 42px; font-size: 17px; }
-.bz-menu-account { display: flex; align-items: center; gap: 12px; padding: 6px 10px 14px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
-.bz-menu-account b { display: block; font-family: var(--font-display); font-size: 15px; overflow-wrap: anywhere; }
-.bz-menu-account span > span { display: block; font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.bz-avatar.is-lg { width: 36px; height: 36px; font-size: 14px; }
+.bz-menu-account { display: flex; align-items: center; gap: 10px; padding: 2px 8px 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.bz-menu-account b { display: block; font-family: var(--font-display); font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
+.bz-menu-account span > span { display: block; font-size: 12px; color: var(--text-muted); overflow-wrap: anywhere; }
 .bz-menu-account .bz-pill { margin-left: auto; }
 a.bz-menu-item { text-decoration: none; }
 .bz-menu-item[aria-current="page"] .bz-menu-label { color: var(--soft-violet-text); }
-.bz-menu-item.is-separated { margin-top: 6px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; }
+.bz-menu-item.is-separated { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; }
 
-/* ---------- Panneau du bas (fenêtres sur téléphone) ---------- */
+/* ---------- Panneau du bas (fenêtres sur téléphone) ----------
+   Gabarit des feuilles de l'app : coins de 24, poignée 36 × 4, titre en
+   Poppins 16, lignes de 44, « Fermer » en simple lien. */
 /* Au-dessus de tout en-tête fixe, y compris celui de la landing (300). */
-.bz-scrim { position: fixed; inset: 0; z-index: 450; background: rgba(4,3,8,.62); animation: bzFadeIn .18s ease; }
+.bz-scrim { position: fixed; inset: 0; z-index: 450; background: rgba(10,6,16,.55); animation: bzFadeIn .18s ease; }
 .bz-menu.is-sheet {
-  left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-height: min(82vh, 640px); max-height: min(82dvh, 640px);
-  padding: 8px max(10px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
-  border-radius: 22px 22px 0 0; border-width: 1px 0 0; box-shadow: 0 -18px 48px rgba(0,0,0,.5);
-  animation: bzSheetUp .24s cubic-bezier(.2,.8,.3,1);
+  left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-height: min(80vh, 600px); max-height: min(80dvh, 600px);
+  padding: 0 max(12px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  border-radius: 24px 24px 0 0; border-width: 1px 0 0; box-shadow: 0 -12px 36px rgba(0,0,0,.45);
+  animation: bzSheetUp .22s cubic-bezier(.2,.8,.3,1);
 }
-/* La poignée : le signe qu'il s'agit d'un panneau posé sur la page. */
-.bz-menu.is-sheet::before { content: ''; display: block; width: 38px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.22); margin: 2px auto 10px; }
-.bz-menu.is-sheet .bz-menu-title { font-size: 12px; padding: 4px 12px 12px; white-space: normal; }
-.bz-menu.is-sheet .bz-menu-item { min-height: 52px; justify-content: center; padding: 10px 14px; font-size: 15px; border-radius: 12px; }
-.bz-menu.is-sheet .bz-menu-why { font-size: 13px; }
-.bz-menu.is-sheet .bz-check { min-height: 52px; padding: 10px 14px; font-size: 15px; border-radius: 12px; }
-.bz-menu.is-sheet .bz-check input { width: 22px; height: 22px; }
-.bz-menu.is-sheet .bz-check-count { font-size: 14px; }
-.bz-menu.is-sheet .bz-menu-foot .bz-btn { min-height: 48px; font-size: 13px; }
+.bz-menu.is-sheet::before { content: ''; display: block; width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.2); margin: 10px auto 12px; }
+.bz-menu.is-sheet .bz-menu-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--text); text-align: center; border: 0; padding: 0 8px 10px; white-space: normal; }
+.bz-menu.is-sheet .bz-menu-item { min-height: 44px; justify-content: center; padding: 9px 12px; font-size: 14px; border-radius: 12px; }
+.bz-menu.is-sheet .bz-menu-why { font-size: 12px; }
+.bz-menu.is-sheet .bz-check { min-height: 44px; padding: 8px 12px; font-size: 14px; border-radius: 12px; }
+.bz-menu.is-sheet .bz-check-count { font-size: 12.5px; }
+.bz-menu.is-sheet .bz-menu-foot { padding: 10px 0 0; }
 .bz-sheet-close {
-  display: block; width: 100%; min-height: 50px; margin-top: 8px; border: 1px solid var(--line-strong); border-radius: 14px;
-  background: rgba(255,255,255,.05); color: var(--text); font-family: var(--font-ui); font-weight: 700; font-size: 15px; cursor: pointer;
+  display: block; width: 100%; height: 40px; margin-top: 4px; border: 0; background: transparent;
+  color: var(--text-muted); font-family: var(--font-ui); font-weight: 700; font-size: 13px; cursor: pointer;
 }
 @keyframes bzSheetUp { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes bzFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ---------- Fiches (tableaux repliés sur téléphone) ---------- */
+/* ---------- Fiches (tableaux repliés sur téléphone) ----------
+   Gabarit des lignes de l'app : padding 12 / 14, titre 13,5, sous-titre 11,5. */
 .bz-cards { display: flex; flex-direction: column; }
-.bz-cardrow { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.bz-cardrow { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
 .bz-cardrow:last-child { border-bottom: 0; }
 .bz-cardrow.is-banned { background: rgba(255,107,107,.05); }
 .bz-cardrow.is-deleted { opacity: .6; }
-.bz-cardrow-head { display: flex; align-items: flex-start; gap: 12px; }
-.bz-cardrow-head .bz-avatar { width: 38px; height: 38px; font-size: 15px; }
+.bz-cardrow-head { display: flex; align-items: flex-start; gap: 10px; }
+.bz-cardrow-head .bz-avatar { width: 30px; height: 30px; font-size: 12.5px; margin-top: 1px; }
 .bz-cardrow-name { flex: 1; min-width: 0; }
-.bz-cardrow-name b { display: block; font-family: var(--font-display); font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
-.bz-cardrow-name span { display: block; font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
-.bz-cardrow-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.bz-dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; margin: 12px 0 0; }
+.bz-cardrow-name b { display: block; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.bz-cardrow-name span { display: block; font-size: 11.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+.bz-cardrow-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.bz-dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; margin: 10px 0 0 40px; }
 .bz-dl > div { min-width: 0; }
-.bz-dl dt { font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
-.bz-dl dd { margin: 2px 0 0; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
-.bz-dl dd small { display: block; font-size: 12.5px; color: var(--text-disabled); }
+.bz-dl dt { font-family: var(--font-ui); font-weight: 700; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-disabled); }
+.bz-dl dd { margin: 1px 0 0; font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.bz-dl dd small { display: block; font-size: 11px; color: var(--text-disabled); }
 .bz-dl .is-full { grid-column: 1 / -1; }
+.bz-cardrow-head:not(:has(.bz-avatar)) + .bz-dl { margin-left: 0; }
 
 /* ---------- Téléphone ----------
-   Tout ce qui suit ne vaut que sous 640 px. Principes : une seule colonne, le
-   contenu d'abord, des cibles de 44 à 52 px, pas de défilement horizontal dans
-   la page, et des champs en 16 px pour qu'iOS ne zoome pas à chaque saisie. */
+   Sous 640 px, le site reprend les gabarits de l'application boostZ : gouttière
+   de 16, titres d'écran en Poppins 20, texte en 13,5, libellés en 11 majuscules,
+   champs de 42 en 14, boutons de 38 (44 pour l'action d'un formulaire), lignes de
+   liste compactes. Le zoom d'iOS sur les champs de moins de 16 px est coupé dans
+   chrome.js, iOS seulement. */
 @media (max-width: 640px) {
-  body { font-size: 16px; min-height: 100dvh; }
+  body { font-size: 13.5px; min-height: 100dvh; }
   .bz-show-sm { display: inline-flex !important; }
   .bz-hide-sm, .bz-top-label { display: none !important; }
 
-  .bz-top {
-    min-height: 56px; padding: 6px max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
-    padding-top: calc(6px + env(safe-area-inset-top));
-  }
-  .bz-top .bz-logo-boost, .bz-top .bz-logo-z { font-size: 19px; }
+  .bz-top { min-height: 52px; padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); padding-top: calc(8px + env(safe-area-inset-top)); }
+  .bz-top .bz-btn.is-primary.is-sm { font-size: 12px; padding: 7px 12px; letter-spacing: .02em; }
 
-  .bz-page { padding-inline: max(16px, env(safe-area-inset-left)); padding-block: 20px calc(48px + env(safe-area-inset-bottom)); }
-  .bz-h1 { font-size: 30px; }
-  .bz-lead { font-size: 15px; }
-  .bz-small { font-size: 13px; }
-  .bz-tiny { font-size: 12.5px; }
-  .bz-card { padding: 16px; border-radius: 18px; }
+  .bz-page { padding-inline: max(16px, env(safe-area-inset-left)); padding-block: 16px calc(36px + env(safe-area-inset-bottom)); }
+  .bz-h1 { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.25; transform: none; }
+  .bz-h2 { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+  .bz-h3 { font-size: 14.5px; }
+  .bz-lead { font-size: 13px; line-height: 1.5; margin-top: 6px; }
+  .bz-eyebrow { font-size: 10.5px; letter-spacing: .1em; }
+  .bz-small { font-size: 12px; }
+  .bz-tiny { font-size: 11px; }
+  .bz-card { padding: 14px; border-radius: 16px; }
+  .bz-card.is-tight { padding: 11px 12px; border-radius: 13px; }
+  .bz-grid { gap: 8px; }
+  .bz-stack { gap: 10px; }
 
-  .bz-input { font-size: 16px; min-height: 48px; padding: 12px 14px; border-radius: 13px; }
-  textarea.bz-input { min-height: 120px; }
-  .bz-label { font-size: 12px; }
-  .bz-btn { min-height: 48px; font-size: 14px; padding: 12px 18px; border-radius: 13px; }
-  .bz-btn.is-sm { min-height: 44px; font-size: 13px; }
-  .bz-msg { font-size: 14px; }
+  .bz-field { gap: 6px; }
+  .bz-label { font-size: 11px; letter-spacing: .06em; }
+  .bz-input { font-size: 14px; line-height: 1.35; padding: 10px 12px; min-height: 42px; border-radius: 12px; border-width: 1px; }
+  textarea.bz-input { min-height: 92px; }
+  .bz-btn { font-size: 12.5px; padding: 9px 14px; border-radius: 11px; border-width: 1px; }
+  .bz-btn.is-sm { font-size: 12px; padding: 6px 11px; }
+  .bz-pill { font-size: 10px; padding: 2px 7px; letter-spacing: .06em; }
+  .bz-msg { font-size: 12.5px; padding: 10px 12px; border-radius: 12px; }
 
-  /* Les actions d'un formulaire : pleine largeur, empilées, la principale en haut. */
-  .bz-actions { flex-direction: column; align-items: stretch; }
-  .bz-actions > .bz-btn { width: 100%; }
+  /* L'action d'un formulaire : pleine largeur et 44 px, comme les CTA de l'app ;
+     le texte d'accompagnement passe dessous. */
+  .bz-actions { flex-direction: column; align-items: stretch; gap: 8px; }
+  .bz-actions > .bz-btn { width: 100%; min-height: 44px; font-size: 13px; border-radius: 14px; }
 
-  /* Onglets et filtres : une seule rangée qui défile, bord à bord. */
-  .bz-tabs {
-    flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
-    margin-inline: -16px; padding: 2px 16px 4px; scroll-padding-inline: 16px;
-  }
+  /* Onglets et filtres : des puces sur une rangée qui défile, bord à bord. */
+  .bz-tabs { flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px; scroll-padding-inline: 16px; }
   .bz-tabs::-webkit-scrollbar { display: none; }
-  .bz-tab { flex: none; scroll-snap-align: start; min-height: 44px; font-size: 14px; padding: 10px 16px; border-radius: 13px; }
+  .bz-tab { flex: none; font-size: 12.5px; padding: 7px 13px; border-radius: 999px; }
+  .bz-tab .bz-count { margin-left: 4px; }
 
-  .bz-bubble { font-size: 15px; max-width: 90%; }
-  .bz-bubble-meta { font-size: 12px; }
-  .bz-system { font-size: 12px; }
+  .bz-bubble { font-size: 13px; line-height: 1.45; padding: 9px 12px; max-width: 84%; }
+  .bz-bubble-meta { font-size: 10.5px; }
+  .bz-system { font-size: 10.5px; padding: 4px 11px; }
+  .bz-thumbs a { width: 68px; height: 68px; border-radius: 9px; }
 
-  /* Pied de page : des lignes qu'on touche sans viser. */
-  .bz-foot { flex-direction: column; align-items: stretch; gap: 0; margin-top: 28px; padding-top: 8px; }
-  .bz-foot a { display: flex; align-items: center; min-height: 48px; font-size: 15px; color: rgba(255,255,255,.72); border-bottom: 1px solid rgba(255,255,255,.06); }
-  .bz-foot a:hover { text-decoration: none; }
-  .bz-foot .push { margin-left: 0; border-bottom: 0; color: var(--text-accent); }
+  /* Pied de page : une rangée de liens discrets, comme les liens légaux de l'app. */
+  .bz-foot { gap: 4px 16px; margin-top: 24px; padding-top: 12px; }
+  .bz-foot a { font-size: 12px; padding: 6px 0; color: rgba(255,255,255,.5); }
+  .bz-foot .push { margin-left: 0; }
 
-  /* Boîtes de dialogue : panneau du bas, boutons empilés sous le pouce. */
+  /* Boîtes de dialogue : feuille du bas, action principale puis « Annuler » en lien. */
   .bz-dialog {
-    width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 22px 22px 0 0; border-width: 1px 0 0;
-    padding: 18px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-    max-height: 92dvh; overflow-y: auto; animation: bzSheetUp .24s cubic-bezier(.2,.8,.3,1);
+    width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 24px 24px 0 0; border-width: 1px 0 0;
+    padding: 18px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    max-height: 90dvh; overflow-y: auto; animation: bzSheetUp .22s cubic-bezier(.2,.8,.3,1);
   }
-  .bz-dialog form > .bz-row:last-child { flex-direction: column-reverse; align-items: stretch; }
-  .bz-dialog form > .bz-row:last-child .bz-btn { width: 100%; }
+  .bz-dialog h2 { font-size: 16px !important; text-align: center; }
+  .bz-dialog form > p { text-align: center; font-size: 12.5px !important; }
+  .bz-dialog form > .bz-row:last-child { flex-direction: column-reverse; align-items: stretch; gap: 2px; }
+  .bz-dialog form > .bz-row:last-child .bz-btn { width: 100%; min-height: 44px; font-size: 13px; border-radius: 14px; }
+  .bz-dialog form > .bz-row:last-child .bz-btn:first-child { min-height: 38px; border-color: transparent; background: transparent; color: var(--text-muted); }
 
-  .bz-gate { padding: 56px 16px 80px; }
-  .bz-gate .bz-btn { width: 100%; }
-  .bz-thumbs a { width: 30%; max-width: 110px; height: auto; aspect-ratio: 1; }
+  .bz-gate { padding: 48px 16px 64px; }
+  .bz-gate h1 { font-family: var(--font-display); font-weight: 700; font-size: 20px; margin-top: 16px; }
+  .bz-gate-icon { width: 48px; height: 48px; border-radius: 15px; }
+  .bz-gate .bz-btn { padding: 11px 22px !important; font-size: 13px !important; }
+
+  .bz-more { width: 30px; height: 30px; border-radius: 9px; }
+  .bz-more svg { width: 16px; height: 16px; }
+  .bz-filter-btn { font-size: 13px; }
 }

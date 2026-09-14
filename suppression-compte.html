@@ -25,17 +25,17 @@
 
   /* Téléphone : chaque ligne du tableau devient une fiche, libellé au-dessus. */
   @media (max-width: 640px) {
-    .doc p, .doc li { font-size: 15.5px; }
-    .doc h2 { font-size: 19px; }
+    .doc p, .doc li { font-size: 13.5px; line-height: 1.6; }
+    .doc h2 { font-size: 15.5px; margin: 24px 0 6px; }
     .doc .bz-table-wrap { overflow: visible; }
-    .doc table { min-width: 0; font-size: 15px; }
+    .doc table { min-width: 0; font-size: 13px; }
     .doc table, .doc tbody, .doc tr, .doc td { display: block; width: auto; }
     .doc thead { display: none; }
-    .doc tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .doc tr { padding: 10px 0; border-bottom: 1px solid var(--line); }
     .doc td { padding: 0; border: 0; }
-    .doc td:first-child { width: auto; font-size: 15.5px; }
-    .doc td + td { margin-top: 6px; }
-    .doc td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 2px; }
+    .doc td:first-child { width: auto; font-size: 13.5px; }
+    .doc td + td { margin-top: 5px; }
+    .doc td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-ui); font-weight: 700; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 2px; }
     .confirm-word { max-width: none; }
     #action .bz-btn { width: 100%; }
   }

@@ -364,45 +364,50 @@
    Le rythme d'une page d'ordinateur (110 px entre sections, six cartes hautes
    empilées) donnait sur téléphone plus de douze écrans et de grands vides. */
 @media (max-width: 640px) {
-  .lp-top { min-height: 56px; padding: 6px 16px; }
-  .lp-top .bz-logo-boost, .lp-top .bz-logo-z { font-size: 19px; }
-  .lp-hero { min-height: 100svh; padding: 76px 16px 40px; }
-  .lp-baseline { font-size: 12.5px; letter-spacing: .18em; }
-  .lp-hero-facts { font-size: 13px; }
-  .lp-stage { margin-top: 24px; }
-  .lp-hint { font-size: 13px; padding: 11px 18px; }
+  .lp-top { min-height: 52px; padding: 8px 16px; }
+  .lp-hero { min-height: 100svh; padding: 68px 16px 32px; }
+  .lp-baseline { font-size: 11.5px; letter-spacing: .16em; }
+  .lp-hero-facts { font-size: 12px; }
+  .lp-stage { margin-top: 18px; }
+  .lp-hint { font-size: 12px; padding: 8px 14px; margin-top: 18px; }
 
-  .lp-section { padding: 64px 16px; }
-  .lp-sticky { padding-block: 52px; }
-  .lp-sticky.is-column { padding-block: 52px 28px; }
-  /* En vw sous 390 px : à 320 px, l'inclinaison du grand titre dépassait de 3 px. */
-  .lp-title { font-size: clamp(28px, 8.6vw, 34px); }
-  .lp-title.is-big { font-size: clamp(30px, 9.4vw, 38px); }
-  .lp-body { font-size: 16px; line-height: 1.65; }
-  .lp-body.is-small { font-size: 15px; }
+  .lp-section { padding: 48px 16px; }
+  .lp-sticky { padding-block: 44px; }
+  .lp-sticky.is-column { padding-block: 44px 24px; }
+  .lp-kicker { font-size: 10.5px; }
+  /* En vw sous 390 px : à 320 px, l'inclinaison du grand titre dépassait. */
+  .lp-title { font-size: clamp(25px, 7.4vw, 29px); margin-top: 10px; }
+  .lp-title.is-big { font-size: clamp(27px, 8vw, 32px); }
+  .lp-body { font-size: 14px; line-height: 1.6; margin-top: 14px; }
+  .lp-body.is-small { font-size: 13px; }
   .lp-body.is-center, .lp-center-head { padding-inline: 0; }
-  .lp-chips span { font-size: 12.5px; padding: 7px 12px; }
+  .lp-chips { gap: 6px; margin-top: 14px; }
+  .lp-chips span { font-size: 11px; padding: 5px 10px; }
 
-  /* Les six usages : une liste qu'on parcourt du pouce, pas six cartes hautes. */
-  .lp-usages { grid-template-columns: 1fr; gap: 8px; margin-top: 22px; }
+  /* Les six usages : des lignes de liste, comme dans l'app. */
+  .lp-usages { grid-template-columns: 1fr; gap: 6px; margin-top: 18px; }
   .lp-usage {
-    display: grid; grid-template-columns: 24px minmax(0, 1fr) 14px; column-gap: 14px; row-gap: 3px; align-items: center;
-    padding: 14px 14px 14px 16px; border-radius: 16px;
+    display: grid; grid-template-columns: 20px minmax(0, 1fr) 10px; column-gap: 12px; row-gap: 2px; align-items: center;
+    padding: 11px 12px 11px 14px; border-radius: 14px;
   }
-  .lp-usage > svg { grid-row: 1 / span 2; align-self: start; margin-top: 2px; }
-  .lp-usage b { grid-column: 2; font-size: 15.5px; }
-  .lp-usage p { grid-column: 2; font-size: 14px; line-height: 1.45; }
+  .lp-usage > svg { grid-row: 1 / span 2; align-self: start; margin-top: 1px; width: 19px; height: 19px; }
+  .lp-usage b { grid-column: 2; font-family: var(--font-ui); font-size: 13.5px; }
+  .lp-usage p { grid-column: 2; font-size: 12px; line-height: 1.4; }
   .lp-usage > span { grid-column: 3; grid-row: 1 / span 2; font-size: 0; margin: 0; }
-  .lp-usage > span::after { content: '›'; font-size: 24px; line-height: 1; color: var(--text-muted); }
+  .lp-usage > span::after { content: '›'; font-size: 18px; line-height: 1; color: var(--text-muted); }
   .lp-usage:hover { transform: none; }
 
-  .lp-marquee-track span { font-size: 13px; }
-  .lp-stores { flex-direction: column; }
-  .lp-store { justify-content: center; min-height: 52px; }
+  .lp-marquee { padding: 9px 0; }
+  .lp-marquee-track span { font-size: 12px; padding-right: 24px; }
+  .lp-stores { gap: 8px; }
+  .lp-store { padding: 8px 14px; border-radius: 12px; border-width: 1px; }
 
-  .lp-footer .lp-wrap { padding-inline: 16px; padding-block: 28px calc(36px + env(safe-area-inset-bottom)) !important; }
+  .lp-footer .lp-wrap { padding-inline: 16px; padding-block: 24px calc(28px + env(safe-area-inset-bottom)) !important; }
+  .lp-foot-base, .lp-foot-copy { font-size: 11.5px; }
   .lp-foot-copy { margin-left: 0; width: 100%; }
-  .lp-foot-nav { flex-direction: column; align-items: stretch; gap: 8px; }
-  .lp-foot-nav a { justify-content: center; min-height: 48px; font-size: 14px; border-radius: 14px; }
-  .lp-legal p { font-size: 13px; }
+  .lp-foot-nav { gap: 6px; margin-top: 16px; padding-top: 14px; }
+  .lp-foot-nav a { font-size: 11.5px; padding: 6px 12px; }
+  .lp-legal { gap: 10px; margin-top: 16px; }
+  .lp-legal p { font-size: 11px; line-height: 1.6; }
+}  .lp-legal p { font-size: 13px; }
 }
