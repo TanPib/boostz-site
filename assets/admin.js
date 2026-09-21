@@ -93,6 +93,10 @@ const state = {
   users: [], adminCount: 0, superCount: 0,
   reports: [], reportId: null,
   tickets: [], ticketCounts: { PENDING: 0, OPEN: 0, CLOSED: 0 }, ticketFilter: '', ticketId: null, ticket: null,
+  // Vue « Idées » : chargée avec le reste pour le badge de l'onglet, puis à
+  // chaque changement de filtre. `absent` : l'API ne connaît pas encore la
+  // route (404). `seq` écarte une réponse dépassée, comme pour l'agent.
+  ideas: { list: null, counts: {}, unread: 0, statuses: [], topics: [], status: '', topic: '', selId: null, sel: null, loading: false, error: null, absent: false, seq: 0 },
   actions: [],
   pane: null,
   // Vue « Agent » : chargée à la première ouverture de l'onglet, puis à chaque
@@ -114,13 +118,14 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', agent: 'Agent', journal: 'Journal', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', ideas: 'Idées', agent: 'Agent', journal: 'Journal', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
   users: 'M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM20 20v-1.3a3.2 3.2 0 0 0-2.4-3.1M15.5 4.7a3.4 3.4 0 0 1 0 6.6',
   reports: 'M5 21V4M5 4h11.5l-2 4 2 4H5',
   support: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4V5.5Z',
+  ideas: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z',
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
   caret: 'M6 9l6 6 6-6',
@@ -301,7 +306,7 @@ async function loadActions() {
 }
 
 async function loadAll() {
-  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions()]);
+  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas()]);
   const failed = results.find((r) => r.status === 'rejected');
   state.loaded = true;
   if (failed) {
@@ -1135,6 +1140,203 @@ function renderTicketChat(t) {
   );
 }
 
+// ---------- Onglet Idées ----------
+// Les idées envoyées depuis « Proposer une idée », sur l'écran Support de l'app
+// (21/09/2026). Pas de conversation : un statut, que le membre suit sous son
+// idée, et un mot de l'équipe qu'il y lit. Les libellés des statuts et des
+// zones viennent de l'API - le membre lit les mêmes - ; la console n'y ajoute
+// que la couleur.
+const IDEA_TONES = {
+  NEW: 'bz-pill is-amber',
+  REVIEWING: 'bz-pill is-violet',
+  PLANNED: 'bz-pill is-violet',
+  SHIPPED: 'bz-pill is-green',
+  DECLINED: 'bz-pill is-grey'
+};
+const ideaPill = (x) => el('span', { class: IDEA_TONES[x.status] || 'bz-pill is-grey', text: x.status_label || x.status });
+
+// Ne lève jamais : un échec reste dans `error`, que l'onglet affiche avec un
+// bouton pour réessayer. Chargée avec tout le reste pour le badge, une panne
+// des idées ne doit pas coûter à la console son bandeau d'erreur général.
+async function loadIdeas() {
+  const d = state.ideas;
+  const seq = ++d.seq;
+  d.loading = true;
+  const q = [d.status && 'status=' + encodeURIComponent(d.status), d.topic && 'topic=' + encodeURIComponent(d.topic)].filter(Boolean).join('&');
+  try {
+    const data = await call('/admin/suggestions' + (q ? '?' + q : ''));
+    if (seq !== d.seq) return;
+    d.list = data.suggestions || [];
+    d.counts = data.counts || {};
+    d.unread = data.unread || 0;
+    d.statuses = data.statuses || [];
+    d.topics = data.topics || [];
+    d.absent = false;
+    d.error = null;
+  } catch (e) {
+    if (seq !== d.seq) return;
+    // Une API plus ancienne que la console : l'onglet le dit calmement, comme
+    // la vue Revenus, au lieu d'afficher une panne.
+    if (e.status === 404) {
+      d.absent = true;
+      d.list = [];
+    } else {
+      d.error = e.message;
+    }
+  } finally {
+    if (seq === d.seq) d.loading = false;
+  }
+}
+
+async function openIdea(id) {
+  const d = state.ideas;
+  const opening = state.pane !== 'idea' || d.selId !== id;
+  d.selId = id;
+  d.sel = null;
+  openPane('idea');
+  render();
+  if (opening) paneTop();
+  try {
+    // L'ouvrir la marque lue pour la console, et seulement pour elle : son
+    // statut ne bouge pas, contrairement à un ticket qu'on prend en charge.
+    const { suggestion } = await call(`/admin/suggestions/${id}`);
+    d.sel = suggestion;
+    await loadIdeas();
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+  render();
+}
+
+// Un statut ou un mot de l'équipe. Le serveur rallume le « nouveau » du membre,
+// et rend l'idée telle quelle quand rien ne change (un double clic).
+const patchIdea = (x, body, message) => run(async () => {
+  const { suggestion } = await call(`/admin/suggestions/${x.id}`, { method: 'PATCH', body });
+  state.ideas.sel = suggestion;
+  await loadIdeas();
+  render();
+  toast(message(suggestion));
+});
+
+function renderIdeas() {
+  const d = state.ideas;
+  const narrow = NARROW.matches;
+  const phone = PHONE.matches;
+  const refresh = () => loadIdeas().then(() => { if (state.tab === 'ideas') render(); });
+  if (d.list === null && !d.loading && !d.error) refresh();
+
+  if (d.absent) {
+    return el('section', { class: 'bz-card adm-agent-empty', style: { marginTop: '16px' } },
+      el('span', { class: 'adm-agent-empty-icon' }, icon('ideas', 22)),
+      el('b', { text: 'Idées : pas encore branché côté serveur' }),
+      el('p', { class: 'bz-small bz-muted', text: 'Ce serveur ne connaît pas encore /admin/suggestions. Les idées des membres apparaîtront ici dès que l’API qui les reçoit sera en ligne.' })
+    );
+  }
+  if (d.error && !d.list) {
+    return el('div', { class: 'bz-msg is-err', role: 'alert', style: { marginTop: '16px' } },
+      el('span', { text: 'Idées indisponibles : ' + d.error + ' ' }),
+      el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Réessayer', onclick: () => { d.error = null; render(); } }));
+  }
+  if (!d.list) return el('div', { class: 'bz-skeleton', style: { height: '140px', marginTop: '16px' } });
+
+  const showList = !narrow || state.pane !== 'idea';
+  const showDetail = !narrow || state.pane === 'idea';
+
+  // Le statut en onglets, avec les totaux globaux que rend l'API ; la zone en
+  // liste, parce que huit onglets de plus ne tiendraient sur aucun écran.
+  const filterBtn = (key, label, count) => el('button', {
+    class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(d.status === key),
+    onclick: () => { if (d.status === key) return; d.status = key; render(); refresh(); }
+  }, label, count ? el('span', { class: 'bz-count', text: String(count) }) : null);
+  const total = Object.values(d.counts).reduce((n, c) => n + c, 0);
+  const filters = el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Filtrer les idées', style: { marginTop: '16px' } },
+    filterBtn('', 'Toutes', total),
+    d.statuses.map((s) => filterBtn(s.key, s.label, d.counts[s.key] || 0)));
+  const zone = el('select', { class: 'bz-input', 'aria-label': 'Filtrer par zone', style: { maxWidth: '320px', marginTop: '10px' } },
+    el('option', { value: '', text: 'Toutes les zones' }),
+    d.topics.map((t) => el('option', { value: t.key, text: t.label, selected: d.topic === t.key })));
+  zone.addEventListener('change', () => { d.topic = zone.value; refresh(); });
+
+  const list = el('div', { class: 'adm-list' });
+  for (const x of d.list) {
+    list.append(el('button', {
+      class: 'adm-item', type: 'button', 'aria-current': x.id === d.selId ? 'true' : 'false',
+      onclick: () => openIdea(x.id)
+    },
+    el('div', { class: 'bz-row', style: { gap: '8px', flexWrap: 'nowrap' } },
+      x.has_unread ? el('span', { class: 'bz-dot', title: 'Jamais ouverte' }) : null,
+      el('b', { style: { fontFamily: 'var(--font-ui)', fontSize: '12.5px', flex: '1', minWidth: '0', overflowWrap: 'anywhere' }, text: x.title }),
+      ideaPill(x)
+    ),
+    el('div', { class: 'bz-small bz-muted', style: { marginTop: '5px' } },
+      el('span', { text: (x.user.pseudo || x.user.email || '—') + (x.user.deleted ? ' (supprimé)' : '') + ' · ' + x.topic_label + ' · ' + x.age })
+    )));
+  }
+  if (!d.list.length) {
+    list.append(el('p', { class: 'bz-small bz-muted', style: { padding: '16px', margin: '0' },
+      text: d.status || d.topic ? 'Aucune idée dans ce filtre.' : 'Aucune idée pour l’instant. Elles arriveront ici depuis « Proposer une idée », sur l’écran Support de l’app.' }));
+  }
+
+  const x = d.sel;
+  const detail = el('div', { class: 'bz-card adm-detail' });
+  if (!d.selId) {
+    detail.append(el('p', { class: 'bz-small bz-muted', style: { margin: '0' }, text: 'Sélectionne une idée pour la lire et la classer. L’ouvrir ne change pas son statut.' }));
+  } else if (!x) {
+    detail.append(el('div', { class: 'bz-skeleton', style: { height: '140px' } }));
+  } else {
+    const statusRow = el('div', { class: 'bz-row adm-status', style: { gap: '6px', marginTop: '10px' } },
+      el('span', { class: 'bz-tiny', text: 'Statut :' }),
+      d.statuses.map((s) => el('button', {
+        class: 'bz-btn is-sm' + (x.status === s.key ? ' is-violet' : ''), type: 'button', text: s.label,
+        disabled: x.status === s.key,
+        onclick: () => patchIdea(x, { status: s.key }, (y) => 'Idée ' + shortId(y.id) + ' : ' + String(y.status_label).toLowerCase() + '.')
+      })));
+    const ctx = x.context || {};
+    const ctxText = [ctx.app_version && 'app ' + ctx.app_version, ctx.platform, ctx.os_version && 'OS ' + ctx.os_version, ctx.update_id && 'OTA ' + String(ctx.update_id).slice(0, 8)].filter(Boolean).join(' · ');
+    // Le mot est lu par le membre sous son idée : court (500 au plus, borné
+    // aussi par le serveur), et vide pour l'effacer.
+    const note = el('textarea', { id: 'idea-note', class: 'bz-input', rows: '3', maxlength: '500', placeholder: 'Ex. : Prévu pour la prochaine version, merci !' });
+    note.value = x.team_note || '';
+    const save = el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Enregistrer le mot' });
+    save.addEventListener('click', () => patchIdea(x, { team_note: note.value.trim() }, (y) => (y.team_note ? 'Mot de l’équipe enregistré.' : 'Mot de l’équipe effacé.')));
+
+    put(detail,
+      phone ? null : el('div', { class: 'bz-row' },
+        el('b', { style: { fontFamily: 'var(--font-display)', fontSize: '15px', flex: '1', minWidth: '0', overflowWrap: 'anywhere' }, text: x.title }),
+        ideaPill(x)),
+      el('div', { class: 'bz-small bz-muted', style: { marginTop: '4px' } },
+        el('span', { text: [(x.user.pseudo || '—') + (x.user.deleted ? ' (compte supprimé)' : ''), x.user.email, x.topic_label, dateTime(x.created_date)].filter(Boolean).join(' · ') })),
+      statusRow,
+      el('div', { class: 'adm-quote' },
+        el('span', { class: 'bz-eyebrow', text: 'Ce que ça lui apporterait' }),
+        el('p', { class: x.details ? null : 'bz-muted', text: x.details || 'Pas de précision : l’idée tient dans son titre.' }),
+        thumbs(x.images),
+        ctxText ? el('p', { class: 'bz-tiny', text: ctxText }) : null
+      ),
+      el('div', { class: 'bz-field', style: { marginTop: '14px' } },
+        el('label', { class: 'bz-label', for: 'idea-note', text: 'Mot de l’équipe · visible par le membre' }),
+        note),
+      el('div', { class: 'bz-row bz-actions', style: { marginTop: '8px', gap: '10px' } },
+        save,
+        el('span', { class: 'bz-tiny', text: 'Le membre le lit sous son idée, avec un point « nouveau ». Vide, il est effacé.' }))
+    );
+  }
+
+  return el('div', {},
+    showList ? filters : null,
+    showList ? zone : null,
+    el('div', { class: 'adm-split', style: { marginTop: '12px' } },
+      showList ? el('section', { class: 'bz-card adm-list-card' },
+        el('div', { class: 'adm-list-head', text: 'Idées · ' + d.list.length + (d.loading ? ' · mise à jour…' : '') }),
+        list) : null,
+      showDetail && narrow ? (phone && x
+        ? paneHead('Toutes les idées', x.title, (x.user.pseudo || x.user.email || '—') + ' · ' + x.topic_label, ideaPill(x))
+        : backButton('Toutes les idées')) : null,
+      showDetail ? detail : null
+    )
+  );
+}
+
 // ---------- Analyse automatique ----------
 const agentPill = (map, key) => {
   const [label, cls] = map[key] || [key || '—', 'bz-pill is-grey'];
@@ -1443,9 +1645,10 @@ function goTo(tab) {
 }
 
 // Téléphone : la navigation de la console, collée en bas, comme celle de l'app.
-// Cinq entrées au plus : Agent et Journal passent sous « Plus », qui les
-// ouvre en panneau et reste allumé quand l'une des deux est affichée.
-const MORE_TABS = ['agent', 'journal'];
+// Cinq entrées au plus : Idées, Agent et Journal passent sous « Plus », qui
+// les ouvre en panneau et reste allumé quand l'une des trois est affichée. Le
+// badge des idées jamais ouvertes remonte sur « Plus », faute de place à elles.
+const MORE_TABS = ['ideas', 'agent', 'journal'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1453,13 +1656,13 @@ function bottomNav(openReports, pending) {
   },
   el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
   el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
-  const more = item('more', 0, () => {
+  const more = item('more', state.ideas.unread, () => {
     const buttons = [];
     togglePopover(more, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': 'Autres sections' },
       el('div', { class: 'bz-menu-title', text: 'Autres sections' }),
       MORE_TABS.map((id) => {
         const b = el('button', { class: 'bz-menu-item adm-more-item', type: 'button', role: 'menuitem', 'aria-current': state.tab === id ? 'page' : null, onclick: () => { closePopover(); goTo(id); } },
-          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] })));
+          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') })));
         buttons.push(b);
         return b;
       })
@@ -1497,6 +1700,7 @@ function render() {
   const panel = state.tab === 'users' ? renderUsers()
     : state.tab === 'reports' ? renderReports()
       : state.tab === 'support' ? renderSupport()
+        : state.tab === 'ideas' ? renderIdeas()
         : state.tab === 'agent' ? renderAgent()
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
           : renderJournal();
@@ -1506,7 +1710,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1517,6 +1721,7 @@ function render() {
       tab('revenue', 'Revenus'),
       tab('reports', 'Signalements', openReports),
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
+      tab('ideas', 'Idées', state.ideas.unread),
       tab('agent', 'Agent'),
       tab('journal', 'Journal')
     ),

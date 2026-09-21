@@ -201,9 +201,12 @@
   .adm-more-item .bz-menu-label { display: inline-flex; align-items: center; gap: 10px; }
   .adm-more-item[aria-current="page"] .bz-menu-label { color: var(--soft-violet-text); }
 
-  /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement. */
+  /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement.
+     nowrap : en colonne, une ligne flex qui peut revenir à la ligne prend la
+     largeur de son plus long enfant - le titre d'une idée, en nowrap dans
+     l'en-tête du détail, élargissait toute la page au-delà de l'écran. */
   @media (max-width: 860px) {
-    .adm-split { flex-direction: column; align-items: stretch; gap: 8px; }
+    .adm-split { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
     .adm-list-card, .adm-detail { flex: none; width: 100%; }
     .adm-list, .adm-thread { max-height: none; overflow: visible; }
   }
