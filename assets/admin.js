@@ -7,6 +7,7 @@
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
 import { renderRevenue, passSummary, hasPassData } from './revenue.js';
+import { loadData, renderData, dataRedCount } from './data.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -118,7 +119,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', ideas: 'Idées', agent: 'Agent', journal: 'Journal', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -128,6 +129,7 @@ const ICONS = {
   ideas: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z',
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
+  data: 'M3 12h4l3-8 4 16 3-8h4',
   caret: 'M6 9l6 6 6-6',
   filter: 'M4 6h16M7 12h10M10 18h4',
   send: 'M5 12h13M13 6l6 6-6 6',
@@ -306,7 +308,7 @@ async function loadActions() {
 }
 
 async function loadAll() {
-  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas()]);
+  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData()]);
   const failed = results.find((r) => r.status === 'rejected');
   state.loaded = true;
   if (failed) {
@@ -1645,10 +1647,11 @@ function goTo(tab) {
 }
 
 // Téléphone : la navigation de la console, collée en bas, comme celle de l'app.
-// Cinq entrées au plus : Idées, Agent et Journal passent sous « Plus », qui
-// les ouvre en panneau et reste allumé quand l'une des trois est affichée. Le
-// badge des idées jamais ouvertes remonte sur « Plus », faute de place à elles.
-const MORE_TABS = ['ideas', 'agent', 'journal'];
+// Cinq entrées au plus : Idées, Agent, Journal et Data passent sous « Plus »,
+// qui les ouvre en panneau et reste allumé quand l'une des quatre est affichée.
+// Les badges des idées jamais ouvertes et des points rouges de Data remontent
+// sur « Plus », faute de place à eux.
+const MORE_TABS = ['ideas', 'agent', 'journal', 'data'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1656,13 +1659,13 @@ function bottomNav(openReports, pending) {
   },
   el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
   el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
-  const more = item('more', state.ideas.unread, () => {
+  const more = item('more', state.ideas.unread + dataRedCount(), () => {
     const buttons = [];
     togglePopover(more, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': 'Autres sections' },
       el('div', { class: 'bz-menu-title', text: 'Autres sections' }),
       MORE_TABS.map((id) => {
         const b = el('button', { class: 'bz-menu-item adm-more-item', type: 'button', role: 'menuitem', 'aria-current': state.tab === id ? 'page' : null, onclick: () => { closePopover(); goTo(id); } },
-          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') })));
+          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') })));
         buttons.push(b);
         return b;
       })
@@ -1688,10 +1691,11 @@ function render() {
   closePopover();
   const phone = PHONE.matches;
   renderHeader();
-  const tab = (id, label, count) => el('button', {
+  // `tone` : la couleur du compteur, rouge pour les points en panne de Data.
+  const tab = (id, label, count, tone) => el('button', {
     class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(state.tab === id),
     onclick: () => { state.tab = id; state.pane = null; render(); }
-  }, label, count ? el('span', { class: 'bz-count', text: String(count) }) : null);
+  }, label, count ? el('span', { class: 'bz-count' + (tone ? ' ' + tone : ''), text: String(count) }) : null);
 
   const openReports = state.reports.filter((r) => r.status === 'OPEN').length;
   const openTickets = (state.ticketCounts.PENDING || 0) + (state.ticketCounts.OPEN || 0);
@@ -1703,6 +1707,7 @@ function render() {
         : state.tab === 'ideas' ? renderIdeas()
         : state.tab === 'agent' ? renderAgent()
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
+          : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
           : renderJournal();
 
   const scrollY = window.scrollY;
@@ -1710,7 +1715,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1723,7 +1728,8 @@ function render() {
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
       tab('ideas', 'Idées', state.ideas.unread),
       tab('agent', 'Agent'),
-      tab('journal', 'Journal')
+      tab('journal', 'Journal'),
+      tab('data', 'Data', dataRedCount(), 'is-red')
     ),
     panel,
     phone ? null : el('p', { class: 'bz-tiny', style: { marginTop: '12px' },

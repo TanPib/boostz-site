@@ -201,6 +201,48 @@
   .adm-more-item .bz-menu-label { display: inline-flex; align-items: center; gap: 10px; }
   .adm-more-item[aria-current="page"] .bz-menu-label { color: var(--soft-violet-text); }
 
+  /* ---------- Vue Data (assets/data.js) ---------- */
+  .bz-tab .bz-count.is-red { opacity: 1; color: var(--soft-red-text); font-weight: 700; }
+  .dt { margin-top: 16px; }
+  .dt-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--soft-green-border); background: var(--soft-green-fill); }
+  .dt-banner.is-warn { border-color: rgba(245,166,35,.6); background: rgba(245,166,35,.1); }
+  .dt-banner.is-down { border-color: var(--soft-red-border); background: var(--soft-red-fill); }
+  .dt-banner .dt-dot { margin-top: 0; }
+  .dt-banner-text { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .dt-banner-text b { font-family: var(--font-display); font-size: 16px; }
+  .dt-banner-actions { display: flex; gap: 8px; }
+  .dt-group { padding: 0; overflow: hidden; margin-top: 10px; }
+  .dt-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .dt-row:last-child { border-bottom: 0; }
+  .dt-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: #A6ABB7; }
+  .dt-dot.is-ok { background: var(--fill-success); }
+  .dt-dot.is-warn { background: var(--amber); }
+  .dt-dot.is-down { background: #FF6B6B; box-shadow: 0 0 0 3px rgba(255,107,107,.2); }
+  .dt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .dt-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .dt-top b { font-family: var(--font-ui); font-size: 13.5px; }
+  .dt-role { font-size: 12px; color: var(--text-muted); }
+  .dt-headline { font-size: 13px; overflow-wrap: anywhere; }
+  .dt-headline.is-warn { color: #F8C46A; }
+  .dt-headline.is-down { color: var(--soft-red-text); }
+  .dt-headline.is-idle, .dt-headline.is-off { color: var(--text-muted); }
+  .dt-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 11.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+  .dt-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .dt-spark { display: flex; align-items: flex-end; gap: 1px; width: 96px; height: 18px; }
+  .dt-spark i { flex: 1; border-radius: 1px; background: rgba(95,211,163,.55); }
+  .dt-spark i.is-empty { background: rgba(255,255,255,.08); }
+  .dt-spark i.is-fail { background: #FF6B6B; }
+  .dt-quota-bar { flex: none; width: 110px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .dt-quota-bar span { display: block; height: 100%; background: #7431E0; }
+  .dt-note { margin: 0; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .dt-server .dt-top b { font-family: var(--font-display); font-size: 15px; }
+  .dt-platforms { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+  .dt-platform { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; }
+  .dt-platform b { font-family: var(--font-display); font-size: 15px; }
+  /* Le bouton sur sa ligne, les liens dessous : toutes les cartes s'alignent,
+     quel que soit le nombre de lignes de leur rôle. */
+  .dt-platform-links { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 4px; font-size: 12px; }
+  .dt-platform-more { display: flex; flex-wrap: wrap; gap: 4px 12px; }
   /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement.
      nowrap : en colonne, une ligne flex qui peut revenir à la ligne prend la
      largeur de son plus long enfant - le titre d'une idée, en nowrap dans
@@ -343,6 +385,15 @@
     .adm-agent-title { margin: 18px 0 8px; }
     .adm-agent-empty { padding: 26px 18px; }
 
+    /* Data : le bouton Tester et les barres passent sous le texte. */
+    .dt { margin-top: 4px; }
+    .dt-banner { padding: 12px 14px; }
+    .dt-banner-actions { width: 100%; }
+    .dt-banner-actions .bz-btn { flex: 1; }
+    .dt-row { flex-wrap: wrap; gap: 10px; padding: 11px 14px; }
+    .dt-side { width: 100%; flex-direction: row; align-items: center; justify-content: space-between; padding-left: 22px; }
+    .dt-platforms { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .dt-platform { padding: 12px; }
     /* Revenus. */
     .rv { margin-top: 4px; }
     /* Sur téléphone, le bandeau ne suit pas le défilement : il masquerait les
