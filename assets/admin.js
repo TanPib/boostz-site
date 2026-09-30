@@ -8,6 +8,7 @@ import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
 import { renderRevenue, passSummary, hasPassData } from './revenue.js';
 import { loadData, renderData, dataRedCount } from './data.js';
+import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -84,7 +85,11 @@ const ACTIONS = {
   super_admin: 'Rang de super admin',
   warn: 'Avertissement',
   delete_account: 'Suppression du compte',
-  report_status: 'Décision sur un signalement'
+  report_status: 'Décision sur un signalement',
+  venue_request: 'Demande de boutique',
+  venue_partner: 'Partenaire',
+  venue_manager: 'Gérant',
+  venue_edit: 'Fiche boutique'
 };
 const SUPER_ONLY = 'Réservé aux super admins.';
 
@@ -119,7 +124,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -127,6 +132,7 @@ const ICONS = {
   reports: 'M5 21V4M5 4h11.5l-2 4 2 4H5',
   support: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4V5.5Z',
   ideas: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z',
+  venues: 'M3 9l1.6-5h14.8L21 9M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M5 11.8V20h14v-8.2M10 20v-5h4v5',
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
   data: 'M3 12h4l3-8 4 16 3-8h4',
@@ -308,7 +314,7 @@ async function loadActions() {
 }
 
 async function loadAll() {
-  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData()]);
+  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData(), loadVenues()]);
   const failed = results.find((r) => r.status === 'rejected');
   state.loaded = true;
   if (failed) {
@@ -1595,6 +1601,12 @@ function detailText(a) {
     case 'delete_account': return (d.cards_deleted ?? 0) + ' cartes, ' + (d.photos_deleted ?? 0) + ' photos, ' + (d.exchanges_cancelled ?? 0) + ' échanges annulés';
     case 'unban': return d.previous_reason ? 'motif initial : ' + d.previous_reason : '';
     case 'warn': return d.report_id ? 'lié au signalement ' + shortId(d.report_id) : '';
+    // Boutiques : le nom est celui du moment du geste ; nul quand une demande
+    // de gérance est refusée après la suppression de sa boutique.
+    case 'venue_request': return (d.decision === 'APPROVED' ? 'Validée' : 'Refusée') + (d.type === 'CLAIM' ? ' · gérance' : ' · création') + ' · ' + (d.venueName || 'boutique supprimée');
+    case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
+    case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
+    case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.join(', ') : '');
     default: return '';
   }
 }
@@ -1647,11 +1659,12 @@ function goTo(tab) {
 }
 
 // Téléphone : la navigation de la console, collée en bas, comme celle de l'app.
-// Cinq entrées au plus : Idées, Agent, Journal et Data passent sous « Plus »,
-// qui les ouvre en panneau et reste allumé quand l'une des quatre est affichée.
-// Les badges des idées jamais ouvertes et des points rouges de Data remontent
-// sur « Plus », faute de place à eux.
-const MORE_TABS = ['ideas', 'agent', 'journal', 'data'];
+// Cinq entrées au plus : Boutiques, Idées, Agent, Journal et Data passent sous
+// « Plus », qui les ouvre en panneau et reste allumé quand l'une des cinq est
+// affichée. Les badges des demandes de boutiques en attente, des idées jamais
+// ouvertes et des points rouges de Data remontent sur « Plus », faute de place
+// à eux.
+const MORE_TABS = ['venues', 'ideas', 'agent', 'journal', 'data'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1659,13 +1672,13 @@ function bottomNav(openReports, pending) {
   },
   el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
   el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
-  const more = item('more', state.ideas.unread + dataRedCount(), () => {
+  const more = item('more', venuesPendingCount() + state.ideas.unread + dataRedCount(), () => {
     const buttons = [];
     togglePopover(more, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': 'Autres sections' },
       el('div', { class: 'bz-menu-title', text: 'Autres sections' }),
       MORE_TABS.map((id) => {
         const b = el('button', { class: 'bz-menu-item adm-more-item', type: 'button', role: 'menuitem', 'aria-current': state.tab === id ? 'page' : null, onclick: () => { closePopover(); goTo(id); } },
-          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') })));
+          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'venues' && venuesPendingCount() ? ' · ' + venuesPendingCount() : '') + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') })));
         buttons.push(b);
         return b;
       })
@@ -1705,6 +1718,10 @@ function render() {
     : state.tab === 'reports' ? renderReports()
       : state.tab === 'support' ? renderSupport()
         : state.tab === 'ideas' ? renderIdeas()
+        : state.tab === 'venues' ? renderVenues({
+          rerender: () => { if (state.tab === 'venues') render(); }, toast, ask, after, icon,
+          narrow: NARROW.matches, phone, pane: state.pane, openPane, closePane, paneTop, backButton, paneHead
+        })
         : state.tab === 'agent' ? renderAgent()
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
@@ -1726,6 +1743,7 @@ function render() {
       tab('revenue', 'Revenus'),
       tab('reports', 'Signalements', openReports),
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
+      tab('venues', 'Boutiques', venuesPendingCount()),
       tab('ideas', 'Idées', state.ideas.unread),
       tab('agent', 'Agent'),
       tab('journal', 'Journal'),
