@@ -48,15 +48,17 @@ const vn = {
 // (GET /admin/venues/:id), avec son propre `venueSeq`. `drafts` : ce que
 // l'admin a écrit dans la note, le champ « Affilier » et les champs d'une
 // boutique créée sur demande, par boutique. `busy` : un geste sur une fiche
-// est en route. `view` : les morceaux de l'écran affiché, que la recherche
-// repeint sur place - redessiner toute la console pendant la frappe ferait
-// perdre le champ de recherche, et le clavier avec lui sur téléphone.
+// est en route ; pour l'interrupteur partenaire, il porte la valeur visée,
+// que la case montre en attendant la réponse. `view` : les morceaux de l'écran
+// affiché, que la recherche repeint sur place - redessiner toute la console
+// pendant la frappe ferait perdre le champ de recherche, et le clavier avec
+// lui sur téléphone. `search` : ce champ, un seul nœud pour tous les rendus.
 const PAGE = 50;
 const dir = {
   q: '', partnerOnly: false, page: 1,
   venues: null, total: 0, loading: false, error: null, seq: 0, timer: null,
   venue: null, venueLoading: false, venueError: null, venueSeq: 0,
-  drafts: new Map(), busy: false, view: null
+  drafts: new Map(), busy: false, view: null, search: null
 };
 
 // Le badge de l'onglet : créations et affiliations en attente, additionnées.
@@ -437,10 +439,16 @@ function requestRow(ctx, x, current) {
 // ctx : { rerender, toast, ask, after, icon, narrow, phone, pane, openPane,
 // closePane, paneTop, backButton, paneHead }, fournis par admin.js au moment
 // du rendu.
+//
+// Un chargement de la file ne redessine que si « À valider » est encore à
+// l'écran. Sur l'Annuaire, ce redessin détacherait le champ de recherche
+// pendant que l'admin y tape, et fermerait le clavier du téléphone.
+const rerenderPending = (ctx) => () => { if (vn.level === 'pending') ctx.rerender(); };
+
 export function renderVenues(ctx) {
   const narrow = ctx.narrow;
   const phone = ctx.phone;
-  const refresh = () => loadVenues().then(ctx.rerender);
+  const refresh = () => loadVenues().then(rerenderPending(ctx));
   // Première ouverture, ou sous-onglet changé : on charge sa liste.
   if (!vn.absent && !vn.error && !vn.loading && (vn.list === null || vn.listType !== vn.type)) refresh();
 
@@ -478,7 +486,7 @@ export function renderVenues(ctx) {
   // jour impossible » s'affiche justement au-dessus d'une liste déjà là.
   const retry = el('button', {
     class: 'bz-btn is-sm', type: 'button', text: 'Réessayer',
-    onclick: () => { vn.error = null; const p = loadVenues(); ctx.rerender(); p.then(ctx.rerender); }
+    onclick: () => { vn.error = null; const p = loadVenues(); ctx.rerender(); p.then(rerenderPending(ctx)); }
   });
 
   if (!list && vn.error) {
@@ -535,24 +543,39 @@ const FIELD_KEYS = ['name', 'address', 'postal_code', 'city', 'phone'];
 const venuePath = (v) => '/admin/venues/' + encodeURIComponent(v.id);
 const plural = (n, one, many) => n.toLocaleString('fr-FR') + ' ' + (n > 1 ? many : one);
 
-// Ne lève jamais : un échec reste dans `error`, que la liste affiche avec
-// « Réessayer ».
-async function loadDirectory() {
+// Ne lève jamais. `page` : la page voulue, qui ne devient `dir.page` que si
+// son chargement aboutit. Un échec reste dans `error`, que la liste affiche
+// avec « Réessayer » - sauf avec `quiet`, pour un simple changement de page :
+// la page et les lignes d'avant restent alors à l'écran, et l'appelant
+// affiche l'échec en toast. Rend le message d'erreur, ou null.
+async function loadDirectory({ page = dir.page, quiet = false } = {}) {
   const seq = ++dir.seq;
   dir.loading = true;
   const q = dir.q.trim();
-  const params = [q ? 'q=' + encodeURIComponent(q) : null, dir.partnerOnly ? 'partner=1' : null, dir.page > 1 ? 'page=' + dir.page : null].filter(Boolean);
+  const params = [q ? 'q=' + encodeURIComponent(q) : null, dir.partnerOnly ? 'partner=1' : null, page > 1 ? 'page=' + page : null].filter(Boolean);
   try {
     const data = await call('/admin/venues' + (params.length ? '?' + params.join('&') : ''));
-    if (seq !== dir.seq) return;
-    dir.venues = data.venues || [];
-    dir.total = data.total || 0;
-    // Le serveur borne la page (1 à 1000) : la sienne fait foi.
-    dir.page = data.page || 1;
+    if (seq !== dir.seq) return null;
+    const venues = data.venues || [];
+    const total = data.total || 0;
+    // Le serveur borne la page (1 à 1000), et la sienne fait foi.
+    const got = data.page || page;
+    // Mais il ne la borne pas à la dernière : quand un geste ou un filtre a fait
+    // fondre le total, la page courante peut revenir vide, sans rien pour en
+    // sortir. On charge alors la dernière qui existe, ou la première. La cible
+    // descend à chaque tour : la boucle s'arrête forcément.
+    if (!venues.length && got > 1) {
+      return await loadDirectory({ page: Math.min(got - 1, Math.max(1, Math.ceil(total / PAGE))), quiet });
+    }
+    dir.venues = venues;
+    dir.total = total;
+    dir.page = got;
     dir.error = null;
+    return null;
   } catch (e) {
-    if (seq !== dir.seq) return;
-    dir.error = e.message;
+    if (seq !== dir.seq) return null;
+    if (!quiet) dir.error = e.message;
+    return e.message;
   } finally {
     if (seq === dir.seq) dir.loading = false;
   }
@@ -618,23 +641,25 @@ function repaintDetail() {
   else paintDetail(view);
 }
 
-// Recharger la liste, en montrant « mise à jour… » tout de suite.
-function refreshList() {
-  const p = loadDirectory().then(repaintList);
+// Recharger la liste, en montrant « mise à jour… » tout de suite. Rend ce que
+// rend loadDirectory : le message d'un échec, ou null.
+function refreshList(opts) {
+  const p = loadDirectory(opts).then((err) => { repaintList(); return err; });
   repaintList();
   return p;
 }
 
-function goPage(view, page) {
-  dir.page = page;
-  refreshList().then(() => {
-    view.rows.scrollTop = 0;
-    // Sur écran étroit la liste ne défile pas seule : on remonte à son haut,
-    // sous la barre du site, si « Suivant » l'a laissé hors de l'écran.
-    if (!view.card.isConnected || typeof view.card.getBoundingClientRect !== 'function') return;
-    const top = view.card.getBoundingClientRect().top;
-    if (top < 0) window.scrollTo({ top: Math.max(0, top + window.scrollY - 72), behavior: 'instant' });
-  });
+// Un changement de page raté ne change rien à l'écran : l'ancienne page reste,
+// et l'échec passe en toast.
+async function goPage(view, page) {
+  const err = await refreshList({ page, quiet: true });
+  if (err) return view.ctx.toast(err, 'err');
+  view.rows.scrollTop = 0;
+  // Sur écran étroit la liste ne défile pas seule : on remonte à son haut,
+  // sous la barre du site, si « Suivant » l'a laissé hors de l'écran.
+  if (!view.card.isConnected || typeof view.card.getBoundingClientRect !== 'function') return;
+  const top = view.card.getBoundingClientRect().top;
+  if (top < 0) window.scrollTo({ top: Math.max(0, top + window.scrollY - 72), behavior: 'instant' });
 }
 
 // Ce que l'admin a écrit dans une fiche : la note, le champ « Affilier » et,
@@ -658,9 +683,9 @@ function resetDraft(d, v, parts) {
 // Un geste sur la fiche ouverte, un seul à la fois. Toutes ces routes rendent
 // la fiche à jour : elle remplace l'ancienne, puis after() relit la liste (les
 // pastilles ont pu changer) et le journal, redessine et affiche le toast.
-async function venueGesture(ctx, v, send, { message, reset = [] }) {
+async function venueGesture(ctx, v, send, { message, reset = [], busy = true }) {
   if (dir.busy) return;
-  dir.busy = true;
+  dir.busy = busy;
   ctx.rerender();
   let fresh;
   try {
@@ -687,7 +712,8 @@ async function venueGesture(ctx, v, send, { message, reset = [] }) {
 
 function setPartner(ctx, v, next) {
   return venueGesture(ctx, v, () => call(venuePath(v), { method: 'PATCH', body: { partner: next } }), {
-    message: next ? v.name + ' est partenaire.' : v.name + ' n’est plus partenaire.'
+    message: next ? v.name + ' est partenaire.' : v.name + ' n’est plus partenaire.',
+    busy: { partner: next }
   });
 }
 
@@ -753,7 +779,7 @@ function openPendingRequest(ctx, r) {
   ctx.openPane(PANE);
   ctx.rerender();
   ctx.paneTop();
-  p.then(ctx.rerender);
+  p.then(rerenderPending(ctx));
 }
 
 // Les pastilles d'une ligne de la liste. La fiche n'a pas les mêmes champs :
@@ -803,7 +829,9 @@ function paintList(view) {
       text: dir.q.trim() || dir.partnerOnly ? 'Aucune boutique ne correspond.' : 'Aucune boutique.' }));
   }
   const pages = Math.max(1, Math.ceil(dir.total / PAGE));
-  if (pages > 1) {
+  // Toujours là au-delà de la page 1, même si le total a fondu entre-temps :
+  // « Précédent » reste un moyen d'en revenir.
+  if (pages > 1 || dir.page > 1) {
     pager.style.display = 'flex';
     put(pager,
       el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Précédent', disabled: dir.page <= 1 || dir.loading, onclick: () => goPage(view, dir.page - 1) }),
@@ -842,7 +870,7 @@ function draftInput(d, key, label, attrs, extra = null) {
 function venueFiche(ctx, v) {
   const d = dirDraftOf(v);
   const flags = ficheFlags(v);
-  const busy = dir.busy;
+  const busy = !!dir.busy;
   const manual = v.source === 'manual';
   const managers = v.managers || [];
   const pending = v.pending_requests || [];
@@ -858,10 +886,18 @@ function venueFiche(ctx, v) {
     ? el('a', { href: v.website, target: '_blank', rel: 'noopener noreferrer', text: v.website })
     : v.website || null;
   const pills = venuePills(flags);
+  // Le numéro que voient les membres : celui que le gérant a saisi dans « Ma
+  // fiche », sinon celui de la fiche d'origine (même règle que l'app,
+  // lib/venueApi.js). PATCH, lui, n'écrit que celui de la fiche d'origine.
+  const managerPhone = (v.profile && v.profile.phone) || null;
+  const shownPhone = managerPhone || v.phone;
 
   // Le statut partenaire. Le retirer efface sa date côté serveur : on le
   // confirme. Annulé, la case revient cochée.
-  const partnerBox = el('input', { type: 'checkbox', role: 'switch', checked: flags.is_partner, disabled: busy });
+  // Pendant sa requête, la case montre la valeur visée, grisée : reprise de
+  // l'ancienne fiche, elle semblerait revenir en arrière, comme un refus.
+  const shownPartner = dir.busy && typeof dir.busy.partner === 'boolean' ? dir.busy.partner : flags.is_partner;
+  const partnerBox = el('input', { type: 'checkbox', role: 'switch', checked: shownPartner, disabled: busy });
   partnerBox.addEventListener('change', async () => {
     const next = partnerBox.checked;
     if (!next) {
@@ -897,7 +933,10 @@ function venueFiche(ctx, v) {
     const address = draftInput(d, 'address', 'Adresse', { maxlength: '200' }, rule);
     const postal = draftInput(d, 'postal_code', 'Code postal', { maxlength: '5', inputmode: 'numeric' });
     const city = draftInput(d, 'city', 'Ville', { maxlength: '80' });
-    const phone = draftInput(d, 'phone', 'Téléphone', { type: 'tel', maxlength: '30', placeholder: 'Aucun' });
+    // Quand le gérant affiche son propre numéro, ce champ n'est pas celui que
+    // voient les membres : son libellé le dit, pour qu'une correction qui ne se
+    // voit pas dans l'app ne passe pas pour un bug.
+    const phone = draftInput(d, 'phone', managerPhone ? 'Téléphone de la fiche d’origine' : 'Téléphone', { type: 'tel', maxlength: '30', placeholder: 'Aucun' });
     address.node.addEventListener('input', checkRule);
     postal.node.addEventListener('input', checkRule);
     checkRule();
@@ -922,7 +961,8 @@ function venueFiche(ctx, v) {
     el('div', { class: 'bz-stack', style: { gap: '6px', marginTop: '12px' } },
       line('Adresse', addressOf(v) || '—'),
       line('Département', v.department || '—'),
-      line('Téléphone', v.phone ? telLink(v.phone) : muted('aucun')),
+      line('Téléphone', shownPhone ? telLink(shownPhone) : muted('aucun')),
+      managerPhone ? el('span', { class: 'bz-tiny', text: 'Numéro saisi par le gérant — c’est celui que voient les membres.' }) : null,
       site ? line('Site', site) : null,
       line('Source', source)),
     pending.length ? el('div', { class: 'adm-ai-note', style: { marginTop: '14px' } },
@@ -959,6 +999,31 @@ function venueFiche(ctx, v) {
   ];
 }
 
+// LE CHAMP DE RECHERCHE EST UN SEUL NŒUD, gardé d'un rendu à l'autre, et ses
+// écouteurs ne lisent que l'état du module : aucun rendu n'a à le refaire. Un
+// rendu complet de la console (after() après un geste) le détache pourtant
+// avec l'ancien écran avant de le rattacher au nouveau, et un champ détaché
+// perd le focus. renderDirectory le lui rend alors, curseur compris.
+function searchInput() {
+  if (dir.search) return dir.search;
+  const search = el('input', { class: 'bz-input', type: 'search', placeholder: 'Nom, ville ou département', 'aria-label': 'Rechercher une boutique', autocomplete: 'off', style: { flex: '1 1 220px', minWidth: '0', width: 'auto' } });
+  search.value = dir.q;
+  search.addEventListener('input', () => {
+    dir.q = search.value;
+    clearTimeout(dir.timer);
+    // 300 ms sans frappe avant d'interroger le serveur : une requête par mot,
+    // pas une par lettre.
+    dir.timer = setTimeout(() => { refreshList({ page: 1 }); }, 300);
+  });
+  search.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    clearTimeout(dir.timer);
+    refreshList({ page: 1 });
+  });
+  dir.search = search;
+  return search;
+}
+
 function renderDirectory(ctx, levels) {
   const narrow = ctx.narrow;
   // Premier passage : la liste se charge. La vue construite plus bas montre
@@ -967,25 +1032,25 @@ function renderDirectory(ctx, levels) {
   const showList = !narrow || ctx.pane !== DIR_PANE;
   const showDetail = !narrow || ctx.pane === DIR_PANE;
 
-  const search = el('input', { class: 'bz-input', type: 'search', value: dir.q, placeholder: 'Nom, ville ou département', 'aria-label': 'Rechercher une boutique', autocomplete: 'off', style: { flex: '1 1 220px', minWidth: '0', width: 'auto' } });
-  search.addEventListener('input', () => {
-    dir.q = search.value;
-    clearTimeout(dir.timer);
-    // 300 ms sans frappe avant d'interroger le serveur : une requête par mot,
-    // pas une par lettre.
-    dir.timer = setTimeout(() => { dir.page = 1; refreshList(); }, 300);
-  });
-  search.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter') return;
-    clearTimeout(dir.timer);
-    dir.page = 1;
-    refreshList();
-  });
+  const search = searchInput();
+  // L'ancien écran est encore en place à cet instant : render() (admin.js)
+  // construit le nouveau avant de vider la page. Si l'admin tape dans le
+  // champ, on note son curseur, et on lui rend le focus une fois l'écran posé
+  // - la microtâche passe après la fin, synchrone, de render().
+  if (showList && document.activeElement === search) {
+    const start = search.selectionStart;
+    const end = search.selectionEnd;
+    queueMicrotask(() => {
+      if (!search.isConnected || document.activeElement === search) return;
+      search.focus({ preventScroll: true });
+      try { search.setSelectionRange(start, end); } catch { /* type sans sélection */ }
+    });
+  }
   const partnerFilter = el('button', {
     class: 'bz-tab', type: 'button', 'aria-pressed': String(dir.partnerOnly),
     // L'allure d'un onglet choisi quand le filtre est actif.
     style: dir.partnerOnly ? { background: 'var(--soft-violet-fill)', borderColor: 'var(--soft-violet-border)', color: 'var(--soft-violet-text)' } : null,
-    onclick: () => { dir.partnerOnly = !dir.partnerOnly; dir.page = 1; clearTimeout(dir.timer); ctx.rerender(); refreshList(); }
+    onclick: () => { dir.partnerOnly = !dir.partnerOnly; clearTimeout(dir.timer); ctx.rerender(); refreshList({ page: 1 }); }
   }, 'Partenaires uniquement');
 
   const head = el('div', { class: 'adm-list-head' });
