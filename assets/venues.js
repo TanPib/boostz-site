@@ -54,12 +54,16 @@ const vn = {
 // affiché, que la recherche repeint sur place - redessiner toute la console
 // pendant la frappe ferait perdre le champ de recherche, et le clavier avec
 // lui sur téléphone. `search` : ce champ, un seul nœud pour tous les rendus.
+// `listScroll` : le défilement de la liste, rendu à la nouvelle liste après un
+// rendu complet. `stale` : une décision dans « À valider » a pu changer la
+// liste, qui sera relue au prochain rendu de l'Annuaire.
 const PAGE = 50;
 const dir = {
   q: '', partnerOnly: false, page: 1,
   venues: null, total: 0, loading: false, error: null, seq: 0, timer: null,
   venue: null, venueLoading: false, venueError: null, venueSeq: 0,
-  drafts: new Map(), busy: false, view: null, search: null
+  drafts: new Map(), busy: false, view: null, search: null,
+  listScroll: 0, stale: false
 };
 
 // Le badge de l'onglet : créations et affiliations en attente, additionnées.
@@ -136,13 +140,15 @@ const muted = (text) => el('span', { class: 'bz-muted', text });
 const telLink = (phone) => el('a', { href: 'tel:' + String(phone).replace(/[^\d+]/g, ''), text: phone });
 const line = (label, value) => el('div', { class: 'adm-line' }, el('span', { class: 'bz-muted', text: label }), el('b', {}, value));
 
-// L'adresse d'une boutique sans répéter la ville : une fiche créée sur demande
-// la porte déjà dans `address` (« 12 rue X, 69003 Lyon »), une fiche OSM pas
-// toujours.
+// L'adresse d'une boutique, complétée du code postal et de la ville seulement
+// s'ils n'y sont pas déjà : une fiche créée sur demande les porte dans
+// `address` (« 12 rue X, 69003 Lyon »), une fiche OSM pas toujours, et
+// certaines n'ont pour adresse que leur code postal, sans ville - on lisait
+// alors « 69001, 69001 ».
 function addressOf(v) {
-  const town = [v.postal_code, v.city].filter(Boolean).join(' ');
-  if (!v.address) return town;
-  return v.city && v.address.includes(v.city) ? v.address : [v.address, town].filter(Boolean).join(', ');
+  const address = (v.address || '').trim();
+  const missing = [v.postal_code, v.city].filter((x) => x && !address.includes(x)).join(' ');
+  return [address, missing].filter(Boolean).join(', ');
 }
 
 const titleOf = (r) => (r.type === 'CREATE'
@@ -185,8 +191,12 @@ async function decide(ctx, r, verb, body, message) {
     // onglet), sa boutique a disparu, ou le membre n'est pas majeur. 404 : elle
     // n'existe plus. Dans ces cas la file affichée est fausse : on la relit.
     // Sinon (un champ refusé, le réseau), rien ne bouge et la saisie reste.
-    if (e.status === 409 || e.status === 404) await ctx.after(null, loadVenues);
-    else ctx.rerender();
+    if (e.status === 409 || e.status === 404) {
+      staleDirectory(r.venue ? r.venue.id : null);
+      await ctx.after(null, loadVenues);
+    } else {
+      ctx.rerender();
+    }
     ctx.toast(e.message, 'err');
     return;
   }
@@ -194,6 +204,9 @@ async function decide(ctx, r, verb, body, message) {
   vn.list = (vn.list || []).filter((x) => x.id !== r.id);
   vn.counts[r.type] = Math.max(0, (vn.counts[r.type] || 0) - 1);
   vn.drafts.delete(r.id);
+  // L'Annuaire a pu changer avec elle : une boutique créée, un gérant ajouté,
+  // une demande en moins sur une fiche.
+  staleDirectory(r.venue ? r.venue.id : null);
   if (vn.selId === r.id) vn.selId = null;
   if (ctx.narrow && ctx.pane === PANE) ctx.closePane();
   await ctx.after(message, loadVenues);
@@ -222,8 +235,10 @@ function approve(ctx, r) {
 async function reject(ctx, r) {
   if (vn.busy) return;
   const reason = draftOf(r).reason.trim();
+  // La boutique est nommée : un même membre peut avoir plusieurs demandes.
+  const shop = r.type === 'CREATE' ? r.proposed && r.proposed.name : r.venue && r.venue.name;
   const ok = await ctx.ask({
-    title: 'Refuser la demande de ' + pseudoOf(r),
+    title: 'Refuser la demande de ' + pseudoOf(r) + (shop ? ' pour ' + shop : ''),
     text: reason
       ? 'Le membre recevra ce motif : « ' + reason + ' »'
       : 'Sans motif, le membre lira seulement : « L’équipe n’a pas pu valider ta demande. »',
@@ -421,7 +436,9 @@ function requestRow(ctx, x, current) {
   const create = x.type === 'CREATE';
   const p = x.proposed || {};
   const v = x.venue;
-  const place = create ? [p.city, p.department].filter(Boolean).join(' · ') : (v ? v.city || '' : '');
+  // Une fiche OSM n'a pas toujours de ville : on se rabat sur son code postal,
+  // puis sur son adresse, pour que la ligne dise où elle est.
+  const place = create ? [p.city, p.department].filter(Boolean).join(' · ') : (v ? v.city || v.postal_code || v.address || '' : '');
   const who = create
     ? 'par ' + pseudoOf(x) + ' · ' + sinceFr(x.created_date)
     : pseudoOf(x) + ' demande à la gérer · ' + sinceFr(x.created_date);
@@ -620,11 +637,32 @@ function pickVenue(id) {
   dir.venueError = null;
 }
 
+// Sur grand écran, choisir une boutique ne change que la fiche et la ligne
+// marquée : un redessin complet recréait la liste, qui repartait de son haut
+// et laissait sortir du cadre la boutique qu'on venait de choisir. Sur écran
+// étroit, la fiche prend la place de la liste : là, on redessine.
 function selectVenue(ctx, id) {
   pickVenue(id);
+  const view = dir.view;
+  if (!ctx.narrow && view && view.detail && view.detail.isConnected) {
+    for (const row of view.rows.childNodes) {
+      if (row.getAttribute && row.getAttribute('data-venue')) row.setAttribute('aria-current', row.getAttribute('data-venue') === id ? 'true' : 'false');
+    }
+    paintDetail(view);
+    return;
+  }
   ctx.openPane(DIR_PANE);
   ctx.rerender();
   ctx.paneTop();
+}
+
+// Après une décision dans « À valider » : la liste de l'Annuaire et la fiche en
+// cache de la boutique concernée ne sont plus sûres. La liste se relit au
+// prochain rendu de l'Annuaire, ses lignes restant à l'écran le temps de la
+// réponse ; la fiche est oubliée, et se recharge quand on la rouvre.
+function staleDirectory(venueId) {
+  dir.stale = true;
+  if (venueId && dir.venue && dir.venue.id === venueId) dir.venue = null;
 }
 
 // Repeindre sur place la liste, ou la fiche, de l'écran affiché. Rien quand
@@ -656,6 +694,7 @@ async function goPage(view, page) {
   const err = await refreshList({ page, quiet: true });
   if (err) return view.ctx.toast(err, 'err');
   view.rows.scrollTop = 0;
+  dir.listScroll = 0;
   // Sur écran étroit la liste ne défile pas seule : on remonte à son haut,
   // sous la barre du site, si « Suivant » l'a laissé hors de l'écran.
   if (!view.card.isConnected || typeof view.card.getBoundingClientRect !== 'function') return;
@@ -815,7 +854,7 @@ function venueRow(ctx, v) {
   const place = [v.city, v.department].filter(Boolean).join(' · ');
   const pills = venuePills(v);
   return el('button', {
-    class: 'adm-item', type: 'button', 'aria-current': v.id === vn.dirVenueId ? 'true' : 'false',
+    class: 'adm-item', type: 'button', 'data-venue': v.id, 'aria-current': v.id === vn.dirVenueId ? 'true' : 'false',
     onclick: () => selectVenue(ctx, v.id)
   },
   el('div', { class: 'bz-row', style: { gap: '8px', flexWrap: 'nowrap', alignItems: 'flex-start' } },
@@ -1095,7 +1134,12 @@ function renderDirectory(ctx, levels) {
   const narrow = ctx.narrow;
   // Premier passage : la liste se charge. La vue construite plus bas montre
   // l'attente, et le repeint suit la réponse.
-  if (dir.venues === null && !dir.loading && !dir.error) loadDirectory().then(repaintList);
+  // Après une décision (`stale`), elle se relit, en gardant ses lignes à
+  // l'écran avec « mise à jour… ».
+  if (!dir.loading && ((dir.venues === null && !dir.error) || dir.stale)) {
+    dir.stale = false;
+    loadDirectory().then(repaintList);
+  }
   const showList = !narrow || ctx.pane !== DIR_PANE;
   const showDetail = !narrow || ctx.pane === DIR_PANE;
 
@@ -1122,6 +1166,14 @@ function renderDirectory(ctx, levels) {
 
   const head = el('div', { class: 'adm-list-head' });
   const rows = el('div', { class: 'adm-list' });
+  // Le défilement de la liste suit l'admin, et la liste d'un rendu complet (un
+  // geste sur une fiche, un retour depuis « À valider ») le reprend une fois
+  // posée : la boutique choisie reste sous ses yeux.
+  rows.addEventListener('scroll', () => { dir.listScroll = rows.scrollTop; });
+  if (showList && dir.listScroll) {
+    const top = dir.listScroll;
+    queueMicrotask(() => { if (rows.isConnected) rows.scrollTop = top; });
+  }
   const pager = el('div', { style: { display: 'none', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '10px 16px', borderTop: '1px solid var(--line)' } });
   const card = el('section', { class: 'bz-card adm-list-card' }, head, rows, pager);
   const detail = showDetail ? el('div', { class: 'bz-card adm-detail' }) : null;

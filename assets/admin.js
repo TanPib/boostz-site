@@ -1605,8 +1605,9 @@ function detailText(a) {
     case 'unban': return d.previous_reason ? 'motif initial : ' + d.previous_reason : '';
     case 'warn': return d.report_id ? 'lié au signalement ' + shortId(d.report_id) : '';
     // Boutiques : le nom est celui du moment du geste ; nul quand une demande
-    // de gérance est refusée après la suppression de sa boutique.
-    case 'venue_request': return (d.decision === 'APPROVED' ? 'Validée' : 'Refusée') + (d.type === 'CLAIM' ? ' · gérance' : ' · création') + ' · ' + (d.venueName || 'boutique supprimée');
+    // d'affiliation est refusée après la suppression de sa boutique. « Affiliation »,
+    // comme le sous-onglet de la console, et non « gérance ».
+    case 'venue_request': return (d.decision === 'APPROVED' ? 'Validée' : 'Refusée') + (d.type === 'CLAIM' ? ' · affiliation' : ' · création') + ' · ' + (d.venueName || 'boutique supprimée');
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
     case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.map((f) => VENUE_FIELDS[f] || f).join(', ') : '');
