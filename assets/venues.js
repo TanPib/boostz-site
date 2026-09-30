@@ -9,7 +9,8 @@
 // DEUX NIVEAUX, pour ne jamais mélanger le travail à faire et la consultation :
 // « À valider », les seules demandes en attente, et « Annuaire », toutes les
 // boutiques, avec la fiche admin de chacune (partenaire, note interne,
-// gérants, et nom et adresse de celles créées sur demande). L'état de
+// gérants, ce que la boutique a saisi dans l'appli, qu'on peut effacer, et nom
+// et adresse de celles créées sur demande). L'état de
 // l'accueil des échanges et sa pause n'y sont pas : c'est le lot C.
 //
 // BRANCHÉ COMME data.js : l'état vit ici. admin.js n'importe que le chargement
@@ -753,6 +754,23 @@ function addManager(ctx, v) {
   });
 }
 
+// Efface ce que la boutique a saisi dans « Ma fiche » : un gérant retiré, ou
+// dont le compte est supprimé, laisse sinon son texte publié, et rien d'autre
+// ne peut le retirer. Le statut partenaire et la note interne sont à l'équipe
+// et restent. Le serveur l'inscrit au journal (« Fiche boutique »).
+async function clearProfile(ctx, v) {
+  if (dir.busy) return;
+  const ok = await ctx.ask({
+    title: 'Effacer ce que la boutique a saisi',
+    text: 'La présentation, les jeux, les horaires et le contact saisis dans l’appli disparaissent de la fiche de ' + v.name + '. Le statut partenaire et la note interne restent.',
+    confirmLabel: 'Effacer', tone: 'red'
+  });
+  if (!ok) return;
+  return venueGesture(ctx, v, () => call(venuePath(v), { method: 'PATCH', body: { clear_profile: true } }), {
+    message: 'Ce que ' + v.name + ' avait saisi est effacé.'
+  });
+}
+
 async function removeManager(ctx, v, m) {
   if (dir.busy) return;
   const ok = await ctx.ask({
@@ -866,6 +884,52 @@ function draftInput(d, key, label, attrs, extra = null) {
   return { node, field: el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', for: id, text: label }), node, extra) };
 }
 
+// Ce que la boutique a saisi dans « Ma fiche », dans l'appli, par opposition
+// aux champs de l'équipe (partenaire, note interne). Même règle que le serveur
+// (hasTypedProfile, routes/adminVenues.js) : rien de saisi, pas de section.
+const typedProfile = (p) => !!(p && (p.description || (p.games && p.games.length) || p.hours || p.phone || p.website || p.instagram));
+const DAYS = [['lun', 'Lun'], ['mar', 'Mar'], ['mer', 'Mer'], ['jeu', 'Jeu'], ['ven', 'Ven'], ['sam', 'Sam'], ['dim', 'Dim']];
+// Les noms courts des 9 jeux, ceux de l'appli (mobile/src/constants/games.js).
+const GAME_NAMES = {
+  pokemon: 'Pokémon', yugioh: 'Yu-Gi-Oh!', onepiece: 'One Piece', lorcana: 'Lorcana', starwarsunlimited: 'Star Wars',
+  magic: 'Magic', animalcrossing: 'Animal Crossing', dragonball: 'Dragon Ball Super', wow: 'Warcraft'
+};
+
+// Une ligne courte par jour, « fermé » pour un jour sans plage.
+function hoursLines(hours) {
+  const h = hours && typeof hours === 'object' ? hours : {};
+  return DAYS.map(([key, label]) => {
+    const ranges = (Array.isArray(h[key]) ? h[key] : []).filter((r) => Array.isArray(r) && r.length === 2);
+    return el('div', { class: 'bz-small' },
+      el('span', { class: 'bz-muted', style: { display: 'inline-block', width: '3em' }, text: label }),
+      el('span', { text: ranges.length ? ranges.map((r) => r[0] + '–' + r[1]).join(', ') : 'fermé' }));
+  });
+}
+
+function typedSection(ctx, v, busy) {
+  const p = v.profile;
+  if (!typedProfile(p)) return null;
+  // Même garde que le site de la fiche d'origine : seul http(s) entre dans un lien.
+  const site = p.website && /^https?:\/\//i.test(p.website)
+    ? el('a', { href: p.website, target: '_blank', rel: 'noopener noreferrer', text: p.website })
+    : p.website || null;
+  const lines = [
+    p.games && p.games.length ? line('Jeux', p.games.map((g) => GAME_NAMES[g] || g).join(', ')) : null,
+    p.phone ? line('Téléphone', telLink(p.phone)) : null,
+    site ? line('Site', site) : null,
+    p.instagram ? line('Instagram', '@' + p.instagram) : null
+  ].filter(Boolean);
+  return el('div', { class: 'adm-quote' },
+    el('span', { class: 'bz-eyebrow', text: 'Saisi par la boutique, dans l’appli' }),
+    p.description ? el('p', { class: 'bz-small', style: { margin: '8px 0 0', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, text: p.description }) : null,
+    lines.length ? el('div', { class: 'bz-stack', style: { gap: '6px', marginTop: '10px' } }, lines) : null,
+    p.hours ? el('div', { style: { marginTop: '10px' } },
+      el('span', { class: 'bz-tiny', style: { display: 'block', marginBottom: '4px' }, text: 'Horaires' }),
+      hoursLines(p.hours)) : null,
+    el('div', { class: 'bz-row', style: { marginTop: '10px' } },
+      el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Effacer ce que la boutique a saisi', disabled: busy, onclick: () => clearProfile(ctx, v) })));
+}
+
 // La fiche admin d'une boutique.
 function venueFiche(ctx, v) {
   const d = dirDraftOf(v);
@@ -930,7 +994,9 @@ function venueFiche(ctx, v) {
       rule.style.color = /^\d{5}$/.test(pc) && !d.address.includes(pc) ? 'var(--text-danger)' : '';
     };
     const name = draftInput(d, 'name', 'Nom', { maxlength: '120' });
-    const address = draftInput(d, 'address', 'Adresse', { maxlength: '200' }, rule);
+    // 250, comme le serveur : une boutique créée sur demande compose « rue, CP
+    // ville » jusqu'à 248 signes.
+    const address = draftInput(d, 'address', 'Adresse', { maxlength: '250' }, rule);
     const postal = draftInput(d, 'postal_code', 'Code postal', { maxlength: '5', inputmode: 'numeric' });
     const city = draftInput(d, 'city', 'Ville', { maxlength: '80' });
     // Quand le gérant affiche son propre numéro, ce champ n'est pas celui que
@@ -995,6 +1061,7 @@ function venueFiche(ctx, v) {
       el('div', { class: 'bz-row', style: { gap: '8px', marginTop: '6px', flexWrap: 'nowrap' } },
         ident,
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Affilier', disabled: busy, onclick: () => addManager(ctx, v) }))),
+    typedSection(ctx, v, busy),
     fiche
   ];
 }
