@@ -1140,7 +1140,7 @@ function venueFiche(ctx, v) {
       el('span', { class: 'bz-eyebrow', text: 'Partenaire' }),
       el('label', { class: 'bz-check', style: { margin: '6px -10px 0' } }, partnerBox,
         el('span', { text: flags.is_partner ? 'Partenaire depuis le ' + dateFr(v.profile.partner_since) : 'Pas partenaire' })),
-      el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire porte le badge PARTENAIRE, passe en tête de liste dans son département, et les membres peuvent le choisir comme lieu de RDV. L’appli dit aux membres que cette place n’est pas payante : si elle le devient, il faudra afficher « sponsorisé ».' })),
+      el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire porte le badge PARTENAIRE, passe en tête de liste dans son département, et les membres peuvent le choisir comme lieu de RDV. L’appli dit aux membres que la place en tête de liste est réservée aux boutiques partenaires de Boostz.' })),
     hostingSection(v, flags),
     el('div', { class: 'bz-field', style: { marginTop: '14px' } },
       el('label', { class: 'bz-label', for: 'vd-note' }, 'Note interne · ', el('small', { text: 'lue par les seuls admins' })),
