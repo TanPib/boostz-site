@@ -93,7 +93,7 @@ const ACTIONS = {
 };
 // Les champs d'une fiche boutique corrigés dans la console, nommés en français
 // dans le journal : le serveur y écrit les clés de l'API.
-const VENUE_FIELDS = { name: 'nom', address: 'adresse', postal_code: 'code postal', city: 'ville', phone: 'téléphone', partner_note: 'note interne' };
+const VENUE_FIELDS = { name: 'nom', address: 'adresse', postal_code: 'code postal', city: 'ville', phone: 'téléphone', partner_note: 'note interne', profile: 'ce que la boutique a saisi' };
 const SUPER_ONLY = 'Réservé aux super admins.';
 
 const state = {
