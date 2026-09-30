@@ -10,8 +10,10 @@
 // « À valider », les seules demandes en attente, et « Annuaire », toutes les
 // boutiques, avec la fiche admin de chacune (partenaire, note interne,
 // gérants, ce que la boutique a saisi dans l'appli, qu'on peut effacer, et nom
-// et adresse de celles créées sur demande). L'état de
-// l'accueil des échanges et sa pause n'y sont pas : c'est le lot C.
+// et adresse de celles créées sur demande). Depuis le lot C, la fiche montre
+// aussi l'accueil des échanges (ouvert ou en pause, les heures, le nombre de
+// membres qui l'ont cochée), en lecture seule : c'est le gérant qui le règle,
+// dans l'appli.
 //
 // BRANCHÉ COMME data.js : l'état vit ici. admin.js n'importe que le chargement
 // (pour le badge de l'onglet), le rendu et le compteur, et passe au rendu ses
@@ -702,6 +704,22 @@ async function goPage(view, page) {
   if (top < 0) window.scrollTo({ top: Math.max(0, top + window.scrollY - 72), behavior: 'instant' });
 }
 
+// Une nouvelle recherche (frappe, Entrée, filtre « Partenaires uniquement »)
+// repart du haut de la liste, comme un changement de page. Avant, elle gardait
+// le défilement de l'ancienne liste : la nouvelle s'ouvrait au milieu, sur des
+// lignes qui n'avaient rien à voir, et `listScroll` le rendait encore au rendu
+// complet suivant (défaut relevé au contrôle du lot B). Le haut n'est rendu
+// qu'à l'arrivée de la liste : pendant le chargement, l'ancienne reste où
+// l'admin l'a laissée. Une recherche ratée ne bouge rien, son erreur s'affiche
+// au-dessus des anciennes lignes.
+async function searchFromTop() {
+  const err = await refreshList({ page: 1 });
+  if (err) return;
+  dir.listScroll = 0;
+  const view = dir.view;
+  if (view && view.rows.isConnected) view.rows.scrollTop = 0;
+}
+
 // Ce que l'admin a écrit dans une fiche : la note, le champ « Affilier » et,
 // pour une boutique créée sur demande, ses champs. Après un enregistrement,
 // seule la partie enregistrée repart de ce que le serveur a rendu.
@@ -969,6 +987,47 @@ function typedSection(ctx, v, busy) {
       el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Effacer ce que la boutique a saisi', disabled: busy, onclick: () => clearProfile(ctx, v) })));
 }
 
+// Le nombre de membres qui ont coché la boutique dans leurs lieux de RDV. Un
+// nombre, jamais qui : ni le gérant ni la console ne voient qui vient.
+function hostingMembersText(n) {
+  const count = Number(n) || 0;
+  if (!count) return 'Aucun membre ne l’a cochée comme lieu de RDV.';
+  if (count === 1) return '1 membre l’a cochée comme lieu de RDV.';
+  return count.toLocaleString('fr-FR') + ' membres l’ont cochée comme lieu de RDV.';
+}
+
+// L'accueil des échanges (lot C), en lecture seule : le gérant le règle dans
+// l'appli (Ma fiche boutique › Échanges chez toi). Une boutique qui n'est pas
+// partenaire n'accueille rien, quelle que soit sa pause : elle garde pourtant
+// ses membres, qui la retrouvent si le partenariat reprend. Sans horaires ni
+// créneaux, l'appli propose un RDV chaque jour de 9 h à 21 h : la ligne le
+// dit. Rien quand le serveur ne rend pas encore `hosting` (avant le lot C), ni
+// pour une boutique non partenaire qui n'a rien à dire (aucun membre, pas en
+// pause, aux heures d'ouverture) : c'est presque tout l'annuaire, et « inactif,
+// aucun membre » sur chaque fiche n'apprendrait rien.
+function hostingSection(v, flags) {
+  const h = v.hosting;
+  if (!h) return null;
+  if (!(flags.is_partner || h.members_count > 0 || h.paused || !h.uses_opening_hours)) return null;
+  const state = !flags.is_partner
+    ? muted('inactif : la boutique n’est pas partenaire')
+    : h.paused
+      ? el('span', { class: 'bz-pill is-amber', text: 'En pause' })
+      : el('span', { class: 'bz-pill is-green', text: 'Ouvert' });
+  const openingHours = !!(v.profile && v.profile.hours);
+  const mode = h.uses_opening_hours
+    ? (openingHours ? 'aux heures d’ouverture' : 'aux heures d’ouverture · aucune saisie, de 9 h à 21 h')
+    : 'créneaux choisis';
+  return el('div', { class: 'adm-quote' },
+    el('span', { class: 'bz-eyebrow', text: 'Accueil des échanges' }),
+    el('div', { class: 'bz-stack', style: { gap: '6px', marginTop: '8px' } },
+      line('Accueil', state),
+      line('Heures', mode)),
+    !h.uses_opening_hours && h.hours ? el('div', { style: { marginTop: '8px' } }, hoursLines(h.hours)) : null,
+    el('p', { class: 'bz-small', style: { margin: '10px 0 0' }, text: hostingMembersText(h.members_count) }),
+    el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Le gérant règle l’accueil dans l’appli, depuis Ma fiche boutique. Ni lui ni la console ne voient qui vient.' }));
+}
+
 // La fiche admin d'une boutique.
 function venueFiche(ctx, v) {
   const d = dirDraftOf(v);
@@ -1006,7 +1065,7 @@ function venueFiche(ctx, v) {
     if (!next) {
       const ok = await ctx.ask({
         title: 'Retirer le statut partenaire',
-        text: v.name + ' perd son badge PARTENAIRE dans l’appli, et sa date de partenariat est effacée.',
+        text: v.name + ' perd son badge PARTENAIRE, sa place en tête de liste et sa place parmi les lieux de RDV proposés. Sa date de partenariat est effacée. Les RDV déjà fixés chez elle restent.',
         confirmLabel: 'Retirer', tone: 'red'
       });
       if (!ok) { partnerBox.checked = true; return; }
@@ -1081,7 +1140,8 @@ function venueFiche(ctx, v) {
       el('span', { class: 'bz-eyebrow', text: 'Partenaire' }),
       el('label', { class: 'bz-check', style: { margin: '6px -10px 0' } }, partnerBox,
         el('span', { text: flags.is_partner ? 'Partenaire depuis le ' + dateFr(v.profile.partner_since) : 'Pas partenaire' })),
-      el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire n’a pour l’instant qu’un badge dans l’appli. La tête de liste et les lieux de RDV arrivent avec le lot suivant.' })),
+      el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire porte le badge PARTENAIRE, passe en tête de liste dans son département, et les membres peuvent le choisir comme lieu de RDV. L’appli dit aux membres que cette place n’est pas payante : si elle le devient, il faudra afficher « sponsorisé ».' })),
+    hostingSection(v, flags),
     el('div', { class: 'bz-field', style: { marginTop: '14px' } },
       el('label', { class: 'bz-label', for: 'vd-note' }, 'Note interne · ', el('small', { text: 'lue par les seuls admins' })),
       note,
@@ -1119,12 +1179,12 @@ function searchInput() {
     clearTimeout(dir.timer);
     // 300 ms sans frappe avant d'interroger le serveur : une requête par mot,
     // pas une par lettre.
-    dir.timer = setTimeout(() => { refreshList({ page: 1 }); }, 300);
+    dir.timer = setTimeout(searchFromTop, 300);
   });
   search.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
     clearTimeout(dir.timer);
-    refreshList({ page: 1 });
+    searchFromTop();
   });
   dir.search = search;
   return search;
@@ -1161,7 +1221,7 @@ function renderDirectory(ctx, levels) {
     class: 'bz-tab', type: 'button', 'aria-pressed': String(dir.partnerOnly),
     // L'allure d'un onglet choisi quand le filtre est actif.
     style: dir.partnerOnly ? { background: 'var(--soft-violet-fill)', borderColor: 'var(--soft-violet-border)', color: 'var(--soft-violet-text)' } : null,
-    onclick: () => { dir.partnerOnly = !dir.partnerOnly; clearTimeout(dir.timer); ctx.rerender(); refreshList({ page: 1 }); }
+    onclick: () => { dir.partnerOnly = !dir.partnerOnly; clearTimeout(dir.timer); ctx.rerender(); searchFromTop(); }
   }, 'Partenaires uniquement');
 
   const head = el('div', { class: 'adm-list-head' });
