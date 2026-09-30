@@ -91,6 +91,9 @@ const ACTIONS = {
   venue_manager: 'Gérant',
   venue_edit: 'Fiche boutique'
 };
+// Les champs d'une fiche boutique corrigés dans la console, nommés en français
+// dans le journal : le serveur y écrit les clés de l'API.
+const VENUE_FIELDS = { name: 'nom', address: 'adresse', postal_code: 'code postal', city: 'ville', phone: 'téléphone', partner_note: 'note interne' };
 const SUPER_ONLY = 'Réservé aux super admins.';
 
 const state = {
@@ -1606,7 +1609,7 @@ function detailText(a) {
     case 'venue_request': return (d.decision === 'APPROVED' ? 'Validée' : 'Refusée') + (d.type === 'CLAIM' ? ' · gérance' : ' · création') + ' · ' + (d.venueName || 'boutique supprimée');
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
-    case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.join(', ') : '');
+    case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.map((f) => VENUE_FIELDS[f] || f).join(', ') : '');
     default: return '';
   }
 }
@@ -1732,7 +1735,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
