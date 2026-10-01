@@ -89,7 +89,10 @@ const ACTIONS = {
   venue_request: 'Demande de boutique',
   venue_partner: 'Partenaire',
   venue_manager: 'Gérant',
-  venue_edit: 'Fiche boutique'
+  venue_edit: 'Fiche boutique',
+  age_override: 'Âge simulé',
+  pass_override: 'Pass simulé',
+  venue_simulation: 'Gérant simulé'
 };
 // Les champs d'une fiche boutique corrigés dans la console, nommés en français
 // dans le journal : le serveur y écrit les clés de l'API.
@@ -1611,6 +1614,10 @@ function detailText(a) {
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
     case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.map((f) => VENUE_FIELDS[f] || f).join(', ') : '');
+    // Les gestes de test de l'admin sur son propre compte (simulateurs de la page Admin de l'app).
+    case 'age_override': return d.mode === 'adult' ? 'majeur' : d.mode === 'minor' ? 'mineur' : 'âge réel';
+    case 'pass_override': return d.mode === 'active' ? (d.plan === 'year' ? 'abonné annuel' : 'abonné mensuel') : d.mode === 'none' ? 'sans Pass' : 'abonnement réel';
+    case 'venue_simulation': return d.venue_id ? (d.name || 'boutique supprimée') : 'arrêtée';
     default: return '';
   }
 }
