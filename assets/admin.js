@@ -30,7 +30,8 @@ const CONTEXTS = {
   forum_message: 'Message de forum',
   place_review: 'Avis sur un lieu',
   place_message: 'Message sur un lieu',
-  news_comment: 'Commentaire d’actualité'
+  news_comment: 'Commentaire d’actualité',
+  venue_review_reply: 'Réponse d’une boutique à un avis'
 };
 const REPORT_STATUS = {
   OPEN: ['Ouvert', 'bz-pill is-red'],
@@ -90,6 +91,7 @@ const ACTIONS = {
   venue_partner: 'Partenaire',
   venue_manager: 'Gérant',
   venue_edit: 'Fiche boutique',
+  venue_reply: 'Réponse de boutique',
   age_override: 'Âge simulé',
   pass_override: 'Pass simulé',
   venue_simulation: 'Gérant simulé'
@@ -879,6 +881,20 @@ function renderReports() {
       class: 'bz-btn is-sm is-' + tone, type: 'button', text: label, disabled: r.status === status,
       onclick: () => setStatus(status, label.toLowerCase())
     });
+    // Une réponse de boutique signalée se masque d'ici ; la réafficher se fait
+    // depuis la fiche de la boutique (onglet Boutiques › Annuaire).
+    const hideReply = async () => {
+      const ok = await ask({
+        title: 'Masquer cette réponse',
+        text: 'Les membres ne la verront plus. Les gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier.',
+        confirmLabel: 'Masquer', tone: 'red'
+      });
+      if (!ok) return;
+      run(async () => {
+        await call('/admin/venues/replies/' + r.context_id, { method: 'PATCH', body: { hidden: true } });
+        await after('Réponse masquée.', loadReports);
+      });
+    };
     const cannotAct = r.reported.deleted ? 'Ce compte est supprimé.' : null;
     const banWhy = cannotAct || (r.reported.banned_at ? 'Déjà banni.' : null) || (r.reported.is_super_admin ? 'Retire-lui d’abord le rang de super admin.' : null) || (isSuper ? null : SUPER_ONLY);
 
@@ -902,7 +918,8 @@ function renderReports() {
       r.content_deleted ? el('p', { class: 'bz-small bz-muted', style: { margin: '10px 0 0' }, text: 'Le contenu signalé a été supprimé depuis.' }) : null,
       el('div', { class: 'bz-row adm-actions', style: { marginTop: '16px', gap: '7px' } },
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Avertir', disabled: !!cannotAct || !target, title: cannotAct || '', onclick: () => target && userActs.warn(target, r.id) }),
-        el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) })
+        el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) }),
+        r.context_type === 'venue_review_reply' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer la réponse', disabled: !!r.content_deleted, onclick: hideReply }) : null
       ),
       el('div', { class: 'bz-row adm-status', style: { marginTop: '10px', gap: '6px' } },
         el('span', { class: 'bz-tiny', text: 'Statut :' }),
@@ -1613,6 +1630,7 @@ function detailText(a) {
     case 'venue_request': return (d.decision === 'APPROVED' ? 'Validée' : 'Refusée') + (d.type === 'CLAIM' ? ' · affiliation' : ' · création') + ' · ' + (d.venueName || 'boutique supprimée');
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
+    case 'venue_reply': return (d.hidden ? 'Masquée · ' : 'Réaffichée · ') + (d.venueName || 'boutique supprimée');
     case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.map((f) => VENUE_FIELDS[f] || f).join(', ') : '');
     // Les gestes de test de l'admin sur son propre compte (simulateurs de la page Admin de l'app).
     case 'age_override': return d.mode === 'adult' ? 'majeur' : d.mode === 'minor' ? 'mineur' : 'âge réel';
