@@ -14,7 +14,8 @@
 // aussi l'accueil des échanges (ouvert ou en pause, les heures, le nombre de
 // membres qui l'ont cochée), en lecture seule : c'est le gérant qui le règle,
 // dans l'appli. Depuis le lot D, elle montre aussi le message épinglé et les
-// réponses de la boutique aux avis, qu'on peut masquer ou réafficher.
+// réponses de la boutique aux avis, qu'on peut masquer ou réafficher. Depuis le
+// lot E, elle montre aussi ses événements et ses séries, masquables de même.
 //
 // BRANCHÉ COMME data.js : l'état vit ici. admin.js n'importe que le chargement
 // (pour le badge de l'onglet), le rendu et le compteur, et passe au rendu ses
@@ -1039,6 +1040,119 @@ function repliesSection(ctx, v, busy) {
     count > 20 ? el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '10px' }, text: 'Les 20 plus récentes.' }) : null);
 }
 
+// Masquer ou réafficher un événement, ou une série entière. Masqué, il (elle)
+// disparaît pour les membres, sur la fiche comme dans les Tournois du
+// département ; les gérants le voient encore, marqué, et ne peuvent plus le
+// modifier. Le serveur l'inscrit au journal (« Événement de boutique »).
+async function setEventHidden(ctx, v, e, hidden) {
+  if (dir.busy) return;
+  if (hidden) {
+    const ok = await ctx.ask({
+      title: 'Masquer cet événement',
+      text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. Les membres déjà prévenus gardent leur notification.',
+      confirmLabel: 'Masquer', tone: 'red'
+    });
+    if (!ok) return;
+  }
+  return venueGesture(ctx, v, () => call('/admin/venues/events/' + encodeURIComponent(e.id), { method: 'PATCH', body: { hidden } }), {
+    message: hidden ? 'Événement masqué.' : 'Événement réaffiché.'
+  });
+}
+
+async function setSeriesHidden(ctx, v, s, hidden) {
+  if (dir.busy) return;
+  if (hidden) {
+    const ok = await ctx.ask({
+      title: 'Masquer cette série',
+      text: 'Les membres ne verront plus aucune de ses dates, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier.',
+      confirmLabel: 'Masquer', tone: 'red'
+    });
+    if (!ok) return;
+  }
+  return venueGesture(ctx, v, () => call('/admin/venues/event-series/' + encodeURIComponent(s.id), { method: 'PATCH', body: { hidden } }), {
+    message: hidden ? 'Série masquée.' : 'Série réaffichée.'
+  });
+}
+
+// La description et le lien d'un événement ou d'une série. Le lien n'est
+// cliquable que s'il commence par http(s) : un `javascript:` reste du texte.
+function eventBody(x) {
+  const out = [];
+  if (x.description) out.push(el('span', { class: 'bz-small bz-muted', style: { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, text: x.description }));
+  if (x.link) {
+    out.push(/^https?:\/\//i.test(x.link)
+      ? el('a', { class: 'bz-small', href: x.link, target: '_blank', rel: 'noopener noreferrer', style: { overflowWrap: 'anywhere' }, text: x.link })
+      : el('span', { class: 'bz-small bz-muted', style: { overflowWrap: 'anywhere' }, text: x.link }));
+  }
+  return out;
+}
+
+// Les pastilles d'état (annulé, arrêtée, masqué) et le bouton Masquer ou
+// Réafficher. `hiddenLabel` s'accorde avec le nom (événement, série).
+function stateControls(busy, hiddenDate, hiddenLabel, pill, set) {
+  return el('div', { class: 'bz-row', style: { gap: '8px' } },
+    pill ? el('span', { class: 'bz-pill is-grey', text: pill }) : null,
+    hiddenDate ? el('span', { class: 'bz-pill is-amber', text: hiddenLabel }) : null,
+    hiddenDate
+      ? el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Réafficher', disabled: busy, onclick: () => set(false) })
+      : el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Masquer', disabled: busy, onclick: () => set(true) }));
+}
+
+function notifiedText(n) {
+  const count = Number(n) || 0;
+  return count ? count.toLocaleString('fr-FR') + (count > 1 ? ' membres prévenus' : ' membre prévenu') : 'sans avis';
+}
+
+// Les événements de la boutique (les 20 plus récents), les dates masquées une
+// à une d'une série comprises. Rien avec un ancien serveur, qui ne rend pas
+// `events`, ni quand il n'y en a aucun.
+function eventsSection(ctx, v, busy) {
+  const count = Number(v.events_count) || 0;
+  if (!Array.isArray(v.events) || !count) return null;
+  const rows = v.events.map((e) => {
+    const meta = ['par ' + (e.author_pseudo || 'gérant supprimé') + ' · publié le ' + dateFr(e.created_date)];
+    if (e.edited_date) meta.push('modifié');
+    meta.push(notifiedText(e.notified_count));
+    if (e.series_id) meta.push('date d’une série');
+    return el('div', { class: 'bz-stack', style: { gap: '4px', marginTop: '12px' } },
+      el('strong', { style: { overflowWrap: 'anywhere' }, text: e.title }),
+      el('span', { class: 'bz-small', text: (GAME_NAMES[e.game] || e.game) + ' · ' + dateTime(e.starts_at) }),
+      eventBody(e),
+      el('span', { class: 'bz-tiny', text: meta.join(' · ') }),
+      stateControls(busy, e.hidden_date, 'Masqué', e.cancelled_date ? 'Annulé' : null, (hidden) => setEventHidden(ctx, v, e, hidden)));
+  });
+  return el('div', { class: 'adm-quote' },
+    el('span', { class: 'bz-eyebrow', text: 'Événements · ' + count.toLocaleString('fr-FR') }),
+    rows,
+    count > 20 ? el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '10px' }, text: 'Les 20 plus récents.' }) : null);
+}
+
+// Les séries de la boutique (les 20 plus récentes). Masquer une série masque
+// toutes ses dates d'un coup ; les dates masquées seules sont dans la section
+// Événements.
+function seriesSection(ctx, v, busy) {
+  const count = Number(v.series_count) || 0;
+  if (!Array.isArray(v.series) || !count) return null;
+  const rows = v.series.map((s) => {
+    const meta = ['par ' + (s.author_pseudo || 'gérant supprimé') + ' · publiée le ' + dateFr(s.created_date)];
+    if (s.edited_date) meta.push('modifiée');
+    meta.push(notifiedText(s.notified_count));
+    const upcoming = Number(s.upcoming_count) || 0;
+    const hours = s.start_time + (s.end_time ? '–' + s.end_time : '');
+    return el('div', { class: 'bz-stack', style: { gap: '4px', marginTop: '12px' } },
+      el('strong', { style: { overflowWrap: 'anywhere' }, text: s.title }),
+      el('span', { class: 'bz-small', text: s.rhythm_label + ' · ' + hours + ' · ' + (GAME_NAMES[s.game] || s.game) }),
+      el('span', { class: 'bz-small bz-muted', text: 'dès le ' + dateFr(s.first_date) + ' · ' + upcoming.toLocaleString('fr-FR') + (upcoming > 1 ? ' dates à venir' : ' date à venir') }),
+      eventBody(s),
+      el('span', { class: 'bz-tiny', text: meta.join(' · ') }),
+      stateControls(busy, s.hidden_date, 'Masquée', s.stopped_date ? 'Arrêtée' : null, (hidden) => setSeriesHidden(ctx, v, s, hidden)));
+  });
+  return el('div', { class: 'adm-quote' },
+    el('span', { class: 'bz-eyebrow', text: 'Séries · ' + count.toLocaleString('fr-FR') }),
+    rows,
+    count > 20 ? el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '10px' }, text: 'Les 20 plus récentes.' }) : null);
+}
+
 // Le nombre de membres qui ont coché la boutique dans leurs lieux de RDV. Un
 // nombre, jamais qui : ni le gérant ni la console ne voient qui vient.
 function hostingMembersText(n) {
@@ -1117,7 +1231,7 @@ function venueFiche(ctx, v) {
     if (!next) {
       const ok = await ctx.ask({
         title: 'Retirer le statut partenaire',
-        text: v.name + ' perd son badge PARTENAIRE, sa place en tête de liste et sa place parmi les lieux de RDV proposés. Sa date de partenariat est effacée. Les RDV déjà fixés chez elle restent.',
+        text: v.name + ' perd son badge PARTENAIRE, sa place en tête de liste et sa place parmi les lieux de RDV proposés. Sa date de partenariat est effacée. Les RDV déjà fixés chez elle restent. Ses événements déjà publiés restent affichés ; elle n’en publie plus, et ses séries n’ajoutent plus de dates.',
         confirmLabel: 'Retirer', tone: 'red'
       });
       if (!ok) { partnerBox.checked = true; return; }
@@ -1214,6 +1328,8 @@ function venueFiche(ctx, v) {
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Affilier', disabled: busy, onclick: () => addManager(ctx, v) }))),
     typedSection(ctx, v, busy),
     repliesSection(ctx, v, busy),
+    eventsSection(ctx, v, busy),
+    seriesSection(ctx, v, busy),
     fiche
   ];
 }
