@@ -31,7 +31,8 @@ const CONTEXTS = {
   place_review: 'Avis sur un lieu',
   place_message: 'Message sur un lieu',
   news_comment: 'Commentaire d’actualité',
-  venue_review_reply: 'Réponse d’une boutique à un avis'
+  venue_review_reply: 'Réponse d’une boutique à un avis',
+  venue_event: 'Événement d’une boutique'
 };
 const REPORT_STATUS = {
   OPEN: ['Ouvert', 'bz-pill is-red'],
@@ -92,6 +93,7 @@ const ACTIONS = {
   venue_manager: 'Gérant',
   venue_edit: 'Fiche boutique',
   venue_reply: 'Réponse de boutique',
+  venue_event: 'Événement de boutique',
   age_override: 'Âge simulé',
   pass_override: 'Pass simulé',
   venue_simulation: 'Gérant simulé'
@@ -895,6 +897,20 @@ function renderReports() {
         await after('Réponse masquée.', loadReports);
       });
     };
+    // Un événement signalé se masque d'ici ; le réafficher se fait depuis la
+    // fiche de la boutique (onglet Boutiques › Annuaire).
+    const hideEvent = async () => {
+      const ok = await ask({
+        title: 'Masquer cet événement',
+        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. Les membres déjà prévenus gardent leur notification.',
+        confirmLabel: 'Masquer', tone: 'red'
+      });
+      if (!ok) return;
+      run(async () => {
+        await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true } });
+        await after('Événement masqué.', loadReports);
+      });
+    };
     const cannotAct = r.reported.deleted ? 'Ce compte est supprimé.' : null;
     const banWhy = cannotAct || (r.reported.banned_at ? 'Déjà banni.' : null) || (r.reported.is_super_admin ? 'Retire-lui d’abord le rang de super admin.' : null) || (isSuper ? null : SUPER_ONLY);
 
@@ -919,7 +935,8 @@ function renderReports() {
       el('div', { class: 'bz-row adm-actions', style: { marginTop: '16px', gap: '7px' } },
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Avertir', disabled: !!cannotAct || !target, title: cannotAct || '', onclick: () => target && userActs.warn(target, r.id) }),
         el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) }),
-        r.context_type === 'venue_review_reply' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer la réponse', disabled: !!r.content_deleted, onclick: hideReply }) : null
+        r.context_type === 'venue_review_reply' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer la réponse', disabled: !!r.content_deleted, onclick: hideReply }) : null,
+        r.context_type === 'venue_event' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer l’événement', disabled: !!r.content_deleted, onclick: hideEvent }) : null
       ),
       el('div', { class: 'bz-row adm-status', style: { marginTop: '10px', gap: '6px' } },
         el('span', { class: 'bz-tiny', text: 'Statut :' }),
@@ -1631,6 +1648,7 @@ function detailText(a) {
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
     case 'venue_reply': return (d.hidden ? 'Masquée · ' : 'Réaffichée · ') + (d.venueName || 'boutique supprimée');
+    case 'venue_event': return (d.hidden ? 'Masqué · ' : 'Réaffiché · ') + (d.seriesId ? 'série · ' : '') + (d.title || 'événement') + ' · ' + (d.venueName || 'boutique supprimée');
     case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.map((f) => VENUE_FIELDS[f] || f).join(', ') : '');
     // Les gestes de test de l'admin sur son propre compte (simulateurs de la page Admin de l'app).
     case 'age_override': return d.mode === 'adult' ? 'majeur' : d.mode === 'minor' ? 'mineur' : 'âge réel';
