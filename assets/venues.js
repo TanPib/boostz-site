@@ -13,7 +13,8 @@
 // et adresse de celles créées sur demande). Depuis le lot C, la fiche montre
 // aussi l'accueil des échanges (ouvert ou en pause, les heures, le nombre de
 // membres qui l'ont cochée), en lecture seule : c'est le gérant qui le règle,
-// dans l'appli.
+// dans l'appli. Depuis le lot D, elle montre aussi le message épinglé et les
+// réponses de la boutique aux avis, qu'on peut masquer ou réafficher.
 //
 // BRANCHÉ COMME data.js : l'état vit ici. admin.js n'importe que le chargement
 // (pour le badge de l'onglet), le rendu et le compteur, et passe au rendu ses
@@ -944,7 +945,7 @@ function draftInput(d, key, label, attrs, extra = null) {
 // Ce que la boutique a saisi dans « Ma fiche », dans l'appli, par opposition
 // aux champs de l'équipe (partenaire, note interne). Même règle que le serveur
 // (hasTypedProfile, routes/adminVenues.js) : rien de saisi, pas de section.
-const typedProfile = (p) => !!(p && (p.description || (p.games && p.games.length) || p.hours || p.phone || p.website || p.instagram));
+const typedProfile = (p) => !!(p && (p.description || (p.games && p.games.length) || p.hours || p.phone || p.website || p.instagram || p.pinned_message));
 const DAYS = [['lun', 'Lun'], ['mar', 'Mar'], ['mer', 'Mer'], ['jeu', 'Jeu'], ['ven', 'Ven'], ['sam', 'Sam'], ['dim', 'Dim']];
 // Les noms courts des 9 jeux, ceux de l'appli (mobile/src/constants/games.js).
 const GAME_NAMES = {
@@ -976,6 +977,12 @@ function typedSection(ctx, v, busy) {
     site ? line('Site', site) : null,
     p.instagram ? line('Instagram', '@' + p.instagram) : null
   ].filter(Boolean);
+  // Le message épinglé, tel que les membres le lisent en haut de la fiche.
+  const pinned = p.pinned_message
+    ? el('div', { style: { marginTop: '10px' } },
+      el('span', { class: 'bz-tiny', style: { display: 'block', marginBottom: '4px' }, text: 'Message épinglé' + (p.pinned_message_date ? ' · le ' + dateFr(p.pinned_message_date) : '') }),
+      el('p', { class: 'bz-small', style: { margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, text: p.pinned_message }))
+    : null;
   return el('div', { class: 'adm-quote' },
     el('span', { class: 'bz-eyebrow', text: 'Saisi par la boutique, dans l’appli' }),
     p.description ? el('p', { class: 'bz-small', style: { margin: '8px 0 0', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, text: p.description }) : null,
@@ -983,8 +990,53 @@ function typedSection(ctx, v, busy) {
     p.hours ? el('div', { style: { marginTop: '10px' } },
       el('span', { class: 'bz-tiny', style: { display: 'block', marginBottom: '4px' }, text: 'Horaires' }),
       hoursLines(p.hours)) : null,
+    pinned,
     el('div', { class: 'bz-row', style: { marginTop: '10px' } },
       el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Effacer ce que la boutique a saisi', disabled: busy, onclick: () => clearProfile(ctx, v) })));
+}
+
+// Masquer ou réafficher une réponse de la boutique à un avis. Masquée, elle
+// disparaît pour les membres ; le gérant la voit encore, marquée, et ne peut
+// plus la modifier. Le serveur l'inscrit au journal (« Réponse de boutique »).
+async function setReplyHidden(ctx, v, r, hidden) {
+  if (dir.busy) return;
+  if (hidden) {
+    const ok = await ctx.ask({
+      title: 'Masquer cette réponse',
+      text: 'Les membres ne la verront plus. Les gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier.',
+      confirmLabel: 'Masquer', tone: 'red'
+    });
+    if (!ok) return;
+  }
+  return venueGesture(ctx, v, () => call('/admin/venues/replies/' + r.id, { method: 'PATCH', body: { hidden } }), {
+    message: hidden ? 'Réponse masquée.' : 'Réponse réaffichée.'
+  });
+}
+
+// Les réponses de la boutique aux avis (les 20 plus récentes). Rien avec un
+// ancien serveur, qui ne rend pas `replies`, ni quand il n'y en a aucune.
+function repliesSection(ctx, v, busy) {
+  const count = Number(v.replies_count) || 0;
+  if (!Array.isArray(v.replies) || !count) return null;
+  const rows = v.replies.map((r) => {
+    const rv = r.review || {};
+    const meta = ['par ' + (r.author_pseudo || 'gérant supprimé') + ' · le ' + dateFr(r.created_date)];
+    if (r.edited_date) meta.push('modifiée');
+    if (r.review_changed) meta.push('avis modifié après la réponse');
+    return el('div', { class: 'bz-stack', style: { gap: '4px', marginTop: '12px' } },
+      el('span', { class: 'bz-small bz-muted', style: { overflowWrap: 'anywhere' }, text: rv.stars + '/5 · ' + (rv.author_pseudo || 'membre') + ' : ' + (rv.comment || '') }),
+      el('p', { class: 'bz-small', style: { margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, text: r.text }),
+      el('span', { class: 'bz-tiny', text: meta.join(' · ') }),
+      el('div', { class: 'bz-row', style: { gap: '8px' } },
+        r.hidden_date ? el('span', { class: 'bz-pill is-amber', text: 'Masquée' }) : null,
+        r.hidden_date
+          ? el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Réafficher', disabled: busy, onclick: () => setReplyHidden(ctx, v, r, false) })
+          : el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Masquer', disabled: busy, onclick: () => setReplyHidden(ctx, v, r, true) })));
+  });
+  return el('div', { class: 'adm-quote' },
+    el('span', { class: 'bz-eyebrow', text: 'Réponses aux avis · ' + count.toLocaleString('fr-FR') }),
+    rows,
+    count > 20 ? el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '10px' }, text: 'Les 20 plus récentes.' }) : null);
 }
 
 // Le nombre de membres qui ont coché la boutique dans leurs lieux de RDV. Un
@@ -1161,6 +1213,7 @@ function venueFiche(ctx, v) {
         ident,
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Affilier', disabled: busy, onclick: () => addManager(ctx, v) }))),
     typedSection(ctx, v, busy),
+    repliesSection(ctx, v, busy),
     fiche
   ];
 }
