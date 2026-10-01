@@ -915,6 +915,7 @@ function renderReports() {
     // date ne retire que cette date ; la série entière se masque d'un second geste.
     const inSeries = r.context_type === 'venue_event' && typeof r.content === 'string' && r.content.includes('[Date d’une série');
     const alreadyHidden = r.context_type === 'venue_event' && typeof r.content === 'string' && r.content.startsWith('[Masqué]');
+    const seriesHidden = inSeries && r.content.includes('[Série masquée]');
     const hideSeries = async () => {
       const ok = await ask({
         title: 'Masquer toute la série',
@@ -953,7 +954,7 @@ function renderReports() {
         el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) }),
         r.context_type === 'venue_review_reply' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer la réponse', disabled: !!r.content_deleted, onclick: hideReply }) : null,
         r.context_type === 'venue_event' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer l’événement', disabled: !!r.content_deleted || alreadyHidden, title: alreadyHidden ? 'Cet événement est déjà masqué.' : '', onclick: hideEvent }) : null,
-        inSeries ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer toute la série', disabled: !!r.content_deleted, onclick: hideSeries }) : null
+        inSeries ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer toute la série', disabled: !!r.content_deleted || seriesHidden, title: seriesHidden ? 'Cette série est déjà masquée.' : '', onclick: hideSeries }) : null
       ),
       el('div', { class: 'bz-row adm-status', style: { marginTop: '10px', gap: '6px' } },
         el('span', { class: 'bz-tiny', text: 'Statut :' }),
