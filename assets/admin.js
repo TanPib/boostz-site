@@ -902,13 +902,29 @@ function renderReports() {
     const hideEvent = async () => {
       const ok = await ask({
         title: 'Masquer cet événement',
-        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. Les membres déjà prévenus gardent leur notification.',
+        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. ' + (inSeries ? 'Seule cette date est masquée : les autres dates de la série restent. ' : '') + 'La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
         confirmLabel: 'Masquer', tone: 'red'
       });
       if (!ok) return;
       run(async () => {
         await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true } });
         await after('Événement masqué.', loadReports);
+      });
+    };
+    // Date d'une série : le texte signalé porte la marque du serveur. Masquer la
+    // date ne retire que cette date ; la série entière se masque d'un second geste.
+    const inSeries = r.context_type === 'venue_event' && typeof r.content === 'string' && r.content.includes('[Date d’une série');
+    const alreadyHidden = r.context_type === 'venue_event' && typeof r.content === 'string' && r.content.startsWith('[Masqué]');
+    const hideSeries = async () => {
+      const ok = await ask({
+        title: 'Masquer toute la série',
+        text: 'Les membres ne verront plus aucune date de cette série, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+        confirmLabel: 'Masquer la série', tone: 'red'
+      });
+      if (!ok) return;
+      run(async () => {
+        await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true, scope: 'series' } });
+        await after('Série masquée.', loadReports);
       });
     };
     const cannotAct = r.reported.deleted ? 'Ce compte est supprimé.' : null;
@@ -936,7 +952,8 @@ function renderReports() {
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Avertir', disabled: !!cannotAct || !target, title: cannotAct || '', onclick: () => target && userActs.warn(target, r.id) }),
         el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) }),
         r.context_type === 'venue_review_reply' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer la réponse', disabled: !!r.content_deleted, onclick: hideReply }) : null,
-        r.context_type === 'venue_event' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer l’événement', disabled: !!r.content_deleted, onclick: hideEvent }) : null
+        r.context_type === 'venue_event' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer l’événement', disabled: !!r.content_deleted || alreadyHidden, title: alreadyHidden ? 'Cet événement est déjà masqué.' : '', onclick: hideEvent }) : null,
+        inSeries ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer toute la série', disabled: !!r.content_deleted, onclick: hideSeries }) : null
       ),
       el('div', { class: 'bz-row adm-status', style: { marginTop: '10px', gap: '6px' } },
         el('span', { class: 'bz-tiny', text: 'Statut :' }),
@@ -1648,7 +1665,7 @@ function detailText(a) {
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
     case 'venue_reply': return (d.hidden ? 'Masquée · ' : 'Réaffichée · ') + (d.venueName || 'boutique supprimée');
-    case 'venue_event': return (d.hidden ? 'Masqué · ' : 'Réaffiché · ') + (d.seriesId ? 'série · ' : '') + (d.title || 'événement') + ' · ' + (d.venueName || 'boutique supprimée');
+    case 'venue_event': return (d.hidden ? 'Masqué · ' : 'Réaffiché · ') + (d.seriesId ? (d.eventId ? 'date d’une série · ' : 'série · ') : '') + (d.title || 'événement') + ' · ' + (d.venueName || 'boutique supprimée');
     case 'venue_edit': return (d.venueName || 'boutique supprimée') + ' · ' + (Array.isArray(d.fields) ? d.fields.map((f) => VENUE_FIELDS[f] || f).join(', ') : '');
     // Les gestes de test de l'admin sur son propre compte (simulateurs de la page Admin de l'app).
     case 'age_override': return d.mode === 'adult' ? 'majeur' : d.mode === 'minor' ? 'mineur' : 'âge réel';

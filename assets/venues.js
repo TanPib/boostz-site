@@ -1049,7 +1049,7 @@ async function setEventHidden(ctx, v, e, hidden) {
   if (hidden) {
     const ok = await ctx.ask({
       title: 'Masquer cet événement',
-      text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. Les membres déjà prévenus gardent leur notification.',
+      text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
       confirmLabel: 'Masquer', tone: 'red'
     });
     if (!ok) return;
@@ -1064,7 +1064,7 @@ async function setSeriesHidden(ctx, v, s, hidden) {
   if (hidden) {
     const ok = await ctx.ask({
       title: 'Masquer cette série',
-      text: 'Les membres ne verront plus aucune de ses dates, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier.',
+      text: 'Les membres ne verront plus aucune de ses dates, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
       confirmLabel: 'Masquer', tone: 'red'
     });
     if (!ok) return;
@@ -1142,7 +1142,7 @@ function seriesSection(ctx, v, busy) {
     return el('div', { class: 'bz-stack', style: { gap: '4px', marginTop: '12px' } },
       el('strong', { style: { overflowWrap: 'anywhere' }, text: s.title }),
       el('span', { class: 'bz-small', text: s.rhythm_label + ' · ' + hours + ' · ' + (GAME_NAMES[s.game] || s.game) }),
-      el('span', { class: 'bz-small bz-muted', text: 'dès le ' + dateFr(s.first_date) + ' · ' + upcoming.toLocaleString('fr-FR') + (upcoming > 1 ? ' dates à venir' : ' date à venir') }),
+      el('span', { class: 'bz-small bz-muted', text: 'dès le ' + dateFr(String(s.first_date).slice(0, 10) + 'T12:00:00') + ' · ' + upcoming.toLocaleString('fr-FR') + (upcoming > 1 ? ' dates à venir' : ' date à venir') }),
       eventBody(s),
       el('span', { class: 'bz-tiny', text: meta.join(' · ') }),
       stateControls(busy, s.hidden_date, 'Masquée', s.stopped_date ? 'Arrêtée' : null, (hidden) => setSeriesHidden(ctx, v, s, hidden)));
