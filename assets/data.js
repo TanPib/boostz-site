@@ -210,7 +210,7 @@ function jobsCard(r) {
   if (!r.syncs.enabled) rows.push(el('p', { class: 'bz-tiny dt-note', text: 'Synchros de fond coupées sur ce serveur : c’est normal en local, elles ne tournent qu’en production.' }));
   for (const s of r.syncs.items) {
     rows.push(jobRow(s.status, s.label, s.headline,
-      (s.last_success_at ? 'Dernière réussite ' + agoFr(s.last_success_at) : 'Aucune réussite enregistrée') + ' · rythme ' + (s.period_h > 24 ? 'hebdomadaire' : 'quotidien')));
+      (s.last_success_at ? 'Dernière réussite ' + agoFr(s.last_success_at) : 'Aucune réussite enregistrée') + ' · rythme ' + (s.rhythm || (s.period_h > 24 ? 'hebdomadaire' : 'quotidien'))));
   }
   for (const c of r.crons) {
     rows.push(jobRow(c.status, 'Cron GitHub · ' + c.label + ' (' + c.rhythm + ')', c.headline,
