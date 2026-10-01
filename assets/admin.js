@@ -902,7 +902,7 @@ function renderReports() {
     const hideEvent = async () => {
       const ok = await ask({
         title: 'Masquer cet événement',
-        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. ' + (inSeries ? 'Seule cette date est masquée : les autres dates de la série restent. ' : '') + 'La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. ' + (inSeries ? 'Seule cette date est masquée : les autres dates de la série restent, et l’avis de la série, envoyé une seule fois, ne change pas.' : 'La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.'),
         confirmLabel: 'Masquer', tone: 'red'
       });
       if (!ok) return;
