@@ -1,0 +1,32 @@
+/* Les pages juridiques (mentions légales, CGU, CGV, confidentialité, traceurs,
+   conditions des boutiques), générées depuis le dépôt de l'application par
+   mobile/scripts/export-legal-site.mjs. Reprend la mise en page de l'ancienne
+   politique de confidentialité. */
+.doc h2 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin: 32px 0 8px; }
+.doc h3 { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; margin: 20px 0 6px; }
+.doc p, .doc li { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+.doc strong { color: var(--text); }
+.doc ul, .doc ol { padding-left: 20px; margin: 8px 0; }
+.doc table { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 13px; margin: 10px 0; }
+.doc th { text-align: left; font-family: var(--font-ui); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.doc td { padding: 11px 12px; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--text-muted); vertical-align: top; }
+.doc td:first-child { color: var(--text); }
+.doc .table-wrap { overflow-x: auto; }
+.doc .note { border: 1px dashed rgba(245,166,35,.5); border-radius: 13px; padding: 4px 16px; margin-top: 18px; }
+.doc .note p { color: var(--amber); }
+
+/* Téléphone : chaque ligne des tableaux devient une fiche, libellés au-dessus. */
+@media (max-width: 640px) {
+  .doc p, .doc li { font-size: 13.5px; line-height: 1.6; }
+  .doc h2 { font-size: 15.5px; margin: 24px 0 6px; }
+  .doc h3 { font-size: 14px; }
+  .doc .table-wrap { overflow: visible; }
+  .doc table { min-width: 0; font-size: 13px; }
+  .doc table, .doc tbody, .doc tr, .doc td { display: block; width: auto; }
+  .doc tr:has(th) { display: none; }
+  .doc tr { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .doc td { padding: 0; border: 0; }
+  .doc td:first-child { font-weight: 600; font-size: 13.5px; }
+  .doc td + td { margin-top: 5px; }
+  .doc td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-ui); font-weight: 700; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 2px; }
+}

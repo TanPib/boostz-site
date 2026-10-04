@@ -1,42 +1,18 @@
 <!doctype html>
+<!-- GÉNÉRÉ par boostz-mobile/mobile/scripts/export-legal-site.mjs à partir de
+     legal/*.md. Ne pas modifier à la main : corriger le texte dans le dépôt de
+     l'application, puis relancer le script. -->
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#08070B">
-<title>Politique de confidentialité — Boostz</title>
+<title>Politique de confidentialité — boostZ</title>
+<meta name="description" content="Politique de confidentialité de l'application boostZ et du site boostz.fr.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
-<style>
-  .doc h2 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin: 32px 0 8px; }
-  .doc h3 { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; margin: 20px 0 6px; }
-  .doc p, .doc li { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
-  .doc strong { color: var(--text); }
-  .doc ul { padding-left: 20px; }
-  .doc code { font-size: 12.5px; color: var(--amber); }
-  .doc table { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 13px; margin: 10px 0; }
-  .doc th { text-align: left; font-family: var(--font-ui); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); padding: 9px 12px; border-bottom: 1px solid var(--line); }
-  .doc td { padding: 11px 12px; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--text-muted); vertical-align: top; }
-  .doc .table-wrap { overflow-x: auto; }
-  .doc .note { border: 1px dashed rgba(245,166,35,.5); border-radius: 13px; padding: 4px 16px; margin-top: 18px; }
-
-  /* Téléphone : chaque ligne des tableaux devient une fiche, libellés au-dessus. */
-  @media (max-width: 640px) {
-    .doc p, .doc li { font-size: 13.5px; line-height: 1.6; }
-    .doc h2 { font-size: 15.5px; margin: 24px 0 6px; }
-    .doc h3 { font-size: 14px; }
-    .doc .table-wrap { overflow: visible; }
-    .doc table { min-width: 0; font-size: 13px; }
-    .doc table, .doc tbody, .doc tr, .doc td { display: block; width: auto; }
-    .doc tr:has(th) { display: none; }
-    .doc tr { padding: 10px 0; border-bottom: 1px solid var(--line); }
-    .doc td { padding: 0; border: 0; }
-    .doc td:first-child { color: var(--text); font-weight: 600; font-size: 13.5px; }
-    .doc td + td { margin-top: 5px; }
-    .doc td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-ui); font-weight: 700; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 2px; }
-  }
-</style>
+<link rel="stylesheet" href="assets/legal.css">
 </head>
 <body>
 <header class="bz-top">
@@ -47,106 +23,138 @@
 <main class="bz-page is-narrow doc">
 
 <h1 class="bz-h1">Politique de confidentialité</h1>
-<p class="bz-lead">Comment Boostz traite vos données personnelles.</p>
-<p class="bz-tiny" style="margin-top:6px">Version 1.0 — dernière mise à jour : [À COMPLÉTER — date de publication]</p>
+<p class="bz-tiny" style="margin-top:6px">Version 2.0, projet du 04/10/2026</p>
+<div class="note"><p>Projet en cours de relecture juridique. Les passages « À COMPLÉTER » seront remplis dans la version définitive.</p></div>
 
-<div class="note">
-<p><strong>Ce document n'est pas publiable en l'état.</strong> Les blocs <code>[À COMPLÉTER]</code>
-appellent une information que seul l'éditeur détient. Comme les CGU et CGV, il est rédigé pour
-servir de base à une relecture par un professionnel du droit et n'a pas été validé
-juridiquement.</p>
-</div>
+<p>Cette politique est commune à l'application BoostZ et au site boostz.fr.</p>
 
-<h2>1. Qui est responsable de traitement</h2>
+<h2>L'essentiel en clair</h2>
 <ul>
-<li><strong>[À COMPLÉTER — dénomination sociale ou nom]</strong></li>
-<li>[À COMPLÉTER — forme juridique et siège social]</li>
-<li>[À COMPLÉTER — RCS / SIREN]</li>
-<li>Contact : <strong>[À COMPLÉTER — adresse e-mail]</strong></li>
+<li>On garde ce qu'il faut pour faire marcher ton compte : ton courriel, ton pseudo, ta date de naissance, ta collection et ce que tu écris.</li>
+<li>On ne te localise jamais, on n'a pas de publicité, on ne vend tes données à personne et on ne te piste pas d'une appli à l'autre.</li>
+<li>Ton profil est privé par défaut. Seuls les majeurs peuvent le rendre public.</li>
+<li>Les photos de tes cartes perdent leur position GPS dès l'envoi.</li>
+<li>Quelques fonctions passent par une intelligence artificielle (Google ou Anthropic). Elle n'apprend pas avec tes données.</li>
+<li>Tu peux récupérer ta collection, corriger tes infos ou supprimer ton compte quand tu veux.</li>
+<li>Une question ou un souci : <a href="mailto:boostz.info@gmail.com">boostz.info@gmail.com</a>. Tu peux aussi te plaindre à la CNIL.</li>
 </ul>
-<p>Aucun délégué à la protection des données n'a été désigné, la désignation n'étant pas
-obligatoire au regard de la nature et du volume des traitements réalisés.</p>
 
-<h2>2. Ce que nous collectons, et pourquoi</h2>
+<h2>1. Responsable du traitement</h2>
+<p>Tanguy Pibarot, entrepreneur individuel (EI), nom commercial BoostZ, 47 rue Vivienne, 75002 Paris. Contact pour vos données : <a href="mailto:boostz.info@gmail.com">boostz.info@gmail.com</a>, ou par courrier au siège. L'Éditeur n'a pas désigné de délégué à la protection des données, ce qui n'est pas obligatoire pour lui.</p>
 
+<h2>2. Données traitées</h2>
 <div class="table-wrap"><table>
-<tr><th>Données</th><th>Finalité</th><th>Base légale</th></tr>
-<tr><td>Adresse e-mail, mot de passe (jamais stocké en clair, uniquement son empreinte)</td><td data-label="Finalité">Créer et sécuriser votre compte</td><td data-label="Base légale">Exécution du contrat</td></tr>
-<tr><td>Date de naissance</td><td data-label="Finalité">Vérifier la condition d'âge de 18 ans exigée par les CGU pour les échanges et la messagerie</td><td data-label="Base légale">Obligation légale et intérêt légitime</td></tr>
-<tr><td>Pseudo, biographie, avatar, photo de profil</td><td data-label="Finalité">Vous identifier auprès des autres utilisateurs lorsque votre profil est public</td><td data-label="Base légale">Exécution du contrat</td></tr>
-<tr><td>Votre collection : cartes, produits scellés, liste de recherche, alertes de prix</td><td data-label="Finalité">Fournir la fonction principale de l'application</td><td data-label="Base légale">Exécution du contrat</td></tr>
-<tr><td><strong>Photographies de vos cartes</strong></td><td data-label="Finalité">Illustrer votre collection et, si vous le demandez, estimer l'état d'une carte</td><td data-label="Base légale">Exécution du contrat</td></tr>
-<tr><td>Messages d'échange, rendez-vous, notations, signalements</td><td data-label="Finalité">Permettre la mise en relation entre collectionneurs et traiter les litiges</td><td data-label="Base légale">Exécution du contrat et intérêt légitime</td></tr>
-<tr><td>Messages de forum</td><td data-label="Finalité">Animer les espaces de discussion publics</td><td data-label="Base légale">Exécution du contrat</td></tr>
+<tr><th>Catégorie</th><th>Données</th><th>D'où elles viennent</th></tr>
+<tr><td>Compte</td><td data-label="Données">Courriel, mot de passe (stocké sous forme d'empreinte, jamais en clair), pseudo, date d'inscription, date de dernière utilisation</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Âge</td><td data-label="Données">Date de naissance complète</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Profil</td><td data-label="Données">Avatar (un dessin composé dans l'app, jamais une photo), présentation, titres et éléments de personnalisation, choix profil public ou privé</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Collection</td><td data-label="Données">Cartes et produits, photos, état, prix d'achat, notes, numéros de certificat de gradation, liste de souhaits, alertes</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Préférences</td><td data-label="Données">Jeux et langues suivis, départements et boutiques choisis pour les échanges, départements favoris des forums, réglages des notifications</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Échanges (majeurs)</td><td data-label="Données">Objets proposés, messages, lieu et heure du rendez-vous, notes et commentaires</td><td data-label="D'où elles viennent">Vous et l'autre membre</td></tr>
+<tr><td>Communauté (majeurs)</td><td data-label="Données">Sujets et messages de forum, avis sur les lieux, commentaires d'actualité, abonnements à d'autres membres, blocages</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Signalements</td><td data-label="Données">Signalements envoyés ou reçus, décisions de modération</td><td data-label="D'où elles viennent">Vous, d'autres membres, l'équipe</td></tr>
+<tr><td>Support et idées</td><td data-label="Données">Demandes, captures d'écran, version de l'app et du système du téléphone, réponses</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Jeu et récompenses</td><td data-label="Données">Solde et historique des Boosties et des crédits, missions, hauts faits, parrain et filleuls, codes bonus utilisés</td><td data-label="D'où elles viennent">Votre activité</td></tr>
+<tr><td>Achats (à venir)</td><td data-label="Données">Produit, prix, date, formule et échéance du Pass, preuve d'acceptation des CGV</td><td data-label="D'où elles viennent">Vous et le Magasin</td></tr>
+<tr><td>Boutiques</td><td data-label="Données">Pour qui demande la création ou la gestion d'une fiche : nom et adresse de la boutique, téléphone, message</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Affichage de l'offre Pass</td><td data-label="Données">Événements « offre affichée », « fermée », « paiement commencé », enregistrés sans lien avec votre compte</td><td data-label="D'où elles viennent">Votre activité</td></tr>
+</table></div>
+<p><strong>Ce que BoostZ ne collecte pas :</strong> votre position (l'application n'a pas accès à la localisation), vos contacts, un identifiant publicitaire, des données bancaires. Elle n'intègre aucun outil de publicité ni de mesure d'audience tiers ; seuls les affichages de l'offre Pass sont comptés, sans lien avec votre compte (voir la politique des traceurs). Le courriel, le mot de passe, le pseudo et la date de naissance sont indispensables pour ouvrir un compte : sans eux, l'inscription n'est pas possible. Le reste est facultatif. Les photos sont débarrassées de leurs métadonnées, dont la position GPS, avant d'être enregistrées.</p>
+<p><strong>Données de personnes qui ne sont pas membres.</strong> Les annonces eBay sont affichées sans le pseudo de leur vendeur : BoostZ ne garde aucune donnée sur les utilisateurs d'eBay. Les fiches de boutiques reprennent des informations publiques d'OpenStreetMap et du répertoire SIRENE, qui peuvent concerner un commerçant personne physique. Ces personnes peuvent s'opposer au traitement à l'adresse de la section 1.</p>
+
+<h2>3. Pourquoi, et sur quelle base</h2>
+<div class="table-wrap"><table>
+<tr><th>Finalité</th><th>Base légale</th></tr>
+<tr><td>Créer et faire fonctionner votre compte, votre collection, les échanges, les forums, les notifications, les récompenses</td><td data-label="Base légale">Exécution du contrat (CGU)</td></tr>
+<tr><td>Vérifier l'âge et réserver certaines fonctions aux majeurs</td><td data-label="Base légale">Intérêt légitime : protéger les mineurs</td></tr>
+<tr><td>Vendre les packs et le Pass, tenir la comptabilité, prouver votre accord</td><td data-label="Base légale">Contrat (CGV), obligation légale</td></tr>
+<tr><td>Filtrer les coordonnées et les insultes, traiter les signalements, sanctionner</td><td data-label="Base légale">Obligation légale pour le traitement des signalements et la motivation des décisions (règlement sur les services numériques). Intérêt légitime pour le filtre et les sanctions : sécurité des membres</td></tr>
+<tr><td>Répondre au support, avec une première analyse automatique</td><td data-label="Base légale">Contrat</td></tr>
+<tr><td>Vérifier visuellement une annonce eBay</td><td data-label="Base légale">Intérêt légitime : vous aider à éviter une mauvaise impression</td></tr>
+<tr><td>Mesurer l'intérêt pour l'offre Pass</td><td data-label="Base légale">Intérêt légitime : améliorer l'offre</td></tr>
+<tr><td>Protéger le service contre les abus (limitation des requêtes)</td><td data-label="Base légale">Intérêt légitime</td></tr>
+<tr><td>Vous envoyer des notifications par courriel</td><td data-label="Base légale">Exécution du contrat : un service que vous activez type par type et coupez à tout moment</td></tr>
+</table></div>
+<p>BoostZ n'envoie aucune prospection pour ses propres offres. Les annonces d'événements des boutiques partenaires sont un type de notification que vous pouvez couper ; elles ne partent par courriel que si vous l'avez activé. Toute autre prospection serait soumise à votre accord préalable.</p>
+
+<h2>4. Qui voit vos données</h2>
+<p><strong>Les autres membres.</strong></p>
+<ul>
+<li>Votre profil est <strong>privé par défaut</strong>. Un membre majeur peut le rendre public. Il affiche alors son pseudo, son avatar, ses titres, sa présentation, sa date d'inscription, ses compteurs (cartes, produits, échanges, abonnés), sa note moyenne et les objets qu'il propose à l'échange avec leur photo. Il apparaît dans les classements, avec son solde de Boosties. Le reste de la collection reste privé.</li>
+<li>Vos sujets, messages, avis et commentaires publics sont signés de votre pseudo et de votre avatar, que votre profil soit public ou non.</li>
+<li>Dans un échange, l'autre membre voit vos objets, vos messages, le rendez-vous, vos départements d'échange et votre note.</li>
+<li>Un membre bloqué ne vous voit plus, et vous ne le voyez plus.</li>
+</ul>
+<p><strong>L'équipe BoostZ</strong> (l'Éditeur et les administrateurs qu'il désigne) voit, dans la console d'administration, votre courriel, votre pseudo, votre tranche d'âge (majeur ou non, pas la date), votre date d'inscription et de dernière utilisation, vos signalements et votre abonnement. Pour résoudre une demande de support, un administrateur peut afficher l'application telle que vous la voyez. Chaque action d'administration est journalisée.</p>
+<p><strong>Les prestataires</strong> listés à la section 5, chacun pour sa tâche.</p>
+<p><strong>Les autorités</strong>, sur réquisition légale.</p>
+<p>Vos données ne sont ni vendues, ni louées, ni utilisées pour de la publicité.</p>
+
+<h2>5. Prestataires</h2>
+<div class="table-wrap"><table>
+<tr><th>Prestataire</th><th>Ce qu'il fait</th><th>Ce qu'il reçoit</th><th>Où</th></tr>
+<tr><td>Supabase</td><td data-label="Ce qu'il fait">Base de données, stockage des photos</td><td data-label="Ce qu'il reçoit">Toutes les données du compte</td><td data-label="Où">Paris, France</td></tr>
+<tr><td>Render</td><td data-label="Ce qu'il fait">Serveur de l'application</td><td data-label="Ce qu'il reçoit">Toutes les données, en transit</td><td data-label="Où">[À COMPLÉTER — région du serveur]</td></tr>
+<tr><td>Resend</td><td data-label="Ce qu'il fait">Envoi des courriels</td><td data-label="Ce qu'il reçoit">Votre courriel, le contenu du message</td><td data-label="Où">États-Unis</td></tr>
+<tr><td>Google (API Gemini)</td><td data-label="Ce qu'il fait">Première analyse des demandes de support, vérification visuelle des annonces, résumé des actualités</td><td data-label="Ce qu'il reçoit">Texte et captures de la demande, faits de votre compte (pas votre courriel ni votre date de naissance), photo de votre carte</td><td data-label="Où">États-Unis</td></tr>
+<tr><td>Anthropic</td><td data-label="Ce qu'il fait">Secours de la vérification visuelle</td><td data-label="Ce qu'il reçoit">Photo de votre carte, seulement si Google ne répond pas</td><td data-label="Où">États-Unis</td></tr>
+<tr><td>GitHub</td><td data-label="Ce qu'il fait">Hébergement du site boostz.fr</td><td data-label="Ce qu'il reçoit">Adresse IP des visiteurs</td><td data-label="Où">États-Unis</td></tr>
+<tr><td>Expo</td><td data-label="Ce qu'il fait">Mises à jour de l'application</td><td data-label="Ce qu'il reçoit">Adresse IP, identifiant d'installation, versions de l'app et du système</td><td data-label="Où">États-Unis</td></tr>
+</table></div>
+<p>La bibliothèque ML Kit de Google, qui lit le texte des cartes sur le téléphone, peut transmettre à Google des statistiques d'usage, sans les photos (voir la politique des traceurs). Google Play et l'App Store distribuent l'application et encaissent les achats. Ils traitent vos données selon leurs propres politiques, comme responsables distincts.</p>
+<p><strong>Intelligence artificielle.</strong> Les données envoyées à Google et à Anthropic servent uniquement à produire la réponse demandée. Leurs conditions interdisent de les utiliser pour entraîner leurs modèles. Aucune décision qui vous concerne n'est prise par ces systèmes. La trace d'une analyse de support est effacée après 90 jours.</p>
+
+<h2>6. Transferts hors de l'Union européenne</h2>
+<p>Resend, Google, Anthropic, GitHub et Expo traitent des données aux États-Unis. Supabase et Render sont des sociétés américaines, même si vos données sont stockées en Europe. Ces transferts sont encadrés par la décision d'adéquation de la Commission européenne pour les entreprises certifiées « Data Privacy Framework », et sinon par les clauses contractuelles types de la Commission. [À COMPLÉTER — garantie retenue pour chaque prestataire.] Une copie des garanties peut être demandée à l'adresse de la section 1.</p>
+
+<h2>7. Combien de temps</h2>
+<div class="table-wrap"><table>
+<tr><th>Données</th><th>Durée</th></tr>
+<tr><td>Compte, profil, collection, photos</td><td data-label="Durée">Jusqu'à la suppression du compte. Sans utilisation de l'application pendant 3 ans, le compte est supprimé, après un avertissement par courriel 30 jours avant. Un compte qui a déjà fait un achat, dont le Pass est actif ou qui est banni n'est pas supprimé pour inactivité</td></tr>
+<tr><td>Inscription refusée (moins de 15 ans)</td><td data-label="Durée">Supprimée sous 7 jours</td></tr>
+<tr><td>Inscription jamais terminée</td><td data-label="Durée">Supprimée après 30 jours sans retour, si le compte n'a ni date de naissance, ni carte, ni produit</td></tr>
+<tr><td>Photos orphelines (supprimées de la collection)</td><td data-label="Durée">Corbeille après 30 jours, destruction 30 jours plus tard</td></tr>
+<tr><td>Messages d'échange</td><td data-label="Durée">1 an après la fin de l'échange, sauf signalement en cours d'examen. Les étapes de l'échange (accord, rendez-vous, conclusion) restent dans l'historique des deux membres</td></tr>
+<tr><td>Contenus publics (forums, avis, commentaires)</td><td data-label="Durée">Tant qu'ils sont en ligne. À la suppression du compte, effacés si vous le demandez, sinon signés « Dresseur supprimé » (CGU, article 9.3)</td></tr>
+<tr><td>Contenus masqués par la modération</td><td data-label="Durée">3 ans après le masquage, puis effacés</td></tr>
+<tr><td>Signalements et décisions de modération</td><td data-label="Durée">3 ans après la décision, et tant que dure une suspension ou un bannissement</td></tr>
+<tr><td>Demandes de support</td><td data-label="Durée">2 ans après leur clôture. Trace de l'analyse automatique : 90 jours</td></tr>
+<tr><td>Notifications</td><td data-label="Durée">12 mois</td></tr>
+<tr><td>Code de réinitialisation du mot de passe</td><td data-label="Durée">Valable 15 minutes, effacé après 24 heures</td></tr>
+<tr><td>Événements de l'offre Pass</td><td data-label="Durée">13 mois, sans lien avec votre compte</td></tr>
+<tr><td>Achats</td><td data-label="Durée">Pièces comptables 10 ans, preuve d'acceptation des CGV 5 ans</td></tr>
+<tr><td>Date et version des conditions acceptées</td><td data-label="Durée">Conservées après la suppression du compte, comme preuve, pendant 5 ans</td></tr>
+<tr><td>Idées proposées</td><td data-label="Durée">Jusqu'à la suppression du compte</td></tr>
+<tr><td>Journal des actions d'administration</td><td data-label="Durée">3 ans</td></tr>
 </table></div>
 
-<h3>Ce que nous ne collectons pas</h3>
-<p>Boostz n'intègre <strong>aucun outil de mesure d'audience, aucun traceur publicitaire et aucun
-kit de suivi tiers</strong>. Nous ne collectons ni votre position GPS, ni votre carnet d'adresses,
-ni l'identifiant publicitaire de votre appareil. Le présent site ne dépose aucun cookie et
-n'appelle aucune ressource externe.</p>
+<h2>8. Sécurité</h2>
+<p>Les échanges avec le serveur sont chiffrés (HTTPS). Les mots de passe sont stockés sous forme d'empreinte (bcrypt). Les codes de réinitialisation sont stockés sous forme d'empreinte et expirent en 15 minutes. Les photos sont enregistrées sous un nom aléatoire impossible à deviner, après retrait de leurs métadonnées. L'accès à la console d'administration est réservé aux administrateurs et journalisé.</p>
+<p>En cas de violation de données présentant un risque pour vous, l'Éditeur prévient la CNIL dans les 72 heures et, si le risque est élevé, vous prévient directement.</p>
 
-<h2>3. Où vos données sont hébergées</h2>
+<h2>9. Mineurs</h2>
+<p>BoostZ est ouvert dès 15 ans. Le traitement repose sur le contrat (CGU), pas sur le consentement. La règle de l'accord parental avant 15 ans, qui ne vise que le consentement (article 45 de la loi Informatique et Libertés), n'a donc pas à s'appliquer, et BoostZ refuse de toute façon les moins de 15 ans. Les comptes de moins de 18 ans n'ont ni profil public, ni échanges, ni messagerie, ni publication, ni achat.</p>
+<p>Une personne qui a ouvert un compte avant ses 18 ans peut demander l'effacement des données collectées pendant sa minorité. L'Éditeur les efface dans le mois (article 51 de la loi Informatique et Libertés). Un parent peut signaler au support un compte ouvert par un enfant de moins de 15 ans : il est supprimé.</p>
 
-<div class="table-wrap"><table>
-<tr><th>Prestataire</th><th>Rôle</th><th>Localisation</th></tr>
-<tr><td>Supabase</td><td data-label="Rôle">Base de données et stockage des photos</td><td data-label="Localisation">Union européenne — Paris</td></tr>
-<tr><td>Render</td><td data-label="Rôle">Hébergement de l'interface de programmation</td><td data-label="Localisation">Union européenne — Francfort</td></tr>
-<tr><td>Expo (EAS)</td><td data-label="Rôle">Distribution des mises à jour de l'application</td><td data-label="Localisation">Hors Union européenne</td></tr>
-<tr><td>Anthropic</td><td data-label="Rôle">Comparaison visuelle d'une annonce, uniquement si vous déclenchez cette fonction. Cette fonction est actuellement inactive en production.</td><td data-label="Localisation">Hors Union européenne</td></tr>
-</table></div>
+<h2>10. Vos droits</h2>
+<p>Vous pouvez demander l'accès à vos données, leur rectification, leur effacement, la limitation de leur traitement et leur portabilité. Vous pouvez vous opposer aux traitements fondés sur l'intérêt légitime et couper à tout moment les notifications par courriel. Vous pouvez aussi définir des directives sur le sort de vos données après votre décès.</p>
+<p><strong>Dans l'application :</strong> corriger votre profil, rendre votre profil privé, couper les notifications par courriel, extraire votre collection (Profil › Options › Extraire ma collection, fichier CSV), supprimer votre compte, et choisir d'effacer aussi vos messages publics (Profil › Compte, ou boostz.fr/suppression-compte).</p>
+<p><strong>Pour le reste</strong>, écrivez à l'adresse de la section 1. La réponse arrive dans un délai d'un mois. Un justificatif d'identité n'est demandé qu'en cas de doute raisonnable. Vous pouvez saisir la CNIL (cnil.fr, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07).</p>
+<p><strong>Décisions automatisées.</strong> Aucune décision produisant un effet juridique ou vous affectant de manière significative n'est prise par un traitement automatisé seul. Le filtre de publication refuse un message qui contient des coordonnées ou des insultes : vous pouvez le reformuler ou contacter le support.</p>
 
-<p>La base de données, les photographies et l'interface de programmation sont donc hébergées <strong>au sein de l'Union européenne</strong>. Seules la distribution des mises à jour et, le cas échéant, la comparaison visuelle d'annonces font intervenir un prestataire situé hors de l'Union ; ces transferts sont encadrés par les garanties contractuelles de ces prestataires.</p>
+<h2>11. Cookies et traceurs</h2>
+<p>Voir la politique des cookies et traceurs. En bref : aucun traceur publicitaire ni de mesure d'audience, seulement ce qui est nécessaire au fonctionnement.</p>
 
-<p>Les services de catalogue et de cotation que l'application interroge (TCGdex, Scryfall,
-Pokéindex, eBay, Vinted et autres) reçoivent uniquement des informations relatives aux cartes
-recherchées. <strong>Aucune donnée permettant de vous identifier ne leur est transmise.</strong></p>
+<h2>12. Modifications</h2>
+<p>Cette politique peut évoluer. Une modification importante est annoncée dans l'application avant de s'appliquer. La date de la version en vigueur figure en tête.</p>
 
-<h2>4. Combien de temps nous les conservons</h2>
-<p>Vos données sont conservées tant que votre compte existe. À sa suppression :</p>
-<ul>
-<li><strong>Effacées immédiatement</strong> : votre collection et ses photographies, votre liste
-de recherche, vos alertes, vos notifications, votre inventaire et l'historique de vos Boosties.</li>
-<li><strong>Conservés sous forme pseudonymisée</strong> : les échanges, messages, notations,
-signalements et publications de forum. Votre nom d'affichage y devient « Dresseur supprimé ». Ces
-contenus concernent également d'autres utilisateurs, qui conservent un intérêt légitime à en
-garder la trace, et les signalements sont nécessaires à la modération.</li>
-<li><strong>Rendus inutilisables</strong> : votre adresse e-mail et votre mot de passe. Le compte
-ne peut plus se connecter.</li>
-</ul>
-<p>Le détail figure sur la page <a href="suppression-compte.html">Suppression de compte</a>.</p>
-
-<h2>5. Vos droits</h2>
-<p>Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition
-et de portabilité. Vous pouvez :</p>
-<ul>
-<li><strong>Rectifier</strong> vos informations à tout moment depuis l'onglet Profil ;</li>
-<li><strong>Effacer</strong> votre compte depuis <em>Profil → Supprimer mon compte</em>, sans
-avoir à nous écrire ;</li>
-<li><strong>Exercer les autres droits</strong> en écrivant à <strong>[À COMPLÉTER — adresse
-e-mail]</strong>. Nous répondons dans un délai d'un mois.</li>
-</ul>
-<p>Vous pouvez également introduire une réclamation auprès de la Commission nationale de
-l'informatique et des libertés (<a href="https://www.cnil.fr" rel="noopener">cnil.fr</a>).</p>
-
-<h2>6. Sécurité</h2>
-<p>Les mots de passe sont stockés sous forme d'empreinte cryptographique et ne sont jamais
-lisibles, y compris par nous. Les échanges entre l'application et nos serveurs sont chiffrés.
-L'accès aux données de production est restreint aux personnes qui en ont besoin.</p>
-
-<h2>7. Mineurs</h2>
-<p>Boostz est réservé aux personnes âgées d'au moins 18 ans, conformément aux CGU. Nous ne
-collectons pas sciemment de données concernant des mineurs. Si vous constatez qu'un compte a été
-créé par un mineur, écrivez-nous et il sera supprimé.</p>
-
-<h2>8. Modifications</h2>
-<p>Toute modification substantielle de la présente politique sera portée à votre connaissance
-dans l'application avant son entrée en vigueur.</p>
-
-<nav class="bz-foot">
-<a href="index.html">Accueil</a>
-<a href="suppression-compte.html">Suppression de compte</a>
-<a href="support.html">Contacter le support</a>
+<nav class="bz-foot" aria-label="Textes légaux">
+  <a href="mentions-legales.html">Mentions légales</a>
+  <a href="cgu.html">CGU</a>
+  <a href="cgv.html">CGV</a>
+  <a href="traceurs.html">Cookies et traceurs</a>
+  <a href="conditions-boutiques.html">Boutiques partenaires</a>
+  <a href="index.html" class="push">← Retour au site</a>
 </nav>
 </main>
 </body>
