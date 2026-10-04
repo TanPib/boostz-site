@@ -618,11 +618,18 @@ function passInfo(u) {
   const p = passSummary(u.boostz_pass);
   if (!p) return [el('span', { class: 'bz-muted', text: '—' })];
   if (!p.active) return [el('span', { class: 'bz-muted', text: 'Expiré' }), 'le ' + p.expires];
+  // Les deux offres se renouvellent seules : la date est un renouvellement,
+  // sauf résiliation, où elle devient la fin de l'abonnement. Tant qu'aucune
+  // facturation n'existe, `will_renew` est null - « on ne sait pas » - et la
+  // ligne n'annonce plus qu'une échéance (23/09/2026).
+  const fin = !p.renewKnown ? 'échéance le ' : p.willRenew ? 'renouvellement le ' : 'se termine le ';
   return [
-    el('span', { class: 'adm-pass' }, el('b', { text: p.planLabel }), p.statusLabel !== 'Actif' ? el('span', { class: p.statusCls, text: p.statusLabel }) : null),
-    // Les deux offres se renouvellent seules : la date est un renouvellement,
-    // sauf résiliation, où elle devient la fin de l'abonnement.
-    'depuis ' + p.sinceSpan + ' · ' + (p.willRenew ? 'renouvellement le ' : 'se termine le ') + p.expires
+    el('span', { class: 'adm-pass' },
+      el('b', { text: p.planLabel }),
+      p.statusLabel !== 'Actif' ? el('span', { class: p.statusCls, text: p.statusLabel }) : null,
+      // Un Pass posé par la bascule d'administration n'a rien payé.
+      p.qa ? el('span', { class: 'bz-pill is-grey', title: 'État posé par la bascule d’administration', text: 'Test' }) : null),
+    (p.sinceSpan ? 'depuis ' + p.sinceSpan + ' · ' : '') + (p.hasEnd ? fin + p.expires : 'sans échéance')
   ];
 }
 

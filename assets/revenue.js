@@ -1,11 +1,20 @@
 // La vue « Revenus » de la console : Boostz Pass, abonnements, chiffre d'affaires.
 //
-// LES DONNÉES N'EXISTENT PAS ENCORE (14/09/2026). Côté serveur, le Pass se
-// résume à UserSettings.passActiveUntil : aucune formule annuelle, aucun
-// paiement, aucun historique. Cette vue est donc construite sur le contrat
-// ci-dessous, que l'API devra tenir ; tant qu'elle ne le tient pas, la console
-// dit « pas encore branché » et propose un aperçu avec des chiffres d'exemple,
-// marqué comme tel à chaque instant.
+// BRANCHÉE SUR LE PASS DEPUIS LE 23/09/2026, SANS ENCAISSEMENT. Le serveur
+// tient désormais les deux routes ci-dessous (server/src/services/
+// businessOverview.js, lib/passBusiness.js) : la console voit les abonnements
+// réels. Ce qui n'existe toujours pas, c'est la FACTURATION - aucun magasin,
+// aucun prestataire de paiement, donc aucun euro, aucun historique, aucune
+// cohorte. La réponse le dit elle-même dans `billing.connected`, et cette vue
+// bascule alors sur un affichage « branché, pas encore vendu » : les chiffres
+// qui existent, et rien à la place de ceux qui n'existent pas.
+//
+// TROIS ÉTATS, À NE JAMAIS CONFONDRE :
+//   404 sur la route       « pas encore branché » (serveur plus ancien que la
+//                          console) -> l'écran d'attente et son aperçu
+//   billing.connected false « branché, rien de vendu » -> les abonnés réels,
+//                          zéro euro annoncé comme tel
+//   billing.connected true  la vue complète, graphiques compris
 //
 // DEUX OFFRES, TOUTES DEUX À RENOUVELLEMENT AUTOMATIQUE : au mois et à l'année.
 // Un abonnement se renouvelle donc toujours à son échéance, sauf résiliation ;
@@ -21,16 +30,26 @@
 //      plan,                 // monthly (renouvelé chaque mois) | annual (renouvelé chaque année)
 //      subscribed_since,     // début de l'abonnement continu en cours (ISO)
 //      current_period_end,   // échéance : fin de la période payée (ISO)
-//      will_renew,           // false dès que la résiliation est demandée
+//      will_renew,           // false dès que la résiliation est demandée,
+//                            // null tant qu'aucune facturation ne le sait
 //      store,                // app_store | google_play | web | null
 //      price_cents, currency // prix de la formule, ex. 499 / "EUR"
+//      source                // subscription (une échéance en base)
+//                            // | admin_override (la bascule de QA des admins,
+//                            //   qui n'a rien payé et doit se voir comme telle)
 //    }
 //
 // 2) GET /admin/business/overview?months=12   (months : 6, 12 ou 24)
 //    {
 //      currency, as_of,
-//      active:  { total, monthly, annual, canceling },  // abonnés actifs maintenant
+//      billing: { connected, source, note },             // false = rien de vendu
+//      active:  { total, monthly, annual, canceling, unknown_plan },
 //      mrr_cents,                                        // revenu mensuel récurrent (annuel / 12)
+//      mrr_theoretical_cents,                            // ce que les abonnés
+//                                                        // RAPPORTERAIENT aux prix
+//                                                        // affichés : jamais un revenu
+//      qa: { override_active, override_none },           // bascules d'administration
+//      expired,                                          // échéances déjà passées
 //      revenue: { this_month_cents, last_month_cents },  // encaissé, brut
 //      new_this_month, churned_this_month,
 //      churn_rate_pct,                                   // départs du mois / actifs au 1er
@@ -103,7 +122,11 @@ export function spanFr(fromIso, to = new Date()) {
 export function passSummary(p, now = new Date()) {
   if (!p) return null;
   const end = p.current_period_end ? new Date(p.current_period_end) : null;
-  const running = !!end && end > now && p.status !== 'expired';
+  // Un Pass simulé par la bascule d'administration n'a pas toujours
+  // d'échéance (passOverride 'active' sans passActiveUntil) : il est actif
+  // tant que la bascule l'est. L'exiger daté l'affichait « Expiré le — »
+  // (vu le 05/10/2026 sur le compte démo).
+  const running = p.status !== 'expired' && (end ? end > now : p.source === 'admin_override');
   const [statusLabel, statusCls] = running ? (PASS_STATUS[p.status] || PASS_STATUS.active) : PASS_STATUS.expired;
   const left = end ? Math.ceil((end - now) / DAY) : null;
   return {
@@ -115,8 +138,15 @@ export function passSummary(p, now = new Date()) {
     since: p.subscribed_since ? dateFr(p.subscribed_since) : '—',
     sinceSpan: running && p.subscribed_since ? spanFr(p.subscribed_since, now) : '',
     expires: end ? dateFr(end.toISOString()) : '—',
+    hasEnd: !!end,
     expiresIn: running && left !== null ? (left <= 0 ? 'aujourd’hui' : 'dans ' + left + ' j') : '',
     willRenew: !!p.will_renew,
+    // Sans facturation, `will_renew` vaut null : « on ne sait pas », et surtout
+    // pas « ne se renouvellera pas », que `!!null` dirait en silence.
+    renewKnown: p.will_renew === true || p.will_renew === false,
+    // Un état posé par la bascule d'administration : il ne vient d'aucun
+    // paiement, et la liste des abonnés doit le montrer.
+    qa: p.source === 'admin_override',
     price: p.price_cents ? money(p.price_cents, p.currency || 'EUR') : null
   };
 }
@@ -544,6 +574,9 @@ function cohortCard(d, phone) {
 function dueText(s) {
   const when = s.expiresIn || 'à l’échéance';
   if (s.statusLabel === 'Paiement en échec') return 'paiement à régulariser, échéance ' + when;
+  // Tant que rien ne facture, on annonce l'échéance sans rien promettre de ce
+  // qui se passera à ce moment-là.
+  if (!s.renewKnown) return 'échéance ' + when;
   return (s.willRenew ? 'renouvellement auto ' : 'se termine ') + when;
 }
 
@@ -551,7 +584,9 @@ function subscribersCard(list, phone) {
   const now = new Date();
   const rows = list
     .map((x) => ({ user: x.user, s: passSummary(x.boostz_pass, now), end: new Date(x.boostz_pass.current_period_end).getTime() || 0 }))
-    .filter((x) => x.s && x.s.active && (rv.plan === 'all' || x.s.plan === rv.plan))
+    // Une bascule d'administration n'est pas un abonné : le serveur la compte
+    // à part (« hors abonnés »), la liste aussi.
+    .filter((x) => x.s && x.s.active && !x.s.qa && (rv.plan === 'all' || x.s.plan === rv.plan))
     .sort((a, b) => a.end - b.end);
 
   const head = el('div', { class: 'rv-card-head' }, el('div', {},
@@ -560,13 +595,17 @@ function subscribersCard(list, phone) {
   if (!rows.length) return el('section', { class: 'bz-card rv-card' }, head, el('p', { class: 'bz-small bz-muted', style: { margin: '10px 0 0' }, text: 'Aucun abonnement en cours.' }));
 
   const name = (u) => (u.pseudo || 'Membre') + (u.deleted ? ' (supprimé)' : '');
+  // Un compte dont l'état vient de la bascule d'administration n'a rien payé :
+  // il s'affiche, et il est marqué.
+  const qaTag = (s) => (s.qa ? el('span', { class: 'bz-pill is-grey', title: 'État posé par la bascule d’administration, sans aucun paiement', text: 'Test' }) : null);
   if (phone) {
     return el('section', { class: 'bz-card rv-card rv-subs' }, head,
       el('ul', { class: 'rv-sub-list' }, rows.map(({ user, s }) => el('li', {},
         el('div', { class: 'rv-sub-top' }, el('b', { text: name(user) }), el('span', { class: 'rv-plan' }, el('span', { class: 'rv-swatch', style: { background: PLAN_COLORS[s.plan] } }), el('span', { text: s.planLabel }))),
         el('div', { class: 'rv-sub-meta' },
           el('span', { class: s.statusCls, text: s.statusLabel }),
-          el('span', { text: 'depuis ' + s.sinceSpan }),
+          qaTag(s),
+          s.sinceSpan ? el('span', { text: 'depuis ' + s.sinceSpan }) : null,
           el('span', { text: dueText(s) })))))
     );
   }
@@ -577,12 +616,58 @@ function subscribersCard(list, phone) {
         el('tbody', {}, rows.map(({ user, s }) => el('tr', {},
           el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: name(user) })),
           el('td', {}, el('span', { class: 'rv-plan' }, el('span', { class: 'rv-swatch', style: { background: PLAN_COLORS[s.plan] } }), el('span', { text: s.planLabel + (s.price ? ' · ' + s.price : '') }))),
-          el('td', {}, el('span', { class: s.statusCls, text: s.statusLabel })),
-          el('td', {}, el('div', { text: s.since }), el('div', { class: 'bz-tiny', text: s.sinceSpan })),
+          el('td', {}, el('span', { class: s.statusCls, text: s.statusLabel }), qaTag(s)),
+          el('td', {}, el('div', { text: s.since }), s.sinceSpan ? el('div', { class: 'bz-tiny', text: s.sinceSpan }) : null),
           el('td', {}, el('div', { text: s.expires }), el('div', { class: 'bz-tiny', text: dueText(s) }))
         )))
       ))
   );
+}
+
+// ---------- Branché, mais rien de vendu ----------
+// L'état dans lequel la console vit depuis le 23/09/2026 : le serveur répond,
+// les abonnements sont réels, et il n'y a pas un euro. Montrer ici les
+// graphiques de revenus reviendrait à dessiner douze mois plats et à laisser
+// croire à une mesure ; on montre donc ce qui existe, et on nomme ce qui
+// manque.
+function wiredNotSellingView(d, subscribers, phone, rerender) {
+  const a = d.active || {};
+  const qa = d.qa || {};
+  const cur = d.currency || 'EUR';
+  const theoretical = d.mrr_theoretical_cents || 0;
+
+  const banner = el('section', { class: 'bz-card rv-wired', role: 'status' },
+    el('div', { class: 'rv-wired-head' },
+      el('span', { class: 'bz-pill is-green', text: 'Pass branché' }),
+      el('b', { text: 'Aucun encaissement pour l’instant' })),
+    el('p', { class: 'bz-small bz-muted', text: (d.billing && d.billing.note) || 'Le Pass n’est branché à aucun magasin ni prestataire de paiement.' }));
+
+  const kpis = el('div', { class: 'adm-agent-kpis rv-kpis' },
+    tile('Abonnés actifs', 'Abonnés', int(a.total), int(a.monthly) + ' mens. · ' + int(a.annual) + ' ann.' + (a.unknown_plan ? ' · ' + int(a.unknown_plan) + ' sans formule' : '')),
+    tile('Revenu encaissé', 'Encaissé', money(0, cur), 'aucun paiement branché'),
+    // Le seul chiffre projeté de la vue, et il porte son nom dans le libellé
+    // comme dans le sous-titre : personne ne doit pouvoir le lire pour un
+    // revenu. Sans `compact` : à ces montants-là, l'arrondi à l'euro ferait
+    // lire « 6 € » pour 5,91 €.
+    tile('Revenu mensuel théorique', 'Théorique', money(theoretical, cur), 'si ces abonnés payaient les prix affichés'),
+    tile('Échéances passées', 'Expirés', int(d.expired), 'comptes dont le Pass s’est arrêté'),
+    tile('Bascules d’administration', 'Tests', int((qa.override_active || 0) + (qa.override_none || 0)), int(qa.override_active) + ' en Pass actif · hors abonnés')
+  );
+
+  const attente = el('section', { class: 'bz-card rv-card' },
+    el('h3', { class: 'bz-h3', text: 'Ce qui apparaîtra au premier paiement' }),
+    el('ul', { class: 'rv-absent-list' },
+      el('li', { text: 'Revenus encaissés par mois et par formule, et le revenu récurrent réel.' }),
+      el('li', { text: 'Arrivées, départs et taux de départ, mois par mois.' }),
+      el('li', { text: 'Rétention par cohorte, dès qu’il y aura un mois de recul.' }),
+      el('li', { text: 'Par abonné : la date de souscription, le magasin d’origine et ce qui se passe à l’échéance — trois choses qu’aucune colonne ne porte aujourd’hui.' })),
+    el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Voir un aperçu avec des données d’exemple', onclick: () => { rv.demo = true; rerender(); } }));
+
+  return el('div', { class: 'rv' }, banner, el('div', { class: 'rv-body' },
+    kpis,
+    a.total ? splitCard(d) : null,
+    subscribers.length ? subscribersCard(subscribers, phone) : null,
+    attente));
 }
 
 // ---------- La vue ----------
@@ -626,6 +711,12 @@ export function renderRevenue({ users, phone, rerender }) {
   }
 
   const d = rv.demo ? demoOverview(rv.months) : rv.data;
+
+  const passRows = rv.demo ? demoSubscribers() : (hasPassData(users) ? users.filter((u) => u.boostz_pass).map((u) => ({ user: u, boostz_pass: u.boostz_pass })) : []);
+  // La facturation n'est pas branchée : la vue complète mentirait par ses
+  // graphiques. On sert l'état réel du Pass à la place.
+  if (!rv.demo && d.billing && d.billing.connected === false) return wiredNotSellingView(d, passRows, phone, rerender);
+
   const cur = d.currency || 'EUR';
   const keys = seriesKeys();
   const a = d.active || {};
@@ -650,7 +741,7 @@ export function renderRevenue({ users, phone, rerender }) {
     tile('Rétention à 12 mois', 'Rét. 12 m', pct(ret.m12), 'à 6 mois : ' + pct(ret.m6))
   );
 
-  const subscribers = rv.demo ? demoSubscribers() : (hasPassData(users) ? users.filter((u) => u.boostz_pass).map((u) => ({ user: u, boostz_pass: u.boostz_pass })) : []);
+  const subscribers = passRows;
 
   const stale = rv.error && connected && !rv.demo ? el('div', { class: 'bz-msg is-err', role: 'alert', style: { marginBottom: '10px' }, text: 'Mise à jour impossible (' + rv.error + ') : chiffres précédents affichés.' }) : null;
 
