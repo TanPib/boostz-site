@@ -210,16 +210,61 @@
   /* ---------- Vue Data (assets/data.js) ---------- */
   .bz-tab .bz-count.is-red { opacity: 1; color: var(--soft-red-text); font-weight: 700; }
   .dt { margin-top: 16px; }
-  .dt-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--soft-green-border); background: var(--soft-green-fill); }
+  .dt-banner { padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--soft-green-border); background: var(--soft-green-fill); }
   .dt-banner.is-warn { border-color: rgba(245,166,35,.6); background: rgba(245,166,35,.1); }
   .dt-banner.is-down { border-color: var(--soft-red-border); background: var(--soft-red-fill); }
+  .dt-banner-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
   .dt-banner .dt-dot { margin-top: 0; }
   .dt-banner-text { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .dt-banner-text b { font-family: var(--font-display); font-size: 16px; }
   .dt-banner-actions { display: flex; gap: 8px; }
-  .dt-group { padding: 0; overflow: hidden; margin-top: 10px; }
+  /* Les éléments nommés du bandeau : on doit pouvoir lire lesquels, et sauter
+     dessus. Un bouton, pas une étiquette - c'est une action. */
+  .dt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
+  .dt-chips-label { color: var(--text-muted); }
+  .dt-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.22); color: var(--text); font-family: var(--font-ui); font-size: 12px;
+  }
+  .dt-chip:hover { border-color: rgba(255,255,255,.34); background: rgba(0,0,0,.34); }
+  .dt-chip .dt-dot { margin-top: 0; width: 8px; height: 8px; box-shadow: none; }
+  .dt-chip.is-down { border-color: var(--soft-red-border); color: var(--soft-red-text); }
+  .dt-chip.is-warn { border-color: rgba(245,166,35,.55); color: #F8C46A; }
+  /* ---- Les trois niveaux : section, sous-section, détail ---- */
+  .dt-sec { padding: 0; overflow: hidden; margin-top: 10px; }
+  .dt-sec-head, .dt-sub-head {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 13px 16px; cursor: pointer;
+    border: 0; background: transparent; color: inherit; text-align: left; font: inherit;
+  }
+  .dt-sec-head:hover, .dt-sub-head:hover { background: rgba(255,255,255,.035); }
+  .dt-sec-head:focus-visible, .dt-sub-head:focus-visible { outline: 2px solid var(--soft-violet-border); outline-offset: -2px; }
+  .dt-caret { flex: none; display: inline-block; width: 10px; color: var(--text-muted); font-size: 16px; line-height: 1; transition: transform .16s; }
+  .dt-caret.is-open { transform: rotate(90deg); }
+  .dt-sec-title { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .dt-sec-title b { font-family: var(--font-display); font-size: 16px; }
+  .dt-sec-title .bz-tiny { color: var(--text-muted); }
+  /* La santé de chaque sous-section, sur la ligne de la section : une pastille
+     par sous-section, dans leur ordre. */
+  .dt-strip { flex: none; display: inline-flex; align-items: center; gap: 4px; }
+  .dt-strip .dt-dot { margin-top: 0; }
+  .dt-trouble { flex: none; font-family: var(--font-ui); font-size: 11.5px; color: var(--text-muted); }
+  .dt-trouble.is-down { color: var(--soft-red-text); }
+  .dt-trouble.is-warn { color: #F8C46A; }
+  .dt-sec-body { border-top: 1px solid rgba(255,255,255,.07); }
+  .dt-sec > .dt-sec-body > .dt-server { padding: 14px 16px; }
+  .dt-sub { border-bottom: 1px solid rgba(255,255,255,.05); }
+  .dt-sub:last-child { border-bottom: 0; }
+  .dt-sub-head { padding: 11px 16px 11px 26px; }
+  .dt-sub-head b { flex: none; font-family: var(--font-ui); font-size: 13.5px; }
+  .dt-sub-head .dt-dot { margin-top: 0; }
+  .dt-count { flex: 1; font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .dt-sub-hint { flex: none; font-size: 11.5px; color: var(--text-muted); }
+  .dt-sub.is-open > .dt-sub-head { background: rgba(255,255,255,.03); }
+  .dt-sub-body { border-top: 1px solid rgba(255,255,255,.05); background: rgba(0,0,0,.14); }
   .dt-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.05); }
   .dt-row:last-child { border-bottom: 0; }
+  /* La ligne sur laquelle le bandeau vient de sauter. */
+  .dt-row.is-focus { background: rgba(116,49,224,.14); box-shadow: inset 3px 0 0 var(--soft-violet-border); }
   .dt-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: #A6ABB7; }
   .dt-dot.is-ok { background: var(--fill-success); }
   .dt-dot.is-warn { background: var(--amber); }
@@ -249,6 +294,36 @@
      quel que soit le nombre de lignes de leur rôle. */
   .dt-platform-links { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: auto; padding-top: 4px; font-size: 12px; }
   .dt-platform-more { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .dt-sec > .dt-sec-body > .dt-platforms { padding: 14px 16px; }
+  /* ---- Le schéma du modèle de données ---- */
+  /* Des couches empilées plutôt qu'un SVG : le schéma se relit tel quel sur un
+     téléphone, et chaque case peut porter la pastille vivante de sa source. */
+  .dt-flow { padding: 14px 16px; }
+  .dt-layer + .dt-layer { margin-top: 4px; }
+  .dt-layer-arrow { display: block; margin: 2px 0 6px; color: var(--soft-violet-text); font-size: 16px; line-height: 1; text-align: center; }
+  .dt-layer-head { display: flex; align-items: center; gap: 8px; }
+  .dt-layer-head b { font-family: var(--font-display); font-size: 14.5px; }
+  .dt-layer-num {
+    flex: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 7px;
+    border: 1px solid var(--soft-violet-border); background: rgba(116,49,224,.16); color: var(--soft-violet-text);
+    font-family: var(--font-ui); font-weight: 700; font-size: 11px;
+  }
+  .dt-layer-note { margin: 3px 0 8px 28px; color: var(--text-muted); }
+  .dt-nodes { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+  .dt-node { padding: 9px 11px; border-radius: 11px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); }
+  .dt-node.is-warn { border-color: rgba(245,166,35,.5); }
+  .dt-node.is-down { border-color: var(--soft-red-border); background: var(--soft-red-fill); }
+  .dt-node-top { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+  .dt-node-top b { font-family: var(--font-ui); font-size: 12.5px; overflow-wrap: anywhere; }
+  .dt-node-top .dt-dot { margin-top: 0; width: 8px; height: 8px; box-shadow: none; }
+  .dt-node .bz-tiny { color: var(--text-muted); }
+  .dt-sub-body > .bz-table-wrap { padding: 12px 16px 14px; }
+  .dt-table { min-width: 0; }
+  .dt-table td { vertical-align: top; font-size: 12.5px; }
+  .dt-inline { display: inline-flex; align-items: center; gap: 6px; }
+  .dt-inline .dt-dot { margin-top: 0; }
+  .dt-rules { margin: 0; padding: 14px 16px 14px 34px; font-size: 12.5px; line-height: 1.6; color: var(--text-muted); }
+  .dt-rules li + li { margin-top: 6px; }
   /* Écran étroit : liste OU détail (admin.js), sans défilement dans le défilement.
      nowrap : en colonne, une ligne flex qui peut revenir à la ligne prend la
      largeur de son plus long enfant - le titre d'une idée, en nowrap dans
