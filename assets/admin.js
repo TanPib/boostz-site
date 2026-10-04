@@ -32,7 +32,11 @@ const CONTEXTS = {
   place_message: 'Message sur un lieu',
   news_comment: 'Commentaire d’actualité',
   venue_review_reply: 'Réponse d’une boutique à un avis',
-  venue_event: 'Événement d’une boutique'
+  venue_event: 'Événement d’une boutique',
+  // Revue juridique du 04/10/2026, lot 4 : la note laissée après un échange
+  // devient signalable, et un litige d'échange garde son échange.
+  exchange_review: 'Note après un échange',
+  exchange: 'Litige d’échange'
 };
 const REPORT_STATUS = {
   OPEN: ['Ouvert', 'bz-pill is-red'],
@@ -81,8 +85,11 @@ const TICKET_STATUS = {
   CLOSED: ['Clôturé', 'bz-pill is-green']
 };
 const ACTIONS = {
-  ban: 'Bannissement',
-  unban: 'Levée du bannissement',
+  ban: 'Suspension ou bannissement',
+  unban: 'Réactivation du compte',
+  // Les décisions motivées (revue juridique du 04/10/2026, lot 4).
+  moderation_hide: 'Contenu masqué',
+  moderation_revoke: 'Décision annulée',
   role: 'Changement de rôle',
   super_admin: 'Rang de super admin',
   warn: 'Avertissement',
@@ -224,7 +231,8 @@ function toast(text, type = 'ok') {
 }
 
 // ---------- Boîte de dialogue ----------
-// fields : [{ name, label, type: 'textarea'|'text', required, placeholder }]
+// fields : [{ name, label, type: 'textarea'|'text'|'select', required, placeholder, options }]
+// options (pour 'select') : [{ value, label }], la première choisie d'office.
 // confirmText : saisie exacte exigée avant d'activer le bouton.
 function ask({ title, text, fields = [], confirmLabel = 'Confirmer', tone = 'violet', confirmText = null }) {
   return new Promise((resolve) => {
@@ -240,7 +248,9 @@ function ask({ title, text, fields = [], confirmLabel = 'Confirmer', tone = 'vio
       const id = 'dlg-' + f.name;
       const input = f.type === 'textarea'
         ? el('textarea', { id, class: 'bz-input', rows: '4', maxlength: '4000', placeholder: f.placeholder || '' })
-        : el('input', { id, class: 'bz-input', autocomplete: 'off', placeholder: f.placeholder || '' });
+        : f.type === 'select'
+          ? el('select', { id, class: 'bz-input' }, (f.options || []).map((o) => el('option', { value: o.value, text: o.label })))
+          : el('input', { id, class: 'bz-input', autocomplete: 'off', placeholder: f.placeholder || '' });
       inputs[f.name] = input;
       body.append(el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', for: id, text: f.label }), input));
     }
@@ -279,6 +289,28 @@ function ask({ title, text, fields = [], confirmLabel = 'Confirmer', tone = 'vio
     first.focus();
   });
 }
+
+// ---------- Décisions de modération motivées ----------
+// Revue juridique du 04/10/2026, lot 4. Masquer un contenu, suspendre ou
+// bannir exige la règle enfreinte et les faits : le membre les reçoit, dans
+// l'application et par courriel, avec la façon de contester (article 17 du
+// DSA). Les règles viennent du serveur, qui refuse une clé qu'il ne connaît pas.
+let rulesCache = null;
+async function moderationRules() {
+  if (!rulesCache) rulesCache = await call('/admin/moderation/rules');
+  return rulesCache;
+}
+function decisionFields(rules) {
+  return [
+    { name: 'rule', label: 'Règle enfreinte', type: 'select', options: rules.rules.map((r) => ({ value: r.key, label: (r.needs_legal_ref ? 'Loi' : r.article) + ' — ' + r.label })) },
+    { name: 'legal_ref', label: 'Loi en cause (seulement pour la règle « Loi »)', placeholder: 'Ex. : article 222-17 du Code pénal' },
+    { name: 'facts', label: 'Faits (envoyés au membre)', type: 'textarea', required: true, placeholder: 'Ce qui a été publié ou fait, quand et où.' }
+  ];
+}
+const DECISION_NOTE = 'Le membre reçoit la décision dans l’application et par courriel : la mesure, les faits, la règle et comment contester.';
+// Les contenus de membre que la console masque d'ici. Les réponses et les
+// événements des boutiques gardent leurs propres boutons.
+const MODERATED = ['forum_thread', 'forum_message', 'place_review', 'place_message', 'news_comment', 'exchange_review'];
 
 // ---------- Chargements ----------
 async function loadUsers() {
@@ -393,19 +425,33 @@ const userActs = {
     await call(`/admin/users/${u.id}/warn`, { method: 'POST', body: { message: values.message, ...(reportId ? { report_id: reportId } : {}) } });
     await after('Avertissement envoyé à ' + nameOf(u) + '.', loadReports, loadTickets);
   }),
-  ban: (u) => run(async () => {
+  ban: (u, reportId = null) => run(async () => {
+    const rules = await moderationRules();
     const values = await ask({
-      title: 'Bannir ' + nameOf(u),
-      text: 'Le compte ne pourra plus utiliser l’application ; ses sessions ouvertes cessent de fonctionner. Réversible.',
-      fields: [{ name: 'reason', label: 'Motif (gardé au dossier)', type: 'textarea', placeholder: 'Ex. : arnaque confirmée sur l’échange du 11 septembre.' }],
-      confirmLabel: 'Bannir', tone: 'red'
+      title: 'Suspendre ou bannir ' + nameOf(u),
+      text: DECISION_NOTE + ' Ses sessions ouvertes cessent de fonctionner ; une suspension se lève seule à son terme. Réversible.',
+      fields: [
+        {
+          name: 'duration', label: 'Durée', type: 'select',
+          options: [...rules.suspension_days.map((d) => ({ value: String(d), label: 'Suspension de ' + d + ' jours' })), { value: 'definitif', label: 'Bannissement définitif' }]
+        },
+        ...decisionFields(rules)
+      ],
+      confirmLabel: 'Appliquer la sanction', tone: 'red'
     });
     if (!values) return;
-    await call(`/admin/users/${u.id}/ban`, { method: 'POST', body: { reason: values.reason } });
-    await after(nameOf(u) + ' est banni.', loadUsers, loadReports);
+    const updated = await call(`/admin/users/${u.id}/ban`, { method: 'POST', body: { ...values, ...(reportId ? { report_id: reportId } : {}) } });
+    await after(nameOf(u) + (updated && updated.banned_until ? ' est suspendu jusqu’au ' + dateShort(updated.banned_until) : ' est banni') + '.', loadUsers, loadReports);
   }),
   unban: (u) => run(async () => {
-    await call(`/admin/users/${u.id}/unban`, { method: 'POST' });
+    const values = await ask({
+      title: 'Réactiver ' + nameOf(u),
+      text: 'La décision qui tient le compte est annulée, et le membre en est prévenu dans l’application et par courriel.',
+      fields: [{ name: 'reason', label: 'Motif de l’annulation (envoyé au membre)', type: 'textarea', placeholder: 'Ex. : contestation admise.' }],
+      confirmLabel: 'Réactiver', tone: 'green'
+    });
+    if (!values) return;
+    await call(`/admin/users/${u.id}/unban`, { method: 'POST', body: { reason: values.reason } });
     await after(nameOf(u) + ' est réactivé.', loadUsers, loadReports);
   }),
   remove: (u) => run(async () => {
@@ -483,7 +529,7 @@ function openActionMenu(anchor, title, items) {
 function statusPills(u) {
   const pills = [];
   if (u.deleted) pills.push(el('span', { class: 'bz-pill is-grey', text: 'Supprimé' }));
-  else if (u.banned_at) pills.push(el('span', { class: 'bz-pill is-red', text: 'Banni' }));
+  else if (u.banned_at) pills.push(el('span', { class: 'bz-pill is-red', text: u.banned_until ? 'Suspendu' : 'Banni' }));
   else pills.push(el('span', { class: rolePillClass(u), text: roleLabel(u) }));
   if (!u.deleted && !u.is_adult) pills.push(el('span', { class: 'bz-pill is-amber', text: 'Mineur' }));
   return pills;
@@ -766,7 +812,7 @@ function openUserSheet(anchor, u) {
       el('div', {}, el('dt', { text: 'Dernière utilisation' }), dd2(lastSeenInfo(u))),
       el('div', {}, el('dt', { text: 'Inscription' }), dd2([dateShort(u.created_date)])),
       el('div', { class: 'is-full' }, el('dt', { text: 'Signalements' }), dd2([el('span', {}, received, ' · ' + u.reports_sent + ' émis')])),
-      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif du bannissement' }), dd2([u.banned_reason])) : null,
+      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif de la sanction' }), dd2([u.banned_reason + (u.banned_until ? ' (jusqu’au ' + dateShort(u.banned_until) + ')' : '')])) : null,
       hasPassData(state.users) ? el('div', { class: 'is-full' }, el('dt', { text: 'Boostz Pass' }), dd2(passInfo(u))) : null
     ),
     items.length ? el('div', { class: 'adm-usheet-label', text: 'Actions' }) : null,
@@ -815,7 +861,7 @@ function userCard(u) {
       el('div', {}, el('dt', { text: 'Dernière utilisation' }), dd2(lastSeenInfo(u))),
       el('div', {}, el('dt', { text: 'Inscription' }), dd2([dateShort(u.created_date)])),
       el('div', { class: 'is-full' }, el('dt', { text: 'Signalements' }), dd2([el('span', {}, received, ' · ' + u.reports_sent + ' émis')])),
-      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif du bannissement' }), dd2([u.banned_reason])) : null
+      u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif de la sanction' }), dd2([u.banned_reason + (u.banned_until ? ' (jusqu’au ' + dateShort(u.banned_until) + ')' : '')])) : null
     )
   );
 }
@@ -928,6 +974,35 @@ function renderReports() {
         await after('Série masquée.', loadReports);
       });
     };
+    // Masquer un contenu de membre en motivant la décision (lot 4) : il
+    // disparaît pour tous, son auteur reçoit la décision, et les signalements
+    // ouverts sur ce contenu sont tranchés, leurs auteurs prévenus.
+    const moderable = MODERATED.includes(r.context_type);
+    const contentHidden = typeof r.content === 'string' && r.content.startsWith('[Masqué]');
+    const hideContent = () => run(async () => {
+      const rules = await moderationRules();
+      const values = await ask({
+        title: 'Masquer ce contenu',
+        text: 'Il disparaît pour tous les membres, son auteur compris. ' + DECISION_NOTE + ' Les signalements ouverts sur ce contenu sont tranchés, et leurs auteurs prévenus.',
+        fields: decisionFields(rules),
+        confirmLabel: 'Masquer', tone: 'red'
+      });
+      if (!values) return;
+      await call('/admin/moderation/decisions', { method: 'POST', body: { ...values, context_type: r.context_type, context_id: r.context_id, report_id: r.id } });
+      await after('Contenu masqué, décision envoyée au membre.', loadReports);
+    });
+    // Annuler la décision : contestation admise, ou erreur.
+    const restoreContent = () => run(async () => {
+      const values = await ask({
+        title: 'Rétablir ce contenu',
+        text: 'La décision est annulée : le contenu redevient visible, et son auteur en est prévenu.',
+        fields: [{ name: 'reason', label: 'Motif de l’annulation (envoyé au membre)', type: 'textarea', placeholder: 'Ex. : contestation admise.' }],
+        confirmLabel: 'Rétablir', tone: 'green'
+      });
+      if (!values) return;
+      await call('/admin/moderation/decisions/' + encodeURIComponent(r.decision_id) + '/revoke', { method: 'POST', body: { reason: values.reason } });
+      await after('Contenu rétabli, membre prévenu.', loadReports);
+    });
     const cannotAct = r.reported.deleted ? 'Ce compte est supprimé.' : null;
     const banWhy = cannotAct || (r.reported.banned_at ? 'Déjà banni.' : null) || (r.reported.is_super_admin ? 'Retire-lui d’abord le rang de super admin.' : null) || (isSuper ? null : SUPER_ONLY);
 
@@ -951,7 +1026,10 @@ function renderReports() {
       r.content_deleted ? el('p', { class: 'bz-small bz-muted', style: { margin: '10px 0 0' }, text: 'Le contenu signalé a été supprimé depuis.' }) : null,
       el('div', { class: 'bz-row adm-actions', style: { marginTop: '16px', gap: '7px' } },
         el('button', { class: 'bz-btn is-violet', type: 'button', text: 'Avertir', disabled: !!cannotAct || !target, title: cannotAct || '', onclick: () => target && userActs.warn(target, r.id) }),
-        el('button', { class: 'bz-btn is-red', type: 'button', text: 'Bannir le compte', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target) }),
+        el('button', { class: 'bz-btn is-red', type: 'button', text: 'Suspendre ou bannir', disabled: !!banWhy || !target, title: banWhy || '', onclick: () => target && userActs.ban(target, r.id) }),
+        moderable ? (contentHidden && r.decision_id
+          ? el('button', { class: 'bz-btn is-green', type: 'button', text: 'Rétablir le contenu', onclick: restoreContent })
+          : el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer le contenu', disabled: !!r.content_deleted || contentHidden, title: contentHidden ? 'Ce contenu est déjà masqué.' : '', onclick: hideContent })) : null,
         r.context_type === 'venue_review_reply' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer la réponse', disabled: !!r.content_deleted, onclick: hideReply }) : null,
         r.context_type === 'venue_event' ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer l’événement', disabled: !!r.content_deleted || alreadyHidden, title: alreadyHidden ? 'Cet événement est déjà masqué.' : '', onclick: hideEvent }) : null,
         inSeries ? el('button', { class: 'bz-btn is-red', type: 'button', text: 'Masquer toute la série', disabled: !!r.content_deleted || seriesHidden, title: seriesHidden ? 'Cette série est déjà masquée.' : '', onclick: hideSeries }) : null
@@ -962,7 +1040,9 @@ function renderReports() {
         statusBtn('RESOLVED', 'Traité', 'green'),
         statusBtn('DISMISSED', 'Classé sans suite', 'grey'),
         statusBtn('OPEN', 'Rouvrir', 'grey')
-      )
+      ),
+      // L'article 16 du DSA : l'auteur du signalement apprend la suite donnée.
+      el('p', { class: 'bz-tiny bz-muted', style: { margin: '8px 0 0' }, text: '« Traité » et « Classé sans suite » préviennent le signalant de la suite donnée.' })
     );
   }
 
