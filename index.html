@@ -248,7 +248,7 @@
       <span id="swap-stamp" class="lp-stamp is-swap" hidden>TROC CONCLU !</span>
       <span id="swap-stars" class="lp-swap-stars" hidden>
         <span class="stars">★★★★★</span>
-        <span class="txt">Vous vous notez : 5 étoiles reçues rapportent 25 boosties</span>
+        <span class="txt">Troc conclu : 15 boosties chacun, puis vous vous notez</span>
       </span>
     </div>
     <p class="lp-body is-small is-center">boostZ compare les cotes des deux côtés et t'aide à juger si le troc est équilibré. La remise se fait en main propre, sans argent, avec une notation en cinq étoiles. <b>Réservé aux 18 ans et plus.</b></p>
@@ -266,19 +266,48 @@
 <section id="jeux" class="lp-section lp-jeux" aria-labelledby="jeux-title">
   <div id="jeux-glow" class="lp-jeux-glow" aria-hidden="true"></div>
   <div class="lp-wrap">
-    <p class="lp-kicker">05 — NEUF JEUX</p>
+    <p class="lp-kicker">05 — NEUF JEUX, TROIS LANGUES</p>
     <h2 id="jeux-title" class="lp-title is-big">Neuf univers.<br><span class="lp-outline">Une app.</span></h2>
-    <p class="lp-body" style="max-width:480px">Touche un jeu : chacun garde sa couleur partout dans l'application, cartes et produits scellés compris.</p>
+    <p class="lp-body" style="max-width:520px">Touche un jeu : chacun garde sa couleur partout dans l'application, cartes et produits scellés compris — et chacun annonce les langues dans lesquelles boostZ sait le servir.</p>
     <div id="game-tiles" class="lp-tiles" role="list"></div>
     <div class="lp-game-info" aria-live="polite">
       <span id="jeux-dot" class="lp-game-dot"></span>
       <div style="flex:1;min-width:220px">
         <b id="jeux-name" class="lp-game-name"></b>
         <p id="jeux-tag" class="lp-game-tag"></p>
+        <div id="jeux-langs" class="lp-game-langs"></div>
       </div>
       <span id="jeux-cov" class="lp-game-cov"></span>
     </div>
-    <p class="bz-tiny" style="margin-top:12px">Couverture des cotes au 13 septembre 2026. La cote d'une carte s'affiche quand une source la publie ; sinon, l'application indique « pas de cote ».</p>
+    <p id="jeux-langnote" class="bz-tiny" style="margin-top:10px"></p>
+
+    <!-- La langue, et pourquoi elle décide du prix. Ajouté le 23/09/2026 :
+         la refonte des langues était en ligne depuis le 22 et la landing n'en
+         disait pas un mot. -->
+    <div class="lp-lang">
+      <div class="lp-lang-head">
+        <h3 class="lp-lang-title">La langue d'une carte<br><span class="lp-outline">n'est pas une étiquette.</span></h3>
+        <p class="lp-body" style="max-width:460px">C'est son prix. Entre une carte japonaise et la même en français, l'écart se compte parfois en dizaines d'euros. boostZ ne devine donc jamais : la langue vient du catalogue dans lequel tu as pris la carte, et elle ne bouge plus.</p>
+      </div>
+      <ul class="lp-lang-points">
+        <li>
+          <span class="lp-lang-chip">Langue</span>
+          <b>Elle est choisie avant la carte.</b>
+          <span>Tu actives les langues que tu collectionnes sur un jeu, tu cherches dedans, et ce que tu ajoutes en vient. Rien à ressaisir, rien à corriger.</span>
+        </li>
+        <li>
+          <span class="lp-lang-chip">Cote</span>
+          <b>Chaque langue a la sienne.</b>
+          <span>Quand une source publie un prix pour ta langue, c'est lui qui s'affiche. Sinon l'application dit d'où vient celui qu'elle montre — « cote toutes langues », ou la cote anglaise d'une carte française — plutôt que de faire passer l'un pour l'autre.</span>
+        </li>
+        <li>
+          <span class="lp-lang-chip">Scellés</span>
+          <b>Un display FR et un display JP sont deux produits.</b>
+          <span>Deux codes-barres, deux marchés, deux cotes. Chacun porte sa langue dans le catalogue, comme dans la vraie vie.</span>
+        </li>
+      </ul>
+    </div>
+    <p class="bz-tiny" style="margin-top:14px">Langues servies au 23 septembre 2026, jeu par jeu — elles suivent ce que publient les sources, pas ce que l'éditeur imprime. La cote d'une carte s'affiche quand une source la publie ; sinon, l'application indique « pas de cote ».</p>
   </div>
 </section>
 
@@ -312,7 +341,7 @@
     <div class="lp-center-head">
       <p class="lp-kicker">07 — BOOSTIES</p>
       <h2 id="boosties-title" class="lp-title is-big">Contribue. <span class="lp-outline">Personnalise.</span></h2>
-      <p class="lp-body" style="margin-inline:auto;max-width:580px">La première photo d'une carte peu documentée rapporte plus que la centième d'une star du catalogue. Tes boosties se dépensent dans la boutique de personnalisation : essaie sur le profil ci-dessous.</p>
+      <p class="lp-body" style="margin-inline:auto;max-width:580px">Ajouter une carte que personne n'avait encore sur boostZ rapporte plus que la centième d'une star du catalogue. Tes boosties se dépensent dans la boutique de personnalisation : essaie sur le profil ci-dessous.</p>
     </div>
     <div class="lp-profile-row">
       <div class="lp-profile">
@@ -345,7 +374,7 @@
           <span style="color:var(--rar-legendaire)"><i style="background:var(--rar-legendaire)"></i>Légendaire</span>
           <span style="color:var(--rar-mythique)"><i style="background:var(--rar-mythique)"></i>Mythique</span>
         </div>
-        <p class="bz-tiny" style="margin:12px 0 0;line-height:1.7">Pochettes Éclat, Prisme et Zénith : rareté plancher garantie, probabilités publiées, doublons partiellement remboursés en boosties. Les boosties sont une unité de compte interne, sans valeur monétaire, utilisable uniquement dans l'application pour personnaliser ton compte.</p>
+        <p class="bz-tiny" style="margin:12px 0 0;line-height:1.7">Chaque objet s'achète à prix affiché, sans tirage au sort. Les boosties sont une unité de compte interne, sans valeur monétaire, utilisable uniquement dans l'application pour personnaliser ton compte.</p>
       </div>
     </div>
   </div>

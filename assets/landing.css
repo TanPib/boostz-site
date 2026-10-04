@@ -204,6 +204,22 @@
 .lp-game-name { font-family: var(--font-display); font-size: 15px; }
 .lp-game-tag { margin: 3px 0 0; font-size: 13px; color: var(--text-muted); }
 .lp-game-cov { border: 1px solid rgba(255,255,255,.18); color: var(--text-muted); font-family: var(--font-ui); font-weight: 700; font-size: 11px; padding: 5px 12px; border-radius: 999px; }
+/* Les trois langues d'un jeu. Celles qu'il sert prennent sa teinte ; les
+   autres restent en creux plutôt que de disparaître - un catalogue anglais
+   seulement est une information, pas un vide. */
+.lp-game-langs { display: flex; gap: 6px; margin-top: 8px; }
+.lp-lang-tag { border: 1px solid rgba(255,255,255,.12); color: var(--text-disabled); font-family: var(--font-ui); font-weight: 700; font-size: 10.5px; letter-spacing: .06em; padding: 3px 9px; border-radius: 999px; }
+.lp-lang-tag.is-never { border-style: dashed; text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* La langue et le prix : le bloc qui porte la notion, sous les neuf jeux. */
+.lp-lang { margin-top: 34px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,.09); }
+.lp-lang-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 40px; }
+.lp-lang-title { font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 38px); line-height: 1.06; letter-spacing: -.02em; margin: 0; flex: 1 1 320px; }
+.lp-lang-points { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; margin: 26px 0 0; padding: 0; }
+.lp-lang-points li { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 16px 16px 18px; border-radius: 16px; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.09); }
+.lp-lang-points b { font-family: var(--font-ui); font-size: 14px; line-height: 1.3; }
+.lp-lang-points li > span:last-child { font-size: 13px; line-height: 1.6; color: var(--text-muted); }
+.lp-lang-chip { border: 1px solid var(--brand-violet); color: var(--brand-violet); background: rgba(139,61,255,.12); font-family: var(--font-ui); font-weight: 700; font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; }
 
 /* ---------- 08 · Carte ---------- */
 .lp-map-card { flex: 1 1 380px; min-width: min(100%, 300px); max-width: 500px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.09); border-radius: 20px; padding: 18px; box-shadow: 0 24px 60px rgba(3,2,8,.5); }

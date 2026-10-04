@@ -273,17 +273,29 @@ function setupScan() {
   });
 }
 
-// ---------- 07 · Jeux ----------
+// ---------- 07 · Jeux et langues ----------
+// `langs` : les langues dans lesquelles l'application sert des CARTES pour ce
+// jeu, telles que le serveur les déclare (server/src/lib/languages.js,
+// CARD_LANGUAGES, relevé le 23/09/2026). Ce ne sont pas les langues dans
+// lesquelles l'éditeur imprime, mais celles qu'une source publie et que le
+// code sait aller chercher : Yu-Gi-Oh! existe en français, et sa seule API
+// ouverte ne sert que l'anglais.
+//
+// `never` : les langues dans lesquelles le jeu n'a JAMAIS été imprimé, qui se
+// disent autrement que « pas encore » - Star Wars: Unlimited n'existe pas en
+// japonais (services/languageCoverage.js, NONEXISTENT).
+const LANG_LABELS = { fr: 'Français', en: 'Anglais', ja: 'Japonais' };
+const LANG_ORDER = ['fr', 'en', 'ja'];
 const GAMES = [
-  { id: 'pkm', tag: 'Le TCG le plus collectionné au monde.', cov: 'Cartes et scellés cotés' },
-  { id: 'ygo', tag: 'Le doyen japonais, toujours bien vivant.', cov: 'Cartes et scellés cotés' },
-  { id: 'opc', tag: 'La hype du moment, tirée par l’anime.', cov: 'Cartes et scellés cotés' },
-  { id: 'lor', tag: 'Le phénomène Disney, avec ses vraies illustrations françaises.', cov: 'Cartes et scellés cotés' },
-  { id: 'swu', tag: 'Le petit dernier, déjà très joué.', cov: 'Cartes et scellés cotés' },
-  { id: 'mtg', tag: 'Trente ans de jeu, un marché immense.', cov: 'Cartes et scellés cotés' },
-  { id: 'acr', tag: 'Les cartes amiibo, pur plaisir de collection.', cov: 'Cartes cotées, pas de scellé' },
-  { id: 'dbs', tag: 'Le shōnen roi, en format cartes.', cov: 'Cartes et scellés cotés' },
-  { id: 'wow', tag: 'Catalogue figé depuis 2013 : le paradis du chineur.', cov: 'Cotes partielles, catalogue figé' }
+  { id: 'pkm', tag: 'Le TCG le plus collectionné au monde.', cov: 'Cartes et scellés cotés', langs: ['fr', 'en', 'ja'], note: 'Le japonais est un catalogue à part entière, avec ses propres extensions et ses propres cotes.' },
+  { id: 'ygo', tag: 'Le doyen japonais, toujours bien vivant.', cov: 'Cartes et scellés cotés', langs: ['en'], note: 'La seule API ouverte du jeu ne publie que l’anglais : le catalogue l’est aussi.' },
+  { id: 'opc', tag: 'La hype du moment, tirée par l’anime.', cov: 'Cartes et scellés cotés', langs: ['en'], note: 'Catalogue anglais, servi par optcgapi.' },
+  { id: 'lor', tag: 'Le phénomène Disney, avec ses vraies illustrations françaises.', cov: 'Cartes et scellés cotés', langs: ['fr', 'en'], note: 'Chaque langue a ses propres illustrations : les françaises sont les vraies, pas des anglaises traduites.' },
+  { id: 'swu', tag: 'Le petit dernier, déjà très joué.', cov: 'Cartes et scellés cotés', langs: ['fr', 'en'], never: ['ja'], note: 'Jamais imprimé en japonais — ce n’est pas un manque, c’est une absence.' },
+  { id: 'mtg', tag: 'Trente ans de jeu, un marché immense.', cov: 'Cartes et scellés cotés', langs: ['fr', 'en', 'ja'], note: 'Les versions étrangères arrivent à la recherche, extension par extension, plutôt qu’en bloc.' },
+  { id: 'acr', tag: 'Les cartes amiibo, pur plaisir de collection.', cov: 'Cartes cotées, pas de scellé', langs: ['en'], note: 'Catalogue anglais, coté sur le marché américain.' },
+  { id: 'dbs', tag: 'Le shōnen roi, en format cartes.', cov: 'Cartes et scellés cotés', langs: ['fr'], note: 'Le catalogue vient du site européen de Bandai, en français.' },
+  { id: 'wow', tag: 'Catalogue figé depuis 2013 : le paradis du chineur.', cov: 'Cotes partielles, catalogue figé', langs: ['en'], note: 'Un jeu arrêté en 2013, et une seule langue à son catalogue.' }
 ];
 let currentGame = 'pkm';
 const tiles = new Map();
@@ -304,6 +316,27 @@ function renderGame() {
   $('jeux-name').textContent = t.name;
   $('jeux-tag').textContent = g.tag;
   $('jeux-cov').textContent = g.cov;
+
+  // Les trois langues, toujours les trois : ce qu'un jeu NE sert PAS est une
+  // information aussi utile que le reste, et la cacher ferait croire à un
+  // catalogue complet.
+  const host = $('jeux-langs');
+  host.textContent = '';
+  for (const code of LANG_ORDER) {
+    const on = g.langs.includes(code);
+    const never = (g.never || []).includes(code);
+    const chip = el('span', {
+      class: 'lp-lang-tag' + (on ? ' is-on' : never ? ' is-never' : ''),
+      title: on ? LANG_LABELS[code] + ' : catalogue servi' : never ? LANG_LABELS[code] + ' : jamais imprimé dans cette langue' : LANG_LABELS[code] + ' : aucune source ne le publie'
+    }, code.toUpperCase());
+    if (on) {
+      chip.style.borderColor = t.c1;
+      chip.style.color = t.c1;
+      chip.style.background = hexA(t.c1, '1A');
+    }
+    host.append(chip);
+  }
+  $('jeux-langnote').textContent = g.note;
 }
 
 function setupGames() {
