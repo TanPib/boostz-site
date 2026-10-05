@@ -10,6 +10,16 @@ export const API = LOCAL ? 'http://localhost:3001' : 'https://boostz-api.onrende
 // sessionStorage et non localStorage : la session disparaît avec l'onglet. Le
 // site sert à des démarches ponctuelles (support, suppression, modération), pas
 // à rester connecté trente jours sur un poste qui n'est peut-être pas le sien.
+//
+// Un script injecté lit sessionStorage aussi bien que localStorage : ce qui
+// protège le jeton, c'est qu'aucun script étranger ne tourne dans la page. D'où
+// deux règles. Aucun texte venu de l'API n'entre en HTML (el() de chrome.js
+// passe par textContent). Et chaque page qui ouvre une session porte une CSP
+// qui n'admet que les fichiers du site : ni script en ligne, ni attribut
+// onclick. Le script d'une page s'écrit dans assets/page-<nom>.js, et une
+// nouvelle adresse appelée par fetch s'ajoute à connect-src de ces pages.
+// Un cookie HttpOnly vaudrait mieux, mais l'API est sur onrender.com : ce
+// serait un cookie tiers, que Safari refuse (revue du 05/10/2026).
 const KEY = 'boostz.session';
 
 export class ApiError extends Error {

@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<!-- Aucun script en ligne : la CSP n'admet que les fichiers du site (voir assets/api.js). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http://localhost:3001; font-src 'self'; connect-src 'self' https://boostz-api.onrender.com http://localhost:3001; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#08070B">
@@ -535,9 +537,6 @@
     </div>
   </div>
 </main>
-<script type="module">
-import { start } from './assets/admin.js';
-start();
-</script>
+<script type="module" src="assets/page-admin.js"></script>
 </body>
 </html>
