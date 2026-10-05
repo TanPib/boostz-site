@@ -30,7 +30,7 @@ export const LAYERS = [
       { label: 'Catalogues des 9 jeux', detail: 'TCGdex, Scryfall, YGOPRODeck, OPTCG API, LorcanaJSON, starwarsunlimited.com, dbs-cardgame.com, warcraft.wiki.gg', providers: ['tcgdex', 'scryfall', 'ygoprodeck', 'optcgapi', 'lorcanajson', 'swu', 'dbs', 'wowwiki'] },
       { label: 'Cotes et scellés', detail: 'tcgcsv (Lorcana, Dragon Ball, SWU, Warcraft et tous les scellés), PriceCharting (Animal Crossing), Frankfurter (USD → EUR)', providers: ['tcgcsv', 'tcgplayer', 'pricecharting', 'frankfurter'] },
       { label: 'Marché', detail: 'eBay Browse : les annonces d’où sortent les cotes marché ; CardTrader : le prix d’entrée par langue et par état', providers: ['ebay', 'cardtrader'] },
-      { label: 'IA et traduction', detail: 'Gemini puis Anthropic en secours ; MyMemory pour les actus ; Claude écrit les récompenses des nouvelles extensions', providers: ['gemini', 'anthropic', 'mymemory'] },
+      { label: 'IA et traduction', detail: 'Anthropic (Claude) pour l’assistant du support, la comparaison d’impression, les résumés d’actus et les récompenses des nouvelles extensions ; MyMemory pour la traduction des actus', providers: ['anthropic', 'mymemory'] },
       { label: 'Services', detail: 'Supabase Storage (photos), OpenStreetMap, data.gouv.fr, SIRENE, Resend', providers: ['supabase', 'osm', 'datagouv', 'sirene', 'resend'] }
     ]
   },
@@ -98,7 +98,7 @@ export const BATCHES = [
   { key: 'tcgcsv:*', label: 'tcgcsv, par jeu', rhythm: 'chaque jour', source: 'tcgcsv.com', writes: 'CardPrice, SealedProduct' },
   { key: 'tcgcsv:pokemon-japan', label: 'tcgcsv · Pokémon Japon', rhythm: 'chaque semaine', source: 'tcgcsv.com, catégorie 85', writes: 'SealedProduct (ja)' },
   { key: 'sealed:*', label: 'Scellés, par jeu', rhythm: 'chaque jour, 05:40 UTC', source: 'tcgcsv.com', writes: 'SealedProduct, SealedPriceHistory' },
-  { key: 'news', label: 'Actus', rhythm: 'toutes les 3 h', source: 'Flux des éditeurs, MyMemory, Gemini', writes: 'NewsSource, NewsArticle' },
+  { key: 'news', label: 'Actus', rhythm: 'toutes les 3 h', source: 'Flux des éditeurs, MyMemory, Anthropic', writes: 'NewsSource, NewsArticle' },
   { key: 'market', label: 'Cotes marché', rhythm: 'à l’ouverture d’une fiche, puis en cache', source: 'eBay Browse', writes: 'MarketplaceListing, MarketplaceSale' },
   { key: 'cardtrader', label: 'CardTrader', rhythm: 'toutes les 30 min, avec le cron des cotes', source: 'api.cardtrader.com, une lecture par seconde', writes: 'CardtraderLink, CardPrice' },
   { key: 'places', label: 'Lieux d’échange', rhythm: 'à la demande, mis en cache', source: 'Overpass, Nominatim, data.gouv.fr, SIRENE', writes: 'TcgVenue, BrocanteEvent' }

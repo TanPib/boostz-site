@@ -53,22 +53,22 @@ const AGENT_VERDICTS = {
 };
 const AGENT_REASONS = {
   desactive: 'Agent coupé',
-  sans_cle: 'Clé Gemini absente',
+  sans_cle: 'Clé Anthropic absente',
   limite_membre: 'Limite du membre atteinte (5 / 24 h)',
   plafond_global: 'Plafond global atteint (200 / 24 h)',
   delai: 'Délai dépassé',
-  quota: 'Quota Gemini épuisé',
+  quota: 'Anthropic surchargé ou à court de crédit',
   erreur: 'Erreur serveur',
   reponse_invalide: 'Réponse du modèle illisible'
 };
 // Ce qu'il y a à faire quand une raison revient. Les limites, elles, protègent
 // la facture et n'appellent aucune action.
 const AGENT_REASON_HINTS = {
-  quota: 'Vérifier le palier de facturation du projet Gemini (AI Studio).',
-  sans_cle: 'Renseigner GEMINI_API_KEY sur Render.',
+  quota: 'Vérifier le solde de crédits et les limites dans la console Anthropic (platform.claude.com).',
+  sans_cle: 'Renseigner ANTHROPIC_API_KEY sur Render.',
   desactive: 'SUPPORT_AGENT_ENABLED vaut false sur Render.',
   plafond_global: '200 analyses en 24 h : le reste part en ticket direct.',
-  delai: 'Le modèle a dépassé 10 s : surveiller si cela se répète.',
+  delai: 'Le modèle a dépassé 15 s : surveiller si cela se répète.',
   erreur: 'Consulter les journaux du serveur sur Render.',
   reponse_invalide: 'Consulter les journaux du serveur sur Render.'
 };
