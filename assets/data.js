@@ -190,8 +190,14 @@ function extraLine(p) {
       el('span', { class: 'dt-quota-bar', 'aria-hidden': 'true' }, el('span', { style: { width: pct + '%' } })),
       el('span', { text: num(q.remaining) + ' / ' + num(q.limit) + ' appels Browse restants aujourd’hui' + (q.reset ? ' · remise à zéro à ' + timeFr(q.reset) : '') }));
   }
+  // Les deux budgets quotidiens de Claude (05/10/2026) : les comparaisons
+  // d'impression des annonces, et les scans (étiquette d'un boîtier).
   const v = p.extra && p.extra.vision;
-  if (v) return el('span', { class: 'dt-meta', text: 'Comparaisons d’impression aujourd’hui : ' + num(v.used) + ' / ' + num(v.limit) });
+  const s = p.extra && p.extra.scan;
+  const parts = [];
+  if (v) parts.push('Comparaisons d’impression aujourd’hui : ' + num(v.used) + ' / ' + num(v.limit));
+  if (s) parts.push('Scans aidés par l’IA : ' + num(s.used) + ' / ' + num(s.limit));
+  if (parts.length) return el('span', { class: 'dt-meta', text: parts.join(' · ') });
   return null;
 }
 

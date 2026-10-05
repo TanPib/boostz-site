@@ -74,7 +74,7 @@ export const LAYERS = [
       { label: 'SetCompletion', detail: 'Une extension complétée dans une langue : la prime versée, le titre et le sceau remis.', tables: true },
       { label: 'TcgVenue → VenueProfile · VenueManager · VenueEvent · VenueReviewReply · VenueRequest', detail: 'Les boutiques : la fiche tenue par leur gérant, leurs événements, leurs réponses aux avis, et les demandes des membres.', tables: true },
       { label: 'LegalAcceptance · ModerationDecision', detail: 'Chaque acceptation des CGU avec sa version, et chaque décision de modération motivée.', tables: true },
-      { label: 'BonusCodeRedemption · PhotoUploadDaily', detail: 'Un code bonus utilisé une fois par compte ; le quota de photos du jour.', tables: true },
+      { label: 'BonusCodeRedemption · PhotoUploadDaily · AiDailyUsage', detail: 'Un code bonus utilisé une fois par compte ; le quota de photos du jour ; les appels à l’IA faits pendant ses scans du jour.', tables: true },
       { label: 'BoostieTransaction · AnalysisCreditTransaction', detail: 'Deux registres séparés par choix : les Boosties (cosmétiques) et les crédits d’analyse (appels réels).', tables: true }
     ]
   },
