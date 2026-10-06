@@ -7,3 +7,5 @@ Disallow: /admin.html
 Disallow: /console.html
 Disallow: /connexion.html
 Disallow: /compte.html
+
+Sitemap: https://boostz.fr/sitemap.xml

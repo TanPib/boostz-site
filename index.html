@@ -3,476 +3,414 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boostz : l'appli de collection, cote et échange de cartes TCG</title>
+<meta name="description" content="Range ta collection Pokémon, One Piece, Lorcana, Magic et 4 autres TCG, suis sa cote dans ta langue et échange entre collectionneurs. L'appli sort fin novembre 2026.">
+<link rel="canonical" href="https://boostz.fr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#0B0812">
 <meta name="color-scheme" content="dark">
-<title>boostZ — Boost ta collection TCG</title>
-<meta name="description" content="boostZ réunit ta collection de cartes à collectionner, leur cote et tes échanges entre collectionneurs. Neuf jeux, cartes et produits scellés, dans une seule application.">
-<meta name="theme-color" content="#08070B">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/vitrine/icone-app-180.png">
+<link rel="alternate" hreflang="fr" href="https://boostz.fr/">
+<link rel="alternate" hreflang="x-default" href="https://boostz.fr/">
+
+<!-- Polices : préchargées pour que le logo s'affiche sans saut -->
+<link rel="preload" href="assets/fonts/outfit-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/exo-var.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Partage : Instagram, WhatsApp, Discord, Facebook, X -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Boostz">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:url" content="https://boostz.fr/">
+<meta property="og:title" content="Boostz : ton compagnon TCG, bientôt sur ton téléphone">
+<meta property="og:description" content="Collection, cote dans ta langue, échanges et boutiques près de chez toi, pour 8 jeux de cartes. Sortie fin novembre 2026.">
+<meta property="og:image" content="https://boostz.fr/assets/vitrine/og-boostz.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Le logo Boostz et les dos de cartes des 8 jeux, en éventail">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Boostz : ton compagnon TCG, bientôt sur ton téléphone">
+<meta name="twitter:description" content="Collection, cote dans ta langue, échanges et boutiques près de chez toi, pour 8 jeux de cartes.">
+<meta name="twitter:image" content="https://boostz.fr/assets/vitrine/og-boostz.jpg">
+
+<!-- Données structurées : Google lit l'organisation, le site, l'appli et la FAQ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://boostz.fr/#org",
+      "name": "Boostz",
+      "url": "https://boostz.fr/",
+      "logo": "https://boostz.fr/assets/vitrine/icone-app-512.png",
+      "email": "boostz.info@gmail.com",
+      "sameAs": ["https://www.instagram.com/boostz.app/", "https://www.tiktok.com/@boostz.app"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://boostz.fr/#site",
+      "name": "Boostz",
+      "url": "https://boostz.fr/",
+      "inLanguage": "fr-FR",
+      "publisher": { "@id": "https://boostz.fr/#org" }
+    },
+    {
+      "@type": "MobileApplication",
+      "name": "Boostz",
+      "operatingSystem": "iOS, Android",
+      "applicationCategory": "LifestyleApplication",
+      "inLanguage": "fr-FR",
+      "description": "Collection, cote, échanges et boutiques pour Pokémon, One Piece, Lorcana, Yu-Gi-Oh!, Magic, Star Wars Unlimited, Dragon Ball Super et Warcraft.",
+      "publisher": { "@id": "https://boostz.fr/#org" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Boostz, c'est quoi ?", "acceptedAnswer": { "@type": "Answer", "text": "Une application mobile pour les collectionneurs de cartes à collectionner. Tu ranges ta collection, tu suis sa cote, tu échanges avec d'autres collectionneurs et tu trouves les boutiques et les tournois près de chez toi." } },
+        { "@type": "Question", "name": "Quand sort l'application ?", "acceptedAnswer": { "@type": "Answer", "text": "Fin novembre 2026, sur l'App Store et Google Play." } },
+        { "@type": "Question", "name": "Boostz est-il gratuit ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui, le compte est gratuit. Le Boostz Pass, mensuel ou annuel et réservé aux majeurs, lève certaines limites : jeux suivis, alertes de prix et pré-estimations d'état." } },
+        { "@type": "Question", "name": "Quels jeux de cartes sont couverts ?", "acceptedAnswer": { "@type": "Answer", "text": "Pokémon, One Piece, Lorcana, Yu-Gi-Oh!, Magic, Star Wars Unlimited, Dragon Ball Super et Warcraft, cartes et produits scellés." } },
+        { "@type": "Question", "name": "D'où viennent les cotes ?", "acceptedAnswer": { "@type": "Answer", "text": "De sources tierces : les catalogues de chaque jeu et les prix du marché. Elles restent indicatives et ne sont jamais inventées : une carte sans cote l'affiche." } },
+        { "@type": "Question", "name": "Peut-on acheter ou vendre des cartes ?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Les échanges sont du troc entre particuliers, en main propre, sans argent via l'application. Ils sont réservés aux 18 ans et plus." } },
+        { "@type": "Question", "name": "Où sont stockées mes données ?", "acceptedAnswer": { "@type": "Answer", "text": "En Europe : le serveur tourne à Francfort et la base de données est à Paris, photos de tes cartes comprises." } },
+        { "@type": "Question", "name": "À partir de quel âge ?", "acceptedAnswer": { "@type": "Answer", "text": "Catalogue, collection et personnalisation dès 15 ans. Échanges, messagerie et forums à partir de 18 ans." } }
+      ]
+    }
+  ]
+}
+</script>
 <link rel="stylesheet" href="assets/site.css">
-<link rel="stylesheet" href="assets/landing.css">
 <link rel="stylesheet" href="assets/parrainage.css">
+<link rel="stylesheet" href="assets/vitrine.css">
 </head>
-<body class="lp">
+<body>
+<div class="pg" id="pg">
 
-<div id="cursor-dot" class="lp-cursor-dot" hidden></div>
-<div id="cursor-ring" class="lp-cursor-ring" hidden></div>
-<div id="confetti" class="lp-confetti" aria-hidden="true"></div>
-
-<header class="lp-top">
-  <a class="bz-logo" href="index.html" aria-label="boostZ, accueil">
-    <span class="bz-logo-boost">boost</span><span class="bz-logo-z" aria-hidden="true"><span class="g1">Z</span><span class="g2">Z</span><span class="z">Z</span></span>
-  </a>
-  <nav id="lp-account" class="lp-top-right" aria-label="Compte"></nav>
+<header class="in" style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;z-index:3">
+<a href="index.html" aria-label="Boostz, accueil" class="wm" style="font-size:26px"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.59em;color:#3AA9FF;opacity:.12">Z</span><span class="word g" style="left:-0.39em;color:#8B3DFF;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#FF4FA0;opacity:.3">Z</span><span class="word grad" style="position:relative">Z</span></span></a>
+<nav id="lp-account" class="bz-top-right" aria-label="Compte"><a class="bz-btn is-primary is-sm" href="connexion.html">Se connecter</a></nav>
 </header>
 
 <main>
-<!-- 01 · Le booster -->
-<section id="intro" class="lp-hero" aria-labelledby="hero-title">
-  <div class="lp-hero-glow" aria-hidden="true"></div>
-  <div class="lp-speed" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-
-  <h1 id="hero-title" class="lp-wordmark">
-    <span class="lp-wordmark-boost">boost</span><span class="lp-wordmark-z"><span class="g1" aria-hidden="true">Z</span><span class="g2" aria-hidden="true">Z</span><span class="z">Z</span></span>
-    <span class="lp-skid" aria-hidden="true"></span>
-  </h1>
-  <p class="lp-baseline">Boost ta collection TCG</p>
-  <p class="lp-hero-facts">9 jeux · cartes et scellés · application en développement</p>
-
-  <div class="lp-stage">
-    <div id="pack" class="lp-pack" role="button" tabindex="0" aria-label="Déchirer le booster" data-cur="1">
-      <div id="pack-top" class="lp-pack-top">
-        <span class="lp-pack-perf"></span>
-        <span class="lp-pack-tear">✂ DÉCHIRE ICI</span>
-      </div>
-      <div class="lp-pack-body">
-        <span class="lp-hatch" aria-hidden="true"></span>
-        <span class="lp-pack-face">
-          <span class="lp-pack-logo"><span class="b">boost</span><span class="z">Z</span></span>
-          <span class="lp-pack-ed">BOOSTER ÉDITION ZÉRO</span>
-          <span class="lp-pack-bolt"><svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)" aria-hidden="true"><path d="M13 2 4 14h6l-3 8 10-12h-6l2-8Z"/></svg></span>
-          <span class="lp-pack-in">9 TCG À L'INTÉRIEUR</span>
-        </span>
-        <span class="lp-pack-perf is-bottom"></span>
-        <span class="lp-shine" aria-hidden="true"></span>
-      </div>
-    </div>
-
-    <div id="opened" class="lp-opened" hidden>
-      <span class="lp-flash" aria-hidden="true"></span>
-      <div id="burst" aria-hidden="true"></div>
-      <div id="hero-card" class="lp-holo-card lp-hero-card" data-cur="1">
-        <span data-holo="1" class="lp-holo" aria-hidden="true"></span>
-        <span class="lp-hatch is-strong" aria-hidden="true"></span>
-        <span id="hero-emblem" class="lp-card-window"></span>
-        <span class="lp-card-foot">
-          <b>Étincelle — carte de démo</b>
-          <span>HOLO RARE ★ · 199/165</span>
-        </span>
-        <span data-gloss="1" class="lp-gloss" aria-hidden="true"></span>
-      </div>
-    </div>
-  </div>
-
-  <p id="hint-sealed" class="lp-hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 12h14M13 6l6 6-6 6"/></svg><span>Glisse vers la droite pour déchirer — <span class="lp-on-fine">ou clique</span><span class="lp-on-touch">ou touche</span></span></p>
-  <p id="hint-opened" class="lp-hint-open" hidden>
-    <span>Neuf TCG couverts, une seule application. Descends : ta carte te suit partout.</span>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2.4" stroke-linecap="round" class="lp-bounce" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
-  </p>
+<!-- 1 · Le booster à ouvrir -->
+<section class="in hero" aria-labelledby="titre">
+<div class="ghost" style="left:4px;top:330px;width:50px;height:70px;transform:rotate(-10deg)"><i></i></div>
+<div class="ghost" style="right:6px;top:120px;width:46px;height:64px;transform:rotate(8deg)"><i></i></div>
+<div class="htext">
+<h1 id="titre" class="htitle"><span class="wm hero-wm" aria-hidden="true"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.59em;color:#3AA9FF;opacity:.12">Z</span><span class="word g" style="left:-0.39em;color:#8B3DFF;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#FF4FA0;opacity:.3">Z</span><span class="word grad" style="position:relative">Z</span></span></span><span class="sr">Boostz&nbsp;: </span><span class="base">Ton compagnon TCG,<br>bientôt sur ton téléphone</span></h1>
+<p class="lead">L'appli française pour ranger, coter et échanger tes cartes Pokémon, One Piece, Lorcana, Magic et bien d'autres.</p>
+</div>
+<div class="hstage" data-hi="0">
+<div class="stage">
+<span class="burst"></span><span class="burst b2"></span>
+<div class="fc c0" style="--r:-24.5deg;transition-delay:.15s"><div class="st"><img class="back" src="assets/vitrine/dos-pokemon.svg" alt="Dos de carte Pokémon dans Boostz"></div></div>
+<div class="fc c1" style="--r:-17.5deg;transition-delay:.2s"><div class="st"><img class="back" src="assets/vitrine/dos-onepiece.svg" alt="Dos de carte One Piece dans Boostz"></div></div>
+<div class="fc c2" style="--r:-10.5deg;transition-delay:.25s"><div class="st"><img class="back" src="assets/vitrine/dos-lorcana.svg" alt="Dos de carte Lorcana dans Boostz"></div></div>
+<div class="fc c3" style="--r:-3.5deg;transition-delay:.3s"><div class="st"><img class="back" src="assets/vitrine/dos-yugioh.svg" alt="Dos de carte Yu-Gi-Oh! dans Boostz"></div></div>
+<div class="fc c4" style="--r:3.5deg;transition-delay:.35s"><div class="st"><img class="back" src="assets/vitrine/dos-magic.svg" alt="Dos de carte Magic dans Boostz"></div></div>
+<div class="fc c5" style="--r:10.5deg;transition-delay:.4s"><div class="st"><img class="back" src="assets/vitrine/dos-starwarsunlimited.svg" alt="Dos de carte Star Wars Unlimited dans Boostz"></div></div>
+<div class="fc c6" style="--r:17.5deg;transition-delay:.45s"><div class="st"><img class="back" src="assets/vitrine/dos-dragonball.svg" alt="Dos de carte Dragon Ball Super dans Boostz"></div></div>
+<div class="fc c7" style="--r:24.5deg;transition-delay:.5s"><div class="st"><img class="back" src="assets/vitrine/dos-wow.svg" alt="Dos de carte Warcraft dans Boostz"></div></div>
+<button type="button" class="pack" aria-label="Ouvrir le booster">
+<span class="pack-top">DÉCHIRE ICI <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M3 12h14M13 6l6 6-6 6"/></svg></span>
+<span class="pack-body">
+<span class="wm" style="font-size:44px"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.39em;color:#fff;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#fff;opacity:.35">Z</span><span class="word" style="position:relative;color:#fff">Z</span></span></span>
+<span class="pack-in">BOOSTER ÉDITION ZÉRO</span>
+<svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M13 2 4 14h6l-3 8 10-12h-6l2-8Z"/></svg>
+<span class="pack-in">8 TCG À L'INTÉRIEUR</span>
+</span>
+</button>
+</div>
+<p class="gname" aria-live="polite"><span class="gn g0" style="color:#F5C93B"><i style="background:#F5C93B"><img src="assets/vitrine/emb-pokemon.svg" alt=""></i>Pokémon</span><span class="gn g1" style="color:#F2706C"><i style="background:#F2706C"><img src="assets/vitrine/emb-onepiece.svg" alt=""></i>One&nbsp;Piece</span><span class="gn g2" style="color:#35C6BC"><i style="background:#35C6BC"><img src="assets/vitrine/emb-lorcana.svg" alt=""></i>Lorcana</span><span class="gn g3" style="color:#B189E8"><i style="background:#B189E8"><img src="assets/vitrine/emb-yugioh.svg" alt=""></i>Yu-Gi-Oh!</span><span class="gn g4" style="color:#C0A183"><i style="background:#C0A183"><img src="assets/vitrine/emb-magic.svg" alt=""></i>Magic</span><span class="gn g5" style="color:#A9B2C4"><i style="background:#A9B2C4"><img src="assets/vitrine/emb-starwarsunlimited.svg" alt=""></i>Star&nbsp;Wars&nbsp;Unlimited</span><span class="gn g6" style="color:#F58A4E"><i style="background:#F58A4E"><img src="assets/vitrine/emb-dragonball.svg" alt=""></i>Dragon&nbsp;Ball&nbsp;Super</span><span class="gn g7" style="color:#58A6DD"><i style="background:#58A6DD"><img src="assets/vitrine/emb-wow.svg" alt=""></i>Warcraft</span></p>
+<p class="hint"><span class="t-touch">Glisse pour ouvrir le booster,<br>ou touche-le</span><span class="t-mouse">Clique sur le booster pour l'ouvrir</span></p>
+<div class="reveal">
+<h2 class="h t2" style="margin-top:4px">8 TCG couverts.<br><span class="acc">Une seule app.</span></h2>
+<button type="button" class="again">Refermer le booster</button>
+</div>
+</div>
 </section>
 
-<!-- 02 · Les usages -->
-<section id="usages" class="lp-section lp-bordered" aria-labelledby="usages-title">
-  <div class="lp-wrap">
-    <p class="lp-kicker">L'APP, EN SIX USAGES</p>
-    <h2 id="usages-title" class="lp-title">Tout ce que boostZ <span class="lp-outline">fait pour toi.</span></h2>
-    <div class="lp-usages">
-      <a class="lp-usage" href="#scan" data-cur="1" style="--hover:rgba(139,61,255,.6)">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="var(--brand-violet)" aria-hidden="true"><path d="M4 4h5v2H6v3H4V4Zm11 0h5v5h-2V6h-3V4ZM4 15h2v3h3v2H4v-5Zm14 0h2v5h-5v-2h3v-3Zm-9-5h6v4H9v-4Z"/></svg>
-        <b>Vitrine</b>
-        <p>Scanne une carte ou une page de classeur entière : tout se range tout seul, dans le catalogue officiel français.</p>
-        <span>VOIR →</span>
-      </a>
-      <a class="lp-usage" href="#invest" data-cur="1" style="--hover:rgba(61,220,151,.6)">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--fill-success)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>
-        <b>Invest'</b>
-        <p>La valeur de ta collection, cartes et scellés, sa courbe d'évolution et des alertes de hausse ou de baisse.</p>
-        <span>VOIR →</span>
-      </a>
-      <a class="lp-usage" href="#analyse" data-cur="1" style="--hover:rgba(77,255,166,.6)">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#4DFFA6" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15.5 15.5 20 20"/></svg>
-        <b>Analyse d'état</b>
-        <p>Coins, bords, surface, centrage évalués sur photo, pour t'aider à juger l'état avant d'envoyer une carte en gradation.</p>
-        <span>VOIR →</span>
-      </a>
-      <a class="lp-usage" href="#echanges" data-cur="1" style="--hover:rgba(255,79,160,.6)">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--brand-rose)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 8h13M16 4l4 4-4 4M17 16H4M8 12l-4 4 4 4"/></svg>
-        <b>Échanges</b>
-        <p>Du troc entre collectionneurs, cotes comparées, en main propre. Aucun argent ne passe par l'application.</p>
-        <span>VOIR →</span>
-      </a>
-      <a class="lp-usage" href="#autour" data-cur="1" style="--hover:rgba(58,169,255,.6)">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="var(--brand-bleu)" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.75 2.75 0 0 1 0 5.5Z"/></svg>
-        <b>Autour de toi</b>
-        <p>Boutiques, brocantes et tournois près de chez toi, avec les forums de ta région.</p>
-        <span>VOIR →</span>
-      </a>
-      <a class="lp-usage" href="#finale" data-cur="1" style="--hover:rgba(245,166,35,.6)">
-        <svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bzCoinU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#D97706"/></linearGradient></defs><circle cx="12" cy="12" r="11" fill="url(#bzCoinU)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/><text x="12" y="16.2" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="12" fill="#fff">b</text></svg>
-        <b>Boosties</b>
-        <p>Gagne des boosties en contribuant au catalogue, dépense-les en avatars, cadres, bannières et titres.</p>
-        <span>VOIR →</span>
-      </a>
-    </div>
-  </div>
+<!-- Le fil naît sous les cartes ouvertes -->
+<div class="thr grow" style="position:relative">
+<svg class="thr-draw" width="12" height="150" style="position:absolute;left:50%;top:0;margin-left:-6px" aria-hidden="true"><line x1="6" y1="6" x2="6" y2="150" stroke="rgba(196,181,253,.6)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round"/></svg>
+<p class="ui" style="position:absolute;left:50%;top:56px;margin:0 0 0 26px;font-size:13px;letter-spacing:.14em;color:#C4B5FD;white-space:nowrap">DESCENDS ↓</p>
+</div>
+<svg class="wave thr grow" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M195 0 C195 60 60 30 30 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
+<!-- 01 · Collection -->
+<section class="zone" aria-labelledby="z1">
+<div class="in zgrid">
+<div class="ztext">
+<p class="kick" data-a style="color:#C4B5FD">01 · Collection</p>
+<h2 id="z1" class="h zt" data-a>Ta collection,<br><span class="acc">rangée toute seule.</span></h2>
+<p class="p" data-a>Scanne une carte seule ou une page de classeur entière&nbsp;: chaque carte est reconnue et rangée dans le catalogue officiel français, avec sa langue.</p>
+<ul class="pts" data-a>
+<li><b style="color:#C4B5FD">Cartes et scellés</b><span>Boosters, displays et coffrets ont leur place à côté de tes cartes.</span></li>
+<li><b style="color:#C4B5FD">Extension par extension</b><span>Ta progression grimpe à chaque carte ajoutée.</span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:420px">
+<div class="st ph big" data-a="land" style="left:150px;top:0;transform:rotate(3deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-vitrine.jpg" alt="Capture de Boostz : la Vitrine, les cartes de la collection rangées par jeu"></div>
+<div class="disc" data-a="pop" style="transition-delay:.3s;left:40px;top:70px;width:84px;height:84px;background:#C4B5FD"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1A1424" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M4 12h16"/></svg></div>
+<div class="st" data-a="land" style="transition-delay:.4s;position:absolute;left:0;top:300px;width:214px;padding:12px 16px;transform:rotate(-2deg)">
+<div class="ui" style="font-size:13px;color:#A8A2B8">Progression de l'extension</div>
+<div style="height:10px;border-radius:5px;background:#2A2140;margin-top:8px;overflow:hidden"><div class="fillbar" style="width:62%;height:100%;background:#5FD3A3;border-radius:5px"></div></div>
+</div>
+</div>
+</div>
+</div>
 </section>
 
-<div class="lp-marquee" aria-hidden="true">
-  <div class="lp-marquee-track">
-    <span>9 TCG · CARTES &amp; SCELLÉS · COTES À JOUR · TROC SANS ARGENT · ANALYSE D'ÉTAT · BOOSTIES · CATALOGUE FR ·&nbsp;</span>
-    <span>9 TCG · CARTES &amp; SCELLÉS · COTES À JOUR · TROC SANS ARGENT · ANALYSE D'ÉTAT · BOOSTIES · CATALOGUE FR ·&nbsp;</span>
-  </div>
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
+<!-- 02 · Langues -->
+<section class="zone" aria-labelledby="z2">
+<div class="in zgrid rev">
+<div class="ztext">
+<p class="kick" data-a style="color:#FF7AB8">02 · Langues</p>
+<h2 id="z2" class="h zt" data-a>Ta langue,<br><span class="acc">ta cote.</span></h2>
+<p class="p" data-a>Une carte japonaise et la même en français n'ont pas le même&nbsp;prix. Boostz ne devine jamais&nbsp;: la langue vient du catalogue où tu prends la carte, et elle ne bouge plus.</p>
+<ul class="pts" data-a>
+<li><b style="color:#FF7AB8">Choisie avant la carte</b><span>Tu actives les langues que tu collectionnes, jeu par jeu&nbsp;: ce que tu ajoutes en vient.</span></li>
+<li><b style="color:#FF7AB8">Chaque langue a sa cote</b><span>Quand une source publie un prix pour ta langue, c'est lui qui s'affiche. Sinon, l'appli dit d'où vient celui qu'elle montre.</span></li>
+<li><b style="color:#FF7AB8">Les scellés aussi</b><span>Un display FR et un display JP sont deux produits, avec deux cotes.</span></li>
+</ul>
 </div>
-
-<!-- 03 · Scan -->
-<div id="scan" class="lp-scene" style="height:260vh">
-  <div class="lp-sticky">
-    <div id="scan-fit" class="lp-scene-row">
-      <div class="lp-scene-text">
-        <p class="lp-kicker">01 — VITRINE</p>
-        <h2 class="lp-title is-big">Scanne.<br><span class="lp-outline">C'est rangé.</span></h2>
-        <p class="lp-body">Une boîte à chaussures pleine de cartes en vrac ? Scanne-les : chacune est identifiée, rangée dans la bonne collection, et ta progression grimpe extension par extension.</p>
-        <div class="lp-chips">
-          <span>Carte seule</span><span>Page de classeur, plusieurs cartes d'un coup</span><span>Recherche par nom</span>
-        </div>
-      </div>
-      <div class="lp-sorter">
-        <div class="bz-row" style="gap:8px">
-          <b class="lp-sorter-title">Tri automatique</b>
-          <span class="lp-sorter-meta">9 cartes en vrac</span>
-        </div>
-        <div id="sort-box" class="lp-sort-box" aria-hidden="true">
-          <div id="loose"></div>
-          <div id="bins" class="lp-bins"></div>
-        </div>
-        <div class="lp-sorter-foot">
-          <span>Ta vitrine</span>
-          <b id="scan-count">448 cartes</b>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="zvis">
+<div class="comp" style="height:640px">
+<div class="st ph big" data-a="land" style="left:80px;top:0;transform:rotate(-3deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-langues.jpg" alt="Capture de Boostz : gérer les langues suivies d'un jeu, ici Pokémon en français et en japonais"></div>
+<div class="st" data-a="land" style="transition-delay:.15s;position:absolute;left:0;top:260px;width:320px;padding:14px 12px 8px;transform:rotate(2deg)">
+<div class="stag">
+<div class="lrow lh"><span class="lg ui" style="font-size:11px;letter-spacing:.14em;color:#A8A2B8">JEU</span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-fr.svg" alt="Français"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-ja.svg" alt="Japonais"></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#F5C93B"><img loading="lazy" decoding="async" src="assets/vitrine/emb-pokemon.svg" alt=""></span><span style="color:#F5C93B">Pokémon</span></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-fr.svg" alt="Français"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-ja.svg" alt="Japonais"></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#F2706C"><img loading="lazy" decoding="async" src="assets/vitrine/emb-onepiece.svg" alt=""></span><span style="color:#F2706C">One&nbsp;Piece</span></span><span class="lc"><i></i></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><i></i></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#35C6BC"><img loading="lazy" decoding="async" src="assets/vitrine/emb-lorcana.svg" alt=""></span><span style="color:#35C6BC">Lorcana</span></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-fr.svg" alt="Français"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><i></i></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#B189E8"><img loading="lazy" decoding="async" src="assets/vitrine/emb-yugioh.svg" alt=""></span><span style="color:#B189E8">Yu-Gi-Oh!</span></span><span class="lc"><i></i></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><i></i></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#C0A183"><img loading="lazy" decoding="async" src="assets/vitrine/emb-magic.svg" alt=""></span><span style="color:#C0A183">Magic</span></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-fr.svg" alt="Français"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-ja.svg" alt="Japonais"></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#A9B2C4"><img loading="lazy" decoding="async" src="assets/vitrine/emb-starwarsunlimited.svg" alt=""></span><span style="color:#A9B2C4">Star&nbsp;Wars&nbsp;Unlimited</span></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-fr.svg" alt="Français"></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><i></i></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#F58A4E"><img loading="lazy" decoding="async" src="assets/vitrine/emb-dragonball.svg" alt=""></span><span style="color:#F58A4E">Dragon&nbsp;Ball&nbsp;Super</span></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-fr.svg" alt="Français"></span><span class="lc"><i></i></span><span class="lc"><i></i></span></div>
+<div class="lrow"><span class="lg"><span class="le" style="background:#58A6DD"><img loading="lazy" decoding="async" src="assets/vitrine/emb-wow.svg" alt=""></span><span style="color:#58A6DD">Warcraft</span></span><span class="lc"><i></i></span><span class="lc"><img loading="lazy" decoding="async" src="assets/vitrine/drapeau-en.svg" alt="Anglais"></span><span class="lc"><i></i></span></div>
 </div>
-
-<!-- 04 · Cote -->
-<div id="invest" class="lp-scene" style="height:240vh">
-  <div class="lp-sticky">
-    <div class="lp-scene-glow" aria-hidden="true"></div>
-    <div class="lp-scene-row">
-      <div id="inv-card" class="lp-holo-card lp-inv-card" data-cur="1">
-        <span data-holo="1" class="lp-holo" aria-hidden="true"></span>
-        <span id="inv-emblem" class="lp-card-window is-inv"></span>
-        <span class="lp-card-label">ÉTINCELLE · NM</span>
-        <span data-gloss="1" class="lp-gloss" aria-hidden="true"></span>
-      </div>
-      <div class="lp-scene-text is-wide">
-        <p class="lp-kicker">02 — INVEST'</p>
-        <h2 class="lp-title is-big">Ce que ça vaut.<br><span class="lp-outline">Au fil des jours.</span></h2>
-        <div class="bz-row" style="gap:14px;margin-top:22px">
-          <b id="inv-val" class="lp-inv-value">8 420 €</b>
-          <span id="inv-delta" class="lp-inv-delta">▲ +340 € · 30 j</span>
-          <span class="lp-demo-tag">EXEMPLE</span>
-        </div>
-        <svg viewBox="0 0 640 240" preserveAspectRatio="none" class="lp-inv-chart" aria-hidden="true">
-          <defs><linearGradient id="bzXpFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139,61,255,.38)"/><stop offset="1" stop-color="rgba(139,61,255,0)"/></linearGradient></defs>
-          <line x1="0" y1="70" x2="640" y2="70" stroke-dasharray="3 7" stroke-width="1" stroke="rgba(255,255,255,.08)"/>
-          <line x1="0" y1="140" x2="640" y2="140" stroke-dasharray="3 7" stroke-width="1" stroke="rgba(255,255,255,.08)"/>
-          <path id="inv-fill" d="M16,205 C60,200 90,214 140,196 C190,178 220,186 270,160 C320,134 350,142 400,110 C450,86 480,92 530,64 C580,44 600,50 624,34 L624,240 L16,240 Z" fill="url(#bzXpFill)" opacity="0"/>
-          <path id="inv-line" d="M16,205 C60,200 90,214 140,196 C190,178 220,186 270,160 C320,134 350,142 400,110 C450,86 480,92 530,64 C580,44 600,50 624,34" fill="none" stroke="#8B3DFF" stroke-width="3.5" stroke-linecap="round"/>
-          <circle id="inv-dot" cx="624" cy="34" r="6" fill="#8B3DFF" stroke="#fff" stroke-width="2" opacity="0"/>
-        </svg>
-        <p class="lp-body is-small">Valeur totale décotée selon l'état, cartes et scellés compris. Les cotes viennent des catalogues de chaque jeu et des prix demandés sur les annonces eBay actives. Elles restent indicatives et ne sont <b>jamais inventées</b> : une carte sans cote l'affiche.</p>
-      </div>
-    </div>
-  </div>
 </div>
-
-<!-- 05 · Analyse -->
-<div id="analyse" class="lp-scene" style="height:260vh">
-  <div class="lp-sticky">
-    <div class="lp-scene-row">
-      <div class="lp-ana">
-        <div class="lp-ana-card">
-          <span class="lp-hatch" aria-hidden="true"></span>
-          <span id="ana-emblem" class="lp-card-window is-ana"></span>
-          <span class="lp-card-label is-ana">RECTO · EN ANALYSE</span>
-          <span id="ana-laser" class="lp-laser" aria-hidden="true"></span>
-        </div>
-        <span class="lp-corner tl" aria-hidden="true"></span><span class="lp-corner tr" aria-hidden="true"></span>
-        <span class="lp-corner bl" aria-hidden="true"></span><span class="lp-corner br" aria-hidden="true"></span>
-        <span id="ana-stamp" class="lp-stamp is-ana" hidden>NEAR MINT 8,5</span>
-      </div>
-      <div class="lp-scene-text is-wide">
-        <p class="lp-kicker">03 — ANALYSE D'ÉTAT</p>
-        <h2 class="lp-title">Coins. Bords.<br><span class="lp-outline">Surface. Centrage.</span></h2>
-        <div id="ana-grades" class="lp-grades">
-          <div class="lp-grade" data-g="0"><b>Coins</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">8,5</b></div>
-          <div class="lp-grade" data-g="1"><b>Bords</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">9,0</b></div>
-          <div class="lp-grade" data-g="2"><b>Surface</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">7,5</b></div>
-          <div class="lp-grade" data-g="3"><b>Centrage</b><span class="lp-grade-track"><span data-fill="1"></span></span><b data-score="1">9,5</b></div>
-        </div>
-        <p class="lp-body is-small">Photographie ta carte recto puis verso : quatre critères évalués, chacun détaillé en sous-scores. Une aide à l'évaluation, <b>pas une note certifiée</b>, pour décider avant d'envoyer ta carte en gradation.</p>
-      </div>
-    </div>
-  </div>
 </div>
-
-<!-- 06 · Troc -->
-<div id="echanges" class="lp-scene" style="height:220vh">
-  <div class="lp-sticky is-column">
-    <div class="lp-center-head">
-      <p class="lp-kicker">04 — ÉCHANGES</p>
-      <h2 class="lp-title is-big">Troque. <span class="lp-outline">Sans argent.</span></h2>
-    </div>
-    <div id="swap-stage" class="lp-swap" aria-hidden="true">
-      <div id="swap-av-l" class="lp-swap-av is-left">
-        <span data-ring="1" style="background:linear-gradient(135deg,var(--brand-rose),var(--brand-violet))">L</span>
-        <b>Toi</b><small>LéoTCG</small>
-      </div>
-      <div id="swap-av-r" class="lp-swap-av is-right">
-        <span data-ring="1" style="background:linear-gradient(135deg,var(--brand-bleu),var(--brand-violet))">S</span>
-        <b>SachaCollec</b><small>Collectionneuse</small>
-      </div>
-      <div id="swap-a" class="lp-swap-card is-a"><span id="swap-a-emblem"></span><small>Pokémon · 41,00 €</small></div>
-      <div id="swap-b" class="lp-swap-card is-b"><span id="swap-b-emblem"></span><small>Lorcana · 38,20 €</small></div>
-      <span class="lp-swap-z"><span>Z</span></span>
-      <span id="swap-chip" class="lp-swap-chip">Cotes comparées : troc équilibré ✓</span>
-      <span id="swap-stamp" class="lp-stamp is-swap" hidden>TROC CONCLU !</span>
-      <span id="swap-stars" class="lp-swap-stars" hidden>
-        <span class="stars">★★★★★</span>
-        <span class="txt">Troc conclu : 15 boosties chacun, puis vous vous notez</span>
-      </span>
-    </div>
-    <p class="lp-body is-small is-center">boostZ compare les cotes des deux côtés et t'aide à juger si le troc est équilibré. La remise se fait en main propre, sans argent, avec une notation en cinq étoiles. <b>Réservé aux 18 ans et plus.</b></p>
-  </div>
+<p class="tag" data-a style="text-align:center">LANGUES SERVIES AU 23&nbsp;SEPTEMBRE&nbsp;2026</p>
 </div>
-
-<div class="lp-marquee" aria-hidden="true">
-  <div class="lp-marquee-track is-reverse">
-    <span>POKÉMON · YU-GI-OH! · ONE PIECE · LORCANA · STAR WARS UNLIMITED · MAGIC · ANIMAL CROSSING · DRAGON BALL SUPER · WORLD OF WARCRAFT ·&nbsp;</span>
-    <span>POKÉMON · YU-GI-OH! · ONE PIECE · LORCANA · STAR WARS UNLIMITED · MAGIC · ANIMAL CROSSING · DRAGON BALL SUPER · WORLD OF WARCRAFT ·&nbsp;</span>
-  </div>
 </div>
-
-<!-- 07 · Les neuf jeux -->
-<section id="jeux" class="lp-section lp-jeux" aria-labelledby="jeux-title">
-  <div id="jeux-glow" class="lp-jeux-glow" aria-hidden="true"></div>
-  <div class="lp-wrap">
-    <p class="lp-kicker">05 — NEUF JEUX, TROIS LANGUES</p>
-    <h2 id="jeux-title" class="lp-title is-big">Neuf univers.<br><span class="lp-outline">Une app.</span></h2>
-    <p class="lp-body" style="max-width:520px">Touche un jeu : chacun garde sa couleur partout dans l'application, cartes et produits scellés compris — et chacun annonce les langues dans lesquelles boostZ sait le servir.</p>
-    <div id="game-tiles" class="lp-tiles" role="list"></div>
-    <div class="lp-game-info" aria-live="polite">
-      <span id="jeux-dot" class="lp-game-dot"></span>
-      <div style="flex:1;min-width:220px">
-        <b id="jeux-name" class="lp-game-name"></b>
-        <p id="jeux-tag" class="lp-game-tag"></p>
-        <div id="jeux-langs" class="lp-game-langs"></div>
-      </div>
-      <span id="jeux-cov" class="lp-game-cov"></span>
-    </div>
-    <p id="jeux-langnote" class="bz-tiny" style="margin-top:10px"></p>
-
-    <!-- La langue, et pourquoi elle décide du prix. Ajouté le 23/09/2026 :
-         la refonte des langues était en ligne depuis le 22 et la landing n'en
-         disait pas un mot. -->
-    <div class="lp-lang">
-      <div class="lp-lang-head">
-        <h3 class="lp-lang-title">La langue d'une carte<br><span class="lp-outline">n'est pas une étiquette.</span></h3>
-        <p class="lp-body" style="max-width:460px">C'est son prix. Entre une carte japonaise et la même en français, l'écart se compte parfois en dizaines d'euros. boostZ ne devine donc jamais : la langue vient du catalogue dans lequel tu as pris la carte, et elle ne bouge plus.</p>
-      </div>
-      <ul class="lp-lang-points">
-        <li>
-          <span class="lp-lang-chip">Langue</span>
-          <b>Elle est choisie avant la carte.</b>
-          <span>Tu actives les langues que tu collectionnes sur un jeu, tu cherches dedans, et ce que tu ajoutes en vient. Rien à ressaisir, rien à corriger.</span>
-        </li>
-        <li>
-          <span class="lp-lang-chip">Cote</span>
-          <b>Chaque langue a la sienne.</b>
-          <span>Quand une source publie un prix pour ta langue, c'est lui qui s'affiche. Sinon l'application dit d'où vient celui qu'elle montre — « cote toutes langues », ou la cote anglaise d'une carte française — plutôt que de faire passer l'un pour l'autre.</span>
-        </li>
-        <li>
-          <span class="lp-lang-chip">Scellés</span>
-          <b>Un display FR et un display JP sont deux produits.</b>
-          <span>Deux codes-barres, deux marchés, deux cotes. Chacun porte sa langue dans le catalogue, comme dans la vraie vie.</span>
-        </li>
-      </ul>
-    </div>
-    <p class="bz-tiny" style="margin-top:14px">Langues servies au 23 septembre 2026, jeu par jeu — elles suivent ce que publient les sources, pas ce que l'éditeur imprime. La cote d'une carte s'affiche quand une source la publie ; sinon, l'application indique « pas de cote ».</p>
-  </div>
 </section>
 
-<!-- 08 · Autour de toi -->
-<div id="autour" class="lp-scene" style="height:220vh">
-  <div class="lp-sticky">
-    <div class="lp-scene-row">
-      <div class="lp-map-card">
-        <svg id="france" class="lp-map" role="img" aria-label="Carte de France avec des boutiques, brocantes et tournois d'illustration"></svg>
-        <div class="lp-map-legend">
-          <span><i style="background:var(--brand-rose)"></i><b id="cnt-broc">0</b>Brocantes</span>
-          <span><i style="background:var(--brand-violet)"></i><b id="cnt-bout">0</b>Boutiques</span>
-          <span><i style="background:var(--brand-bleu)"></i><b id="cnt-tour">0</b>Tournois</span>
-        </div>
-        <p class="bz-tiny" style="text-align:center;margin:8px 0 0">Points d'illustration</p>
-      </div>
-      <div class="lp-scene-text">
-        <p class="lp-kicker">06 — AUTOUR DE TOI</p>
-        <h2 class="lp-title">Le TCG vit aussi<br><span class="lp-outline">près de chez toi.</span></h2>
-        <p class="lp-body">Boutiques (OpenStreetMap, resynchronisé chaque semaine), brocantes et vide-greniers (open data DataTourisme) et tournois, sur la même carte, avec les forums de ta région.</p>
-        <p class="bz-tiny lp-scroll-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="lp-bounce" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>Continue de dérouler : la France s'allume, point par point.</p>
-      </div>
-    </div>
-  </div>
-</div>
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
-<!-- 09 · Boosties -->
-<section id="finale" class="lp-section" aria-labelledby="boosties-title">
-  <div class="lp-finale-glow" aria-hidden="true"></div>
-  <div class="lp-wrap">
-    <div class="lp-center-head">
-      <p class="lp-kicker">07 — BOOSTIES</p>
-      <h2 id="boosties-title" class="lp-title is-big">Contribue. <span class="lp-outline">Personnalise.</span></h2>
-      <p class="lp-body" style="margin-inline:auto;max-width:580px">Ajouter une carte que personne n'avait encore sur boostZ rapporte plus que la centième d'une star du catalogue. Tes boosties se dépensent dans la boutique de personnalisation : essaie sur le profil ci-dessous.</p>
-    </div>
-    <div class="lp-profile-row">
-      <div class="lp-profile">
-        <div id="pf-banner" class="lp-pf-banner"><span class="lp-hatch" aria-hidden="true"></span><span class="lp-shine" aria-hidden="true"></span></div>
-        <div class="lp-pf-body">
-          <div id="pf-avatar" class="lp-pf-avatar">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path id="pf-glyph" d=""/></svg>
-          </div>
-          <div class="bz-row" style="gap:8px;margin-top:12px">
-            <b class="lp-pf-name">LéoTCG</b>
-            <span id="pf-rar" class="lp-pf-rar"></span>
-          </div>
-          <div id="pf-title" class="lp-pf-title"></div>
-          <div class="lp-pf-stats"><span><b>457</b> cartes</span><span><b>38</b> scellés</span><span><b>12</b> échanges</span></div>
-        </div>
-      </div>
-      <div class="lp-shop">
-        <div class="bz-row">
-          <b class="lp-shop-title">Boutique de personnalisation</b>
-          <span class="lp-coin-chip"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bzCoinV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCD34D"/><stop offset="1" stop-color="#D97706"/></linearGradient></defs><circle cx="12" cy="12" r="11" fill="url(#bzCoinV)"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/></svg>1 240</span>
-        </div>
-        <div class="lp-shop-line"><span class="lp-shop-label">Avatar</span><div id="opt-av" class="lp-opts"></div></div>
-        <div class="lp-shop-line"><span class="lp-shop-label">Cadre</span><div id="opt-fr" class="lp-opts"></div></div>
-        <div class="lp-shop-line"><span class="lp-shop-label">Bannière</span><div id="opt-bn" class="lp-opts"></div></div>
-        <div class="lp-shop-line is-last"><span class="lp-shop-label">Titre</span><div id="opt-ti" class="lp-opts"></div></div>
-        <div class="lp-rarities">
-          <span style="color:var(--rar-commun)"><i style="background:var(--rar-commun)"></i>Commun</span>
-          <span style="color:var(--rar-rare)"><i style="background:var(--rar-rare)"></i>Rare</span>
-          <span style="color:#B58BFF"><i style="background:var(--rar-epique)"></i>Épique</span>
-          <span style="color:var(--rar-legendaire)"><i style="background:var(--rar-legendaire)"></i>Légendaire</span>
-          <span style="color:var(--rar-mythique)"><i style="background:var(--rar-mythique)"></i>Mythique</span>
-        </div>
-        <p class="bz-tiny" style="margin:12px 0 0;line-height:1.7">Chaque objet s'achète à prix affiché, sans tirage au sort. Les boosties sont une unité de compte interne, sans valeur monétaire, utilisable uniquement dans l'application pour personnaliser ton compte.</p>
-      </div>
-    </div>
-  </div>
+<!-- 03 · Investissement -->
+<section class="zone" aria-labelledby="z3">
+<div class="in zgrid">
+<div class="ztext">
+<p class="kick" data-a style="color:#5FD3A3">03 · Investissement</p>
+<h2 id="z3" class="h zt" data-a>Ce que vaut<br><span class="acc">ta collection.</span></h2>
+<p class="p" data-a>Invest' additionne la cote de tes cartes et de tes scellés, trace sa courbe et te prévient quand elle monte ou baisse. Une carte sans cote l'affiche&nbsp;: rien n'est inventé.</p>
+<ul class="pts" data-a>
+<li><b style="color:#5FD3A3">Des alertes</b><span>Une cote qui monte ou qui baisse, et tu es prévenu.</span></li>
+<li><b style="color:#5FD3A3">L'état compte</b><span>Coins, bords, surface et centrage, évalués sur photo avant une gradation.</span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:420px">
+<div class="st ph big" data-a="land" style="left:0;top:10px;transform:rotate(-3deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-invest.jpg" alt="Capture de Boostz : Invest', la valeur de la collection répartie par jeu et par langue"></div>
+<div class="st" data-a="land" style="transition-delay:.12s;position:absolute;left:158px;top:30px;width:180px;padding:14px 16px;transform:rotate(2deg)">
+<div style="font-weight:600;font-size:13px;color:#A8A2B8">Valeur totale</div>
+<div data-to="150" style="font-family:Poppins,sans-serif;font-weight:800;font-size:32px;line-height:1.1;margin-top:2px">150 €</div>
+</div>
+<div class="st" data-a="land" style="transition-delay:.24s;position:absolute;left:150px;top:150px;width:188px;padding:14px 16px;transform:rotate(-2deg)">
+<div style="font-weight:600;font-size:13px;color:#A8A2B8">Évolution · 30&nbsp;jours</div>
+<svg width="150" height="50" viewBox="0 0 420 140" style="display:block;margin-top:6px" aria-hidden="true"><path class="draw" pathLength="1" d="M0 130 L60 118 L120 124 L180 96 L240 102 L300 70 L360 76 L420 30" fill="none" stroke="#5FD3A3" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="ui" style="font-size:16px;color:#5FD3A3;margin-top:2px">↑ +21,9 %</div>
+</div>
+<div class="disc" data-a="pop" style="transition-delay:.4s;left:214px;top:300px;width:96px;height:96px;background:#7C3AED;flex-direction:column;transform:rotate(-6deg)"><span class="h" style="font-size:34px;color:#fff;line-height:1">9,5</span><span class="ui" style="font-size:10px;color:#fff;margin-top:2px">Note estimée</span></div>
+</div>
+<p class="tag" data-a style="text-align:center">DONNÉES DE DÉMONSTRATION</p>
+</div>
+</div>
 </section>
 
-<!-- 10 · L'app et la confiance -->
-<section id="app" class="lp-section lp-bordered" aria-labelledby="app-title">
-  <div class="lp-app-glow" aria-hidden="true"></div>
-  <div class="lp-wrap lp-app-row">
-    <div class="lp-phone-wrap">
-      <div class="lp-phone-frame" data-cur="1" id="phone">
-        <div class="lp-phone">
-          <div class="lp-phone-status"><span>9:41</span><span class="notch"></span><span class="icons">●●●</span></div>
-          <div class="lp-phone-bar">
-            <span class="lp-mini-logo"><span class="b">boost</span><span class="z">Z</span></span>
-            <span class="lp-coin-chip is-mini">1 240</span>
-            <span class="lp-mini-av"></span>
-          </div>
-          <div class="lp-phone-value">
-            <span class="lp-phone-eyebrow">VALEUR TOTALE</span>
-            <div class="bz-row" style="gap:8px;margin-top:3px"><b>12 480 €</b><span class="lp-phone-delta">▲ +340 €</span></div>
-            <svg viewBox="0 0 200 34" preserveAspectRatio="none" aria-hidden="true"><path d="M2,28 C30,26 45,30 70,22 C95,14 115,18 140,12 C165,7 180,9 198,4" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="2" stroke-linecap="round"/><circle cx="198" cy="4" r="3" fill="#fff"/></svg>
-          </div>
-          <div class="lp-phone-filters"><span class="is-on">Tous</span><span>Pokémon</span><span>Lorcana</span><span>One P.</span></div>
-          <div id="phone-cards" class="lp-phone-cards"></div>
-          <div class="lp-phone-nav" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="var(--text-accent)"><path d="M4 4h4.5v4.5H4V4Zm5.75 0h4.5v4.5h-4.5V4ZM15.5 4H20v4.5h-4.5V4ZM4 9.75h4.5v4.5H4v-4.5Zm5.75 0h4.5v4.5h-4.5v-4.5Zm5.75 0H20v4.5h-4.5v-4.5ZM4 15.5h4.5V20H4v-4.5Zm5.75 0h4.5V20h-4.5v-4.5Zm5.75 0H20V20h-4.5v-4.5Z"/></svg>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>
-            <span class="lp-phone-fab"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h5v2H6v3H4V4Zm11 0h5v5h-2V6h-3V4ZM4 15h2v3h3v2H4v-5Zm14 0h2v5h-5v-2h3v-3Zm-9-5h6v4H9v-4Z"/></svg></span>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.2" stroke-linecap="round"><path d="M7 8h13M16 4l4 4-4 4M17 16H4M8 12l-4 4 4 4"/></svg>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(255,255,255,.4)"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5Z"/></svg>
-          </div>
-        </div>
-      </div>
-      <span class="lp-float is-green" aria-hidden="true">+340 € ce mois</span>
-      <span class="lp-float is-grey" aria-hidden="true">Catalogue officiel FR</span>
-    </div>
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
-    <div class="lp-app-text">
-      <p class="lp-kicker">08 — L'APP</p>
-      <h2 id="app-title" class="lp-title is-big">Bientôt dans<br><span class="lp-outline">ta poche.</span></h2>
-      <div class="lp-trust">
-        <div class="lp-trust-item">
-          <span class="lp-trust-ico" style="--c:var(--brand-bleu)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3Z"/></svg></span>
-          <div><b>Tes données restent en Europe</b><p>Le serveur tourne à Francfort et la base de données est à Paris, photos de tes cartes comprises.</p></div>
-        </div>
-        <div class="lp-trust-item">
-          <span class="lp-trust-ico" style="--c:var(--brand-violet)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h11a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3V5Z"/><path d="M8 9h6M8 13h6"/></svg></span>
-          <div><b>Des catalogues choisis pour le français</b><p>Pour plusieurs jeux, la source retenue est celle qui publie les vraies illustrations françaises, pas de l'anglais traduit.</p></div>
-        </div>
-        <div class="lp-trust-item">
-          <span class="lp-trust-ico" style="--c:var(--brand-rose)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
-          <div><b>15 ans pour collectionner, 18 ans pour échanger</b><p>Catalogue, collection et personnalisation dès 15 ans. Échanges, messagerie et forums à partir de 18 ans.</p></div>
-        </div>
-      </div>
-      <div class="lp-stores">
-        <span class="lp-store">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
-          <span><small>BIENTÔT SUR</small><b>App Store</b></span>
-        </span>
-        <span class="lp-store">
-          <svg width="15" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.85)" aria-hidden="true"><path d="M4 3.5v17l9-8.5-9-8.5Zm10.2 7.4 2.6-2.4 3.2 1.8c.9.5.9 1.9 0 2.4l-3.2 1.8-2.6-2.4v-1.2Zm-1 2.3 2.3 2.2-9.7 5.4 7.4-7.6Zm0-3.4L5.8 4.2l9.7 5.4-2.3 2.2Z"/></svg>
-          <span><small>BIENTÔT SUR</small><b>Google Play</b></span>
-        </span>
-      </div>
-      <p class="bz-tiny" style="margin:14px 0 0">Application en développement, pas encore publiée sur les stores. Aucune date de sortie n'est arrêtée.</p>
-    </div>
-  </div>
+<!-- 04 · Communauté -->
+<section class="zone" aria-labelledby="z4">
+<div class="in zgrid rev">
+<div class="ztext">
+<p class="kick" data-a style="color:#63B7FF">04 · Communauté</p>
+<h2 id="z4" class="h zt" data-a>Échange, discute,<br><span class="acc">retrouve-toi.</span></h2>
+<p class="p" data-a>Du troc entre collectionneurs, cotes comparées des deux côtés et remise en main propre&nbsp;: aucun argent ne passe par l'appli. Les forums de ta région annoncent brocantes, tournois et bons plans.</p>
+<ul class="pts" data-a>
+<li><b style="color:#63B7FF">Entre majeurs</b><span>Échanges, messagerie et forums sont réservés aux 18&nbsp;ans et plus.</span></li>
+<li><b style="color:#63B7FF">Cinq étoiles</b><span>Après un troc, vous vous notez l'un l'autre.</span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:400px">
+<div class="st ph" data-a="land" style="left:96px;top:0;transform:rotate(-3deg)"><img loading="lazy" decoding="async" src="assets/vitrine/forum-rhone.jpg" alt="Capture de Boostz : les sujets du forum du Rhône, entre bons plans, brocantes et tournois"></div>
+<div class="st" data-a="land" style="transition-delay:.15s;position:absolute;left:0;top:64px;width:96px;height:132px;padding:9px;transform:rotate(-8deg)"><div class="mini" style="height:100%;padding:7px"><b></b><u style="background:#2F5A7A;height:62px"></u><s></s></div></div>
+<div class="st" data-a="land" style="transition-delay:.25s;position:absolute;left:244px;top:206px;width:96px;height:132px;padding:9px;transform:rotate(7deg)"><div class="mini" style="height:100%;padding:7px"><b></b><u style="background:#7A4A3A;height:62px"></u><s></s></div></div>
+<div class="disc spin" data-a="pop" style="transition-delay:.35s;left:22px;top:250px;width:80px;height:80px;background:#63B7FF"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#1A1424" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h14l-4-4M20 15H6l4 4"/></svg></div>
+</div>
+</div>
+</div>
+</section>
+
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
+<!-- 05 · Boutiques partenaires -->
+<section class="zone" aria-labelledby="z5">
+<div class="in zgrid">
+<div class="ztext">
+<p class="kick" data-a style="color:#5FDCDC">05 · Boutiques partenaires</p>
+<h2 id="z5" class="h zt" data-a>Tes boutiques,<br><span class="acc">au premier rang.</span></h2>
+<p class="p" data-a>Les boutiques de jeux près de chez toi, sur la carte. Les partenaires passent en tête de liste et publient leurs tournois, avant-premières et soirées.</p>
+<ul class="pts" data-a>
+<li><b style="color:#5FDCDC">Un lieu pour tes échanges</b><span>Une boutique partenaire peut accueillir tes rendez-vous de troc, aux heures qu'elle indique.</span></li>
+<li><b style="color:#5FDCDC">Tu tiens une boutique&nbsp;?</b><span>Gère ta fiche et demande le statut de partenaire, gratuitement. <a href="conditions-boutiques.html">Conditions des boutiques&nbsp;→</a></span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:380px">
+<div class="st ph" data-a="land" style="left:0;top:14px;transform:rotate(-3deg)"><img loading="lazy" decoding="async" src="assets/vitrine/forums-carte.jpg" alt="Capture de Boostz : la carte de France des forums et des boutiques par région"></div>
+<div class="st" data-a="land" style="transition-delay:.15s;position:absolute;left:116px;top:40px;width:224px;padding:14px;transform:rotate(2deg)">
+<div class="stag">
+<div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:2px solid #2A2140"><div style="flex:none;width:38px;height:38px;border-radius:10px;background:#5FDCDC;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1424" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16l-1-5H5zM5 10v10h14V10M10 20v-5h4v5"/></svg></div><div style="flex:1"><div class="ui" style="font-size:10px;letter-spacing:.14em;color:#5FDCDC">PARTENAIRE</div><span class="bar" style="width:80%;margin-top:5px;background:#8A84A0"></span></div></div>
+<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid #2A2140"><div style="flex:none;width:38px;height:38px;border-radius:10px;background:#2A2140"></div><div style="flex:1"><span class="bar" style="width:65%"></span><span class="bar" style="width:40%;margin-top:6px"></span></div></div>
+<div style="display:flex;align-items:center;gap:10px;padding-top:10px"><div style="flex:none;width:38px;height:38px;border-radius:10px;background:#2A2140"></div><div style="flex:1"><span class="bar" style="width:55%"></span><span class="bar" style="width:35%;margin-top:6px"></span></div></div>
+</div>
+</div>
+<div class="st wig" data-a="land" style="transition-delay:.3s;position:absolute;left:124px;top:268px;width:210px;padding:12px 14px;background:#5FDCDC;transform:rotate(3deg)">
+<div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1424" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="ui" style="font-size:16px;color:#1A1424;white-space:nowrap">Tournois, soirées</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
+<!-- 06 · Missions et boosties -->
+<section class="zone" aria-labelledby="z6">
+<div class="in zgrid rev">
+<div class="ztext">
+<p class="kick" data-a style="color:#F0C066">06 · Missions et boosties</p>
+<h2 id="z6" class="h zt" data-a>Relève des missions,<br><span class="acc">gagne des boosties.</span></h2>
+<p class="p" data-a>Missions, hauts faits, cartes ajoutées au catalogue&nbsp;: tout rapporte des boosties. Tu les dépenses en avatars, cadres, bannières et titres, à prix affiché, sans tirage au sort.</p>
+<ul class="pts" data-a>
+<li><b style="color:#F0C066">Une mission par semaine</b><span>Elle t'offre un crédit d'analyse d'état en plus.</span></li>
+<li><b style="color:#F0C066">Contribue au catalogue</b><span>Ajouter une carte que personne n'avait encore rapporte plus que la centième d'une star du catalogue.</span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:420px">
+<div class="st ph big" data-a="land" style="left:160px;top:0;transform:rotate(3deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-missions.jpg" alt="Capture de Boostz : les missions du jour et leurs boosties"></div>
+<div class="disc medal" data-a="pop" style="transition-delay:.3s;left:30px;top:80px;width:100px;height:100px;background:linear-gradient(180deg,#FCD34D,#D97706)"><svg width="46" height="46" viewBox="0 0 24 24" fill="#fff" aria-label="Missions" role="img"><rect x="9.6" y="3" width="4.8" height="12" rx="2.4"/><circle cx="12" cy="19.4" r="2.6"/></svg></div>
+<div class="st wig" data-a="land" style="transition-delay:.45s;position:absolute;left:0;top:300px;padding:10px 16px;display:flex;align-items:center;gap:10px;transform:rotate(-3deg)"><span class="mco">b</span><span class="ui" style="font-size:15px;white-space:nowrap">Boosties gagnés</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
+<!-- 07 · Parrainage -->
+<section class="zone" aria-labelledby="z7">
+<div class="in zgrid">
+<div class="ztext">
+<p class="kick" data-a style="color:#C4B5FD">07 · Parrainage</p>
+<h2 id="z7" class="h zt" data-a>Invite tes amis,<br><span class="acc">gagnez tous les deux.</span></h2>
+<p class="p" data-a>Chaque membre a son code de parrainage et un lien à partager. Ton ami saisit ton code dans les 7&nbsp;jours qui suivent son inscription&nbsp;: il reçoit 150&nbsp;boosties, et toi 100.</p>
+<ul class="pts" data-a>
+<li><b style="color:#C4B5FD">Un lien qui ouvre l'appli</b><span>Ton lien boostz.fr ouvre Boostz sur la page Parrainage, ton code déjà rempli.</span></li>
+<li><b style="color:#C4B5FD">Des paliers</b><span>Plus tu parraines, plus tu débloques de récompenses, affichées dans l'appli.</span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:420px">
+<div class="st ph big" data-a="land" style="left:0;top:10px;transform:rotate(-4deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-parrainage.jpg" alt="Capture de Boostz : le code de parrainage à partager et les filleuls"></div>
+<div class="st" data-a="land" style="transition-delay:.2s;position:absolute;left:150px;top:150px;width:188px;transform:rotate(-3deg);padding:12px 14px"><div class="gain"><span class="mco" style="width:34px;height:34px;line-height:34px;font-size:18px">b</span><div><b>+150</b><span>pour ton filleul</span></div></div></div>
+<div class="st" data-a="land" style="transition-delay:.4s;position:absolute;left:170px;top:250px;width:168px;transform:rotate(3deg);padding:12px 14px"><div class="gain"><span class="mco" style="width:34px;height:34px;line-height:34px;font-size:18px">b</span><div><b>+100</b><span>pour toi</span></div></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 08 · Boostz Pass -->
+<section class="passband" aria-labelledby="z8">
+<div class="in zgrid rev">
+<div class="ztext">
+<p class="kick" data-a style="color:#F5C542">08 · Boostz Pass</p>
+<h2 id="z8" class="h zt" data-a><span class="wm" style="font-size:1.25em" aria-label="Boostz Pass"><span class="word" style="color:#fff">boost</span><span class="word goldtxt">Z</span><span class="word goldtxt" style="margin-left:.12em">pass</span></span><br><span style="color:#D7CCEC">pour aller plus loin.</span></h2>
+<p class="p" data-a style="color:#D7CCEC">Le compte est gratuit. Le Boostz Pass, mensuel ou annuel, lève ses limites. Il est réservé aux majeurs et se résilie à tout moment depuis ton profil.</p>
+<ul class="pts" data-a>
+<li><b style="color:#F5C542">Prix de lancement</b><span style="color:#D7CCEC">Pour les nouveaux abonnés, une seule fois par compte.</span></li>
+<li><b style="color:#F5C542">Rien ne disparaît</b><span style="color:#D7CCEC">À la fin du Pass, tes jeux et tes alertes restent en place.</span></li>
+</ul>
+</div>
+<div class="zvis">
+<div class="comp" style="height:420px">
+<div class="st ph big gold" data-a="land" style="left:168px;top:0;transform:rotate(4deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-pass.jpg" alt="Capture de Boostz : la présentation du Boostz Pass, mensuel ou annuel"></div>
+<div class="st gold" data-a="land" style="transition-delay:.2s;position:absolute;left:0;top:110px;width:176px;padding:12px 14px;transform:rotate(-3deg)"><div class="ui" style="font-size:11px;letter-spacing:.14em;color:#F5C542">MENSUEL OU ANNUEL</div><div class="ui" style="font-size:16px;color:#fff;margin-top:6px;line-height:1.3">Résiliable à tout moment</div></div>
+<div class="st gold" data-a="land" style="transition-delay:.35s;position:absolute;left:8px;top:270px;width:170px;padding:12px 14px;transform:rotate(2deg)"><div class="ui" style="font-size:11px;letter-spacing:.14em;color:#F5C542">TOUS LES JEUX</div><div class="ui" style="font-size:16px;color:#fff;margin-top:6px;line-height:1.3">Alertes et analyses illimitées</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 150 20 195 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
+<!-- La sortie -->
+<section class="in sortie" aria-labelledby="sortie">
+<div data-a="pop" style="display:inline-block;width:110px;height:110px;border-radius:28px;border:4px solid #F5F2FB;box-shadow:8px 8px 0 #05040A;overflow:hidden;transform:rotate(-4deg)"><img loading="lazy" decoding="async" src="assets/vitrine/icone-app.png" alt="Icône de l'application Boostz" style="display:block;width:100%;height:100%"></div>
+<h2 id="sortie" data-a class="h t3" style="margin-top:26px">Boostz sort<br><span class="acc">fin novembre 2026</span></h2>
+<div data-a style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:26px">
+<button type="button" class="store" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="#7F7891" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg><span><small>BIENTÔT SUR</small><b>App Store</b></span></button>
+<button type="button" class="store" disabled><svg width="20" height="22" viewBox="0 0 24 24" fill="#7F7891" aria-hidden="true"><path d="M4 3.5v17l9-8.5-9-8.5Zm10.2 7.4 2.6-2.4 3.2 1.8c.9.5.9 1.9 0 2.4l-3.2 1.8-2.6-2.4v-1.2Zm-1 2.3 2.3 2.2-9.7 5.4 7.4-7.6Zm0-3.4L5.8 4.2l9.7 5.4-2.3 2.2Z"/></svg><span><small>BIENTÔT SUR</small><b>Google Play</b></span></button>
+</div>
+<p data-a class="h t4" style="margin-top:46px">Abonne-toi pour<br><span class="acc">ne rien manquer</span></p>
+<div data-a class="cta">
+<a class="btn" href="https://www.instagram.com/boostz.app/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="#fff"/></svg>Instagram · @boostz.app</a>
+<a class="btn" href="https://www.tiktok.com/@boostz.app" style="background:#1D1730"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.4 4.6 5 5"/></svg>TikTok · Boostz</a>
+</div>
+</section>
+
+<!-- Questions fréquentes : utile au visiteur, et lu par les moteurs de recherche -->
+<section class="in" style="padding-top:90px" aria-labelledby="faq">
+<p class="kick" data-a style="color:#C4B5FD;text-align:center">Questions fréquentes</p>
+<h2 id="faq" class="h t4" data-a style="text-align:center;margin-bottom:24px">Tout savoir sur Boostz</h2>
+<div class="faq" data-a>
+<details open><summary>Boostz, c'est quoi&nbsp;?</summary><p>Une application mobile pour les collectionneurs de cartes à collectionner. Tu ranges ta collection, tu suis sa cote, tu échanges avec d'autres collectionneurs et tu trouves les boutiques et les tournois près de chez toi.</p></details>
+<details><summary>Quand sort l'application&nbsp;?</summary><p>Fin novembre 2026, sur l'App Store et Google Play. Abonne-toi à @boostz.app sur Instagram ou à Boostz sur TikTok pour ne rien manquer.</p></details>
+<details><summary>Boostz est-il gratuit&nbsp;?</summary><p>Oui, le compte est gratuit. Le Boostz Pass, mensuel ou annuel et réservé aux majeurs, lève certaines limites&nbsp;: jeux suivis, alertes de prix et pré-estimations d'état.</p></details>
+<details><summary>Quels jeux de cartes sont couverts&nbsp;?</summary><p>Pokémon, One Piece, Lorcana, Yu-Gi-Oh!, Magic, Star Wars Unlimited, Dragon Ball Super et Warcraft, cartes et produits scellés.</p></details>
+<details><summary>D'où viennent les cotes&nbsp;?</summary><p>De sources tierces&nbsp;: les catalogues de chaque jeu et les prix du marché. Elles restent indicatives et ne sont jamais inventées&nbsp;: une carte sans cote l'affiche.</p></details>
+<details><summary>Peut-on acheter ou vendre des cartes&nbsp;?</summary><p>Non. Les échanges sont du troc entre particuliers, en main propre, sans argent via l'application. Ils sont réservés aux 18&nbsp;ans et plus.</p></details>
+<details><summary>Où sont stockées mes données&nbsp;?</summary><p>En Europe&nbsp;: le serveur tourne à Francfort et la base de données est à Paris, photos de tes cartes comprises.</p></details>
+<details><summary>À partir de quel âge&nbsp;?</summary><p>Catalogue, collection et personnalisation dès 15&nbsp;ans. Échanges, messagerie et forums à partir de 18&nbsp;ans.</p></details>
+</div>
 </section>
 </main>
 
-<footer class="lp-footer">
-  <div class="lp-wrap" style="padding-block:36px 44px">
-    <div class="bz-row" style="gap:18px">
-      <span class="lp-mini-logo is-foot"><span class="b">boost</span><span class="z">Z</span></span>
-      <span class="lp-foot-base">Boost ta collection TCG</span>
-      <span class="lp-foot-copy">© 2026 boostZ · application en développement</span>
-    </div>
-    <nav class="lp-foot-nav" aria-label="Liens du site">
-      <a href="mentions-legales.html">Mentions légales</a>
-      <a href="cgu.html">CGU</a>
-      <a href="cgv.html">CGV</a>
-      <a href="confidentialite.html">Politique de confidentialité</a>
-      <a href="traceurs.html">Cookies et traceurs</a>
-      <a href="suppression-compte.html" class="is-red"><span class="lp-lock" data-lock hidden></span>Supprimer mon compte</a>
-      <a href="support.html" class="is-violet"><span class="lp-lock" data-lock hidden></span>Contacter le support</a>
-      <span id="foot-note" class="bz-tiny" hidden>Connexion requise pour ces deux actions.</span>
-    </nav>
-    <div class="lp-legal">
-      <p>Boostz n'est affilié, associé, autorisé, approuvé par, ni officiellement lié à aucun éditeur, distributeur ou titulaire de droits sur les jeux de cartes référencés. L'ensemble des noms, marques, logos et visuels de cartes demeure la propriété exclusive de leurs titulaires respectifs. Aucune image officielle n'est utilisée sur ce site : les cartes affichées sont des visuels de démonstration.</p>
-      <p>Les échanges se font entre particuliers, sans transfert d'argent via l'application. Les cotes affichées sont indicatives et proviennent de sources tierces. Les boosties sont une unité de compte interne, sans valeur monétaire, non transférables et non convertibles en euros.</p>
-    </div>
-    <p class="bz-tiny" style="margin-top:16px">Éditeur : Tanguy Pibarot, entrepreneur individuel (EI), nom commercial BoostZ, 47 rue Vivienne, 75002 Paris. Hébergeurs et crédits : <a href="mentions-legales.html">mentions légales</a>.</p>
-  </div>
+<footer class="legal" style="border-top:1px solid rgba(255,255,255,.08);margin-top:80px">
+<div class="in" style="padding-top:28px;padding-bottom:36px;font-size:13px;color:#A8A2B8">
+<nav aria-label="Liens du site" style="display:flex;flex-wrap:wrap;gap:12px 24px;font-family:'DM Sans',sans-serif;font-weight:700">
+<a href="mentions-legales.html">Mentions légales</a><a href="cgu.html">CGU</a><a href="cgv.html">CGV</a><a href="confidentialite.html">Politique de confidentialité</a><a href="traceurs.html">Cookies et traceurs</a><a href="conditions-boutiques.html">Conditions des boutiques</a><a href="support.html"><span class="lp-lock" data-lock hidden></span>Contacter le support</a><a href="suppression-compte.html" style="color:#F0899A"><span class="lp-lock" data-lock hidden></span>Supprimer mon compte</a>
+<span id="foot-note" class="bz-tiny" hidden>Connexion requise pour ces deux actions.</span>
+</nav>
+<p style="margin:20px 0 0;font-size:12px;line-height:1.6;max-width:960px">Boostz n'est affilié, associé, autorisé, approuvé par, ni officiellement lié à aucun éditeur, distributeur ou titulaire de droits sur les jeux de cartes référencés. L'ensemble des noms, marques, logos et visuels de cartes demeure la propriété exclusive de leurs titulaires respectifs. Aucune image officielle n'est utilisée sur ce site&nbsp;: les cartes affichées sont des visuels de démonstration, et les captures de l'application montrent un compte et des données de démonstration.</p>
+<p style="margin:10px 0 0;font-size:12px;line-height:1.6;max-width:960px">Les échanges se font entre particuliers, sans transfert d'argent via l'application. Les cotes affichées sont indicatives et proviennent de sources tierces. Les boosties sont une unité de compte interne, sans valeur monétaire, non transférables et non convertibles en euros.</p>
+<p style="margin:10px 0 0;font-size:12px;line-height:1.6">Éditeur&nbsp;: Tanguy Pibarot, entrepreneur individuel (EI), nom commercial BoostZ, 47 rue Vivienne, 75002 Paris. Hébergeurs et crédits&nbsp;: <a href="mentions-legales.html">mentions légales</a>.</p>
+<p style="margin:12px 0 0;font-size:12px">© 2026 Boostz</p>
+</div>
 </footer>
 
-<script type="module" src="assets/landing.js"></script>
+</div>
+
+<script type="module" src="assets/vitrine.js"></script>
 <script type="module" src="assets/parrainage.js"></script>
 </body>
 </html>
