@@ -45,7 +45,7 @@
 <h2>2. Données traitées</h2>
 <div class="table-wrap"><table>
 <tr><th>Catégorie</th><th>Données</th><th>D'où elles viennent</th></tr>
-<tr><td>Compte</td><td data-label="Données">Courriel, mot de passe (stocké sous forme d'empreinte, jamais en clair), pseudo, date d'inscription, date de dernière utilisation</td><td data-label="D'où elles viennent">Vous</td></tr>
+<tr><td>Compte</td><td data-label="Données">Courriel, mot de passe (stocké sous forme d'empreinte, jamais en clair), pseudo, date d'inscription, date de dernière utilisation ; si vous vous connectez avec Google, l'identifiant de votre compte Google</td><td data-label="D'où elles viennent">Vous, et Google si vous vous connectez avec lui</td></tr>
 <tr><td>Âge</td><td data-label="Données">Date de naissance complète</td><td data-label="D'où elles viennent">Vous</td></tr>
 <tr><td>Profil</td><td data-label="Données">Avatar (un dessin composé dans l'app, jamais une photo), présentation, titres et éléments de personnalisation, choix profil public ou privé</td><td data-label="D'où elles viennent">Vous</td></tr>
 <tr><td>Collection</td><td data-label="Données">Cartes et produits, photos, état, prix d'achat, notes, numéros de certificat de gradation, liste de souhaits, alertes</td><td data-label="D'où elles viennent">Vous</td></tr>
@@ -55,11 +55,12 @@
 <tr><td>Signalements</td><td data-label="Données">Signalements envoyés ou reçus, décisions de modération</td><td data-label="D'où elles viennent">Vous, d'autres membres, l'équipe</td></tr>
 <tr><td>Support et idées</td><td data-label="Données">Demandes, captures d'écran, version de l'app et du système du téléphone, réponses</td><td data-label="D'où elles viennent">Vous</td></tr>
 <tr><td>Jeu et récompenses</td><td data-label="Données">Solde et historique des Boosties et des crédits, missions, hauts faits, parrain et filleuls, codes bonus utilisés</td><td data-label="D'où elles viennent">Votre activité</td></tr>
-<tr><td>Achats (à venir)</td><td data-label="Données">Produit, prix, date, formule et échéance du Pass, preuve d'acceptation des CGV</td><td data-label="D'où elles viennent">Vous et le Magasin</td></tr>
+<tr><td>Achats</td><td data-label="Données">Produit, date, numéro de commande et jeton d'achat Google Play, formule et échéance du Pass, état de l'achat (livré, en attente, remboursé), cases cochées avant de payer (acceptation des CGV, renonciation au droit de rétractation ou démarrage immédiat du Pass)</td><td data-label="D'où elles viennent">Vous et Google Play</td></tr>
 <tr><td>Boutiques</td><td data-label="Données">Pour qui demande la création ou la gestion d'une fiche : nom et adresse de la boutique, téléphone, message</td><td data-label="D'où elles viennent">Vous</td></tr>
 <tr><td>Affichage de l'offre Pass</td><td data-label="Données">Événements « offre affichée », « fermée », « paiement commencé », enregistrés sans lien avec votre compte</td><td data-label="D'où elles viennent">Votre activité</td></tr>
 </table></div>
-<p><strong>Ce que BoostZ ne collecte pas :</strong> votre position (l'application n'a pas accès à la localisation), vos contacts, un identifiant publicitaire, des données bancaires. Elle n'intègre aucun outil de publicité ni de mesure d'audience tiers ; seuls les affichages de l'offre Pass sont comptés, sans lien avec votre compte (voir la politique des traceurs). Le courriel, le mot de passe, le pseudo et la date de naissance sont indispensables pour ouvrir un compte : sans eux, l'inscription n'est pas possible. Le reste est facultatif. Les photos sont débarrassées de leurs métadonnées, dont la position GPS, avant d'être enregistrées.</p>
+<p><strong>Ce que BoostZ ne collecte pas :</strong> votre position (l'application n'a pas accès à la localisation), vos contacts, un identifiant publicitaire, des données bancaires. Elle n'intègre aucun outil de publicité ni de mesure d'audience tiers ; seuls les affichages de l'offre Pass sont comptés, sans lien avec votre compte (voir la politique des traceurs). Le courriel, le mot de passe (ou la connexion avec Google), le pseudo et la date de naissance sont indispensables pour ouvrir un compte : sans eux, l'inscription n'est pas possible. Le reste est facultatif. Les photos sont débarrassées de leurs métadonnées, dont la position GPS, avant d'être enregistrées.</p>
+<p><strong>Connexion avec Google.</strong> Si vous choisissez « Continuer avec Google », Google transmet à BoostZ l'identifiant de votre compte Google, votre courriel et la confirmation qu'il est vérifié, ainsi que votre prénom, qui sert seulement à vous proposer un pseudo et n'est pas conservé. Ni votre nom ni votre photo ne sont récupérés. Si un compte BoostZ existe déjà avec ce courriel, les deux sont reliés. Votre date de naissance vous est ensuite demandée, comme pour une inscription par courriel. Le lien avec votre compte Google est effacé avec votre compte.</p>
 <p><strong>Données de personnes qui ne sont pas membres.</strong> Les annonces eBay sont affichées sans le pseudo de leur vendeur : BoostZ ne garde aucune donnée sur les utilisateurs d'eBay. Les fiches de boutiques reprennent des informations publiques d'OpenStreetMap et du répertoire SIRENE, qui peuvent concerner un commerçant personne physique. Ces personnes peuvent s'opposer au traitement à l'adresse de la section 1.</p>
 
 <h2>3. Pourquoi, et sur quelle base</h2>
@@ -74,6 +75,7 @@
 <tr><td>Mesurer l'intérêt pour l'offre Pass</td><td data-label="Base légale">Intérêt légitime : améliorer l'offre</td></tr>
 <tr><td>Protéger le service contre les abus (limitation des requêtes)</td><td data-label="Base légale">Intérêt légitime</td></tr>
 <tr><td>Vous envoyer des notifications par courriel</td><td data-label="Base légale">Exécution du contrat : un service que vous activez type par type et coupez à tout moment</td></tr>
+<tr><td>Vous prévenir par courriel avant chaque reconduction d'un Pass annuel</td><td data-label="Base légale">Obligation légale (article L. 215-1 du Code de la consommation) : ce courriel ne se coupe pas</td></tr>
 </table></div>
 <p>BoostZ n'envoie aucune prospection pour ses propres offres. Les annonces d'événements des boutiques partenaires sont un type de notification que vous pouvez couper ; elles ne partent par courriel que si vous l'avez activé. Avant 18 ans, elles sont coupées tant que vous ne les activez pas. Toute autre prospection serait soumise à votre accord préalable.</p>
 
@@ -100,7 +102,7 @@
 <tr><td>GitHub</td><td data-label="Ce qu'il fait">Hébergement du site boostz.fr</td><td data-label="Ce qu'il reçoit">Adresse IP des visiteurs</td><td data-label="Où">États-Unis</td></tr>
 <tr><td>Expo</td><td data-label="Ce qu'il fait">Mises à jour de l'application</td><td data-label="Ce qu'il reçoit">Adresse IP, identifiant d'installation, versions de l'app et du système</td><td data-label="Où">États-Unis</td></tr>
 </table></div>
-<p>La bibliothèque ML Kit de Google, qui lit le texte des cartes sur le téléphone, peut transmettre à Google des statistiques d'usage, sans les photos (voir la politique des traceurs). Google Play et l'App Store distribuent l'application et encaissent les achats. Ils traitent vos données selon leurs propres politiques, comme responsables distincts.</p>
+<p>La bibliothèque ML Kit de Google, qui lit le texte des cartes sur le téléphone, peut transmettre à Google des statistiques d'usage, sans les photos (voir la politique des traceurs). Google Play et l'App Store distribuent l'application et encaissent les achats. Pour relier un achat à votre compte, BoostZ transmet à Google Play une empreinte de votre identifiant de membre, jamais votre courriel. Si vous vous connectez avec Google, Google confirme votre identité à BoostZ. Google et Apple traitent vos données selon leurs propres politiques, comme responsables distincts.</p>
 <p><strong>Intelligence artificielle.</strong> Les données envoyées à Anthropic servent uniquement à produire la réponse demandée. Ses conditions commerciales excluent de les utiliser pour entraîner ses modèles. Aucune décision qui vous concerne n'est prise par ces systèmes. La trace d'une analyse de support est effacée après 90 jours.</p>
 
 <h2>6. Transferts hors de l'Union européenne</h2>
@@ -121,7 +123,7 @@
 <tr><td>Notifications</td><td data-label="Durée">12 mois</td></tr>
 <tr><td>Code de réinitialisation du mot de passe</td><td data-label="Durée">Valable 15 minutes, effacé après 24 heures</td></tr>
 <tr><td>Événements de l'offre Pass</td><td data-label="Durée">13 mois, sans lien avec votre compte</td></tr>
-<tr><td>Achats</td><td data-label="Durée">Pièces comptables 10 ans, preuve d'acceptation des CGV 5 ans</td></tr>
+<tr><td>Achats</td><td data-label="Durée">Pièces comptables 10 ans, preuve d'acceptation des CGV et des cases cochées avant de payer 5 ans, y compris après la suppression du compte</td></tr>
 <tr><td>Date et version des conditions acceptées</td><td data-label="Durée">Conservées après la suppression du compte, comme preuve, pendant 5 ans</td></tr>
 <tr><td>Idées proposées</td><td data-label="Durée">Jusqu'à la suppression du compte</td></tr>
 <tr><td>Journal des actions d'administration</td><td data-label="Durée">3 ans</td></tr>
