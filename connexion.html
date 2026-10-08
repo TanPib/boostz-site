@@ -29,6 +29,10 @@
   .soon { display: flex; align-items: center; gap: 10px; border: 1.5px solid rgba(255,255,255,.1); border-radius: 13px; padding: 12px 14px; opacity: .55; }
   .soon b { font-family: var(--font-ui); font-size: 13px; }
   .soon .bz-pill { margin-left: auto; }
+  .forgot-link { align-self: flex-end; margin-top: -4px; background: none; border: 0; padding: 4px 0; color: var(--text-muted); font: inherit; font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .forgot-link:hover, .forgot-link:focus-visible { color: var(--text, #fff); }
+  .forgot-head { margin: 0 0 4px; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .code-input { letter-spacing: .35em; font-variant-numeric: tabular-nums; }
   @media (max-width: 480px) { .login-top, .login-main { padding-inline: 16px; } }
   @media (max-width: 640px) {
     .login-top { padding-block: 10px; }
@@ -56,6 +60,7 @@
     <p class="bz-lead">Connecte-toi avec le compte de ton application boostZ.</p>
 
     <div class="bz-card" style="margin-top:22px;padding:22px">
+      <div id="login-panel">
       <!-- Sans action ni name sur les champs, et bouton désactivé jusqu'au chargement du
            script : si le formulaire partait avant que le JavaScript soit prêt, le
            navigateur l'enverrait en GET et le mot de passe finirait dans l'adresse. -->
@@ -73,6 +78,7 @@
             </button>
           </span>
         </div>
+        <button id="forgot-open" class="forgot-link" type="button">Mot de passe oublié ?</button>
         <div id="message" aria-live="polite"></div>
         <button id="submit" class="bz-btn is-primary is-block" type="submit" disabled>SE CONNECTER</button>
       </form>
@@ -88,6 +94,37 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.8)" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3ZM12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Zm-5.6-8a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9l3.3-2.5ZM12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.5l3.3 2.6C7.2 7.8 9.4 6 12 6Z"/></svg>
           <b>Continuer avec Google</b><span class="bz-pill">Bientôt</span>
         </div>
+      </div>
+      </div>
+
+      <!-- Mot de passe oublié : un code à six chiffres part par e-mail, puis le
+           code et le nouveau mot de passe partent ensemble. Mêmes précautions que
+           la connexion : pas d'action ni de name, boutons actifs une fois le script prêt. -->
+      <div id="forgot-panel" hidden>
+        <h2 class="forgot-head">Mot de passe oublié</h2>
+        <p id="forgot-intro" class="bz-small bz-muted" style="margin:0 0 14px;line-height:1.6">Indique l'adresse de ton compte : on t'envoie un code à six chiffres, valable 15&nbsp;minutes.</p>
+        <form id="forgot-form" class="bz-stack" style="gap:14px" action="javascript:void(0)" novalidate>
+          <div class="bz-field">
+            <label class="bz-label" for="forgot-email">Adresse e-mail</label>
+            <input id="forgot-email" class="bz-input" type="email" autocomplete="username" required placeholder="ton@email.fr">
+          </div>
+          <div id="forgot-message" aria-live="polite"></div>
+          <button id="forgot-submit" class="bz-btn is-primary is-block" type="submit" disabled>RECEVOIR UN CODE</button>
+        </form>
+        <form id="reset-form" class="bz-stack" style="gap:14px" action="javascript:void(0)" novalidate hidden>
+          <div class="bz-field">
+            <label class="bz-label" for="reset-code">Code reçu par e-mail</label>
+            <input id="reset-code" class="bz-input code-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required placeholder="000000">
+          </div>
+          <div class="bz-field">
+            <label class="bz-label" for="reset-password">Nouveau mot de passe</label>
+            <input id="reset-password" class="bz-input" type="password" autocomplete="new-password" minlength="8" required placeholder="8 caractères minimum">
+          </div>
+          <div id="reset-message" aria-live="polite"></div>
+          <button id="reset-submit" class="bz-btn is-primary is-block" type="submit" disabled>CHANGER LE MOT DE PASSE</button>
+          <button id="resend" class="forgot-link" type="button" style="align-self:center">Renvoyer un code</button>
+        </form>
+        <button id="forgot-close" class="forgot-link" type="button" style="display:block;margin:14px auto 0">← Retour à la connexion</button>
       </div>
     </div>
 

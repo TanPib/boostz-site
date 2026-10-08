@@ -98,7 +98,21 @@ export async function call(path, { method = 'GET', body } = {}) {
 // jeton est refusé partout ensuite. Sans cette vérification, la personne verrait
 // « connecté » puis « session expirée » à l'écran suivant, sans comprendre.
 export async function login(email, password) {
-  const data = await call('/auth/login', { method: 'POST', body: { email, password } });
+  return openSession(await call('/auth/login', { method: 'POST', body: { email, password } }));
+}
+
+// « Mot de passe oublié » : le code part par e-mail, la réponse est la même que
+// l'adresse ait un compte ou non (le serveur ne le dit jamais).
+export async function forgotPassword(email) {
+  return call('/auth/password/forgot', { method: 'POST', body: { email } });
+}
+
+// Le bon code fixe le nouveau mot de passe et rend un jeton, comme une connexion.
+export async function resetPassword(email, code, password) {
+  return openSession(await call('/auth/password/reset', { method: 'POST', body: { email, code, password } }));
+}
+
+async function openSession(data) {
   saveSession(data.token, data.user);
   try {
     const me = await call('/auth/me');

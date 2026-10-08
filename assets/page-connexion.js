@@ -1,4 +1,4 @@
-import { login, session, isAdmin, ApiError } from './api.js';
+import { login, forgotPassword, resetPassword, session, isAdmin, ApiError } from './api.js';
 import { logo, say } from './chrome.js';
 
 document.getElementById('logo').append(logo());
@@ -73,5 +73,97 @@ form.addEventListener('submit', async (e) => {
     say(message, text, 'err');
     submit.disabled = false;
     password.focus();
+  }
+});
+
+// Mot de passe oublié. Le serveur répond pareil que l'adresse ait un compte ou
+// non, et borne lui-même les envois (une minute entre deux codes, trois par
+// heure) : la page n'a qu'à relayer ses messages.
+const loginPanel = document.getElementById('login-panel');
+const forgotPanel = document.getElementById('forgot-panel');
+const forgotForm = document.getElementById('forgot-form');
+const forgotEmail = document.getElementById('forgot-email');
+const forgotSubmit = document.getElementById('forgot-submit');
+const forgotMessage = document.getElementById('forgot-message');
+const resetForm = document.getElementById('reset-form');
+const resetCode = document.getElementById('reset-code');
+const resetPasswordInput = document.getElementById('reset-password');
+const resetSubmit = document.getElementById('reset-submit');
+const resetMessage = document.getElementById('reset-message');
+const resend = document.getElementById('resend');
+let resetAddress = '';
+
+forgotSubmit.disabled = false;
+resetSubmit.disabled = false;
+
+function showForgot(open) {
+  loginPanel.hidden = open;
+  forgotPanel.hidden = !open;
+  if (open) {
+    if (!forgotEmail.value) forgotEmail.value = email.value.trim();
+    (resetForm.hidden ? forgotEmail : resetCode).focus();
+  } else {
+    email.focus();
+  }
+}
+
+document.getElementById('forgot-open').addEventListener('click', () => showForgot(true));
+document.getElementById('forgot-close').addEventListener('click', () => showForgot(false));
+
+async function sendCode(host) {
+  const address = forgotEmail.value.trim();
+  if (!address) {
+    say(forgotMessage, 'Indique ton adresse e-mail.', 'err');
+    return;
+  }
+  forgotSubmit.disabled = true;
+  resend.disabled = true;
+  say(host, '');
+  const slow = setTimeout(() => say(host, 'Envoi… le serveur peut mettre une trentaine de secondes à se réveiller.', 'note'), 2000);
+  try {
+    const res = await forgotPassword(address);
+    clearTimeout(slow);
+    resetAddress = address;
+    document.getElementById('forgot-intro').textContent = 'Tape le code reçu à ' + address + ' et choisis ton nouveau mot de passe. L’e-mail parle de l’application : le code marche aussi ici.';
+    forgotForm.hidden = true;
+    resetForm.hidden = false;
+    say(resetMessage, (res && res.message) || 'Si un compte existe avec cette adresse, un code vient de partir.', 'info');
+    resetCode.focus();
+  } catch (err) {
+    clearTimeout(slow);
+    say(host, err.message, 'err');
+  } finally {
+    forgotSubmit.disabled = false;
+    resend.disabled = false;
+  }
+}
+
+forgotForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  sendCode(forgotMessage);
+});
+
+resend.addEventListener('click', () => sendCode(resetMessage));
+
+resetForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const code = resetCode.value.replace(/\s+/g, '');
+  if (!/^\d{6}$/.test(code)) {
+    say(resetMessage, 'Le code fait six chiffres.', 'err');
+    return;
+  }
+  if (resetPasswordInput.value.length < 8) {
+    say(resetMessage, 'Le mot de passe doit faire au moins 8 caractères.', 'err');
+    return;
+  }
+  resetSubmit.disabled = true;
+  say(resetMessage, '');
+  try {
+    const { user } = await resetPassword(resetAddress, code, resetPasswordInput.value);
+    location.href = destinationFor(user);
+  } catch (err) {
+    say(resetMessage, err.message, 'err');
+    resetSubmit.disabled = false;
+    resetCode.focus();
   }
 });
