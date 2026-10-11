@@ -86,6 +86,23 @@
 <link rel="stylesheet" href="assets/vitrine.css">
 </head>
 <body>
+<!-- Sommaire : une colonne de points à gauche sur ordinateur, un bouton en bas à gauche sur téléphone -->
+<nav class="toc" id="toc" aria-label="Sommaire de la page">
+<button type="button" class="toc-btn" id="toc-btn" aria-expanded="false" aria-controls="toc-list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="sr">Sommaire</span></button>
+<ol class="toc-list" id="toc-list">
+<li><a href="#accueil"><i aria-hidden="true"></i><span>Accueil</span></a></li>
+<li><a href="#collection"><i aria-hidden="true"></i><span><b>01</b> Collection</span></a></li>
+<li><a href="#langues"><i aria-hidden="true"></i><span><b>02</b> Langues</span></a></li>
+<li><a href="#cote"><i aria-hidden="true"></i><span><b>03</b> Investissement</span></a></li>
+<li><a href="#communaute"><i aria-hidden="true"></i><span><b>04</b> Communauté</span></a></li>
+<li><a href="#boutiques"><i aria-hidden="true"></i><span><b>05</b> Boutiques</span></a></li>
+<li><a href="#missions"><i aria-hidden="true"></i><span><b>06</b> Missions</span></a></li>
+<li><a href="#parrainage"><i aria-hidden="true"></i><span><b>07</b> Parrainage</span></a></li>
+<li><a href="#pass"><i aria-hidden="true"></i><span><b>08</b> Boostz Pass</span></a></li>
+<li><a href="#lancement"><i aria-hidden="true"></i><span>Sortie</span></a></li>
+<li><a href="#questions"><i aria-hidden="true"></i><span>Questions</span></a></li>
+</ol>
+</nav>
 <div class="pg" id="pg">
 
 <header class="in" style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;z-index:3">
@@ -95,7 +112,7 @@
 
 <main>
 <!-- 1 · Le booster à ouvrir -->
-<section class="in hero" aria-labelledby="titre">
+<section id="accueil" class="in hero" aria-labelledby="titre">
 <div class="ghost" style="left:4px;top:330px;width:50px;height:70px;transform:rotate(-10deg)"><i></i></div>
 <div class="ghost" style="right:6px;top:120px;width:46px;height:64px;transform:rotate(8deg)"><i></i></div>
 <div class="htext">
@@ -140,7 +157,7 @@
 <svg class="wave thr grow" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M195 0 C195 60 60 30 30 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 01 · Collection -->
-<section class="zone" aria-labelledby="z1">
+<section id="collection" class="zone" aria-labelledby="z1">
 <div class="in zgrid">
 <div class="ztext">
 <p class="kick" data-a style="color:#C4B5FD">01 · Collection</p>
@@ -164,10 +181,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 02 · Langues -->
-<section class="zone" aria-labelledby="z2">
+<section id="langues" class="zone" aria-labelledby="z2">
 <div class="in zgrid rev">
 <div class="ztext">
 <p class="kick" data-a style="color:#FF7AB8">02 · Langues</p>
@@ -201,10 +218,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 03 · Investissement -->
-<section class="zone" aria-labelledby="z3">
+<section id="cote" class="zone" aria-labelledby="z3">
 <div class="in zgrid">
 <div class="ztext">
 <p class="kick" data-a style="color:#5FD3A3">03 · Investissement</p>
@@ -234,10 +251,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 04 · Communauté -->
-<section class="zone" aria-labelledby="z4">
+<section id="communaute" class="zone" aria-labelledby="z4">
 <div class="in zgrid rev">
 <div class="ztext">
 <p class="kick" data-a style="color:#63B7FF">04 · Communauté</p>
@@ -259,10 +276,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 05 · Boutiques partenaires -->
-<section class="zone" aria-labelledby="z5">
+<section id="boutiques" class="zone" aria-labelledby="z5">
 <div class="in zgrid">
 <div class="ztext">
 <p class="kick" data-a style="color:#5FDCDC">05 · Boutiques partenaires</p>
@@ -270,7 +287,7 @@
 <p class="p" data-a>Les boutiques de jeux près de chez toi, sur la carte. Les partenaires passent en tête de liste et publient leurs tournois, avant-premières et soirées.</p>
 <ul class="pts" data-a>
 <li><b style="color:#5FDCDC">Un lieu pour tes échanges</b><span>Une boutique partenaire peut accueillir tes rendez-vous de troc, aux heures qu'elle indique.</span></li>
-<li><b style="color:#5FDCDC">Tu tiens une boutique&nbsp;?</b><span>Gère ta fiche et demande le statut de partenaire, gratuit jusqu'au 31Gère ta fiche et demande le statut de partenaire, gratuit jusqu'au 31&nbsp;décembre 2027. nbsp;décembre 2027. <a href="conditions-boutiques.html">Conditions des boutiques&nbsp;→</a></span></li>
+<li><b style="color:#5FDCDC">Tu tiens une boutique&nbsp;?</b><span>Gère ta fiche et demande le statut de partenaire, gratuit jusqu'au 31&nbsp;décembre 2027. <a href="conditions-boutiques.html">Conditions des boutiques&nbsp;→</a></span></li>
 </ul>
 </div>
 <div class="zvis">
@@ -291,10 +308,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 06 · Missions et boosties -->
-<section class="zone" aria-labelledby="z6">
+<section id="missions" class="zone" aria-labelledby="z6">
 <div class="in zgrid rev">
 <div class="ztext">
 <p class="kick" data-a style="color:#F0C066">06 · Missions et boosties</p>
@@ -315,10 +332,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M400 30 C300 100 220 0 140 60 S30 90 -10 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- 07 · Parrainage -->
-<section class="zone" aria-labelledby="z7">
+<section id="parrainage" class="zone" aria-labelledby="z7">
 <div class="in zgrid">
 <div class="ztext">
 <p class="kick" data-a style="color:#C4B5FD">07 · Parrainage</p>
@@ -339,8 +356,10 @@
 </div>
 </section>
 
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 170 0 250 60 S360 90 400 40" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
 <!-- 08 · Boostz Pass -->
-<section class="passband" aria-labelledby="z8">
+<section id="pass" class="passband" aria-labelledby="z8">
 <div class="in zgrid rev">
 <div class="ztext">
 <p class="kick" data-a style="color:#F5C542">08 · Boostz Pass</p>
@@ -361,10 +380,10 @@
 </div>
 </section>
 
-<svg class="wave thr" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 150 20 195 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M-10 30 C80 100 150 20 195 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 
 <!-- La sortie -->
-<section class="in sortie" aria-labelledby="sortie">
+<section id="lancement" class="in sortie" aria-labelledby="sortie">
 <div data-a="pop" style="display:inline-block;width:110px;height:110px;border-radius:28px;border:4px solid #F5F2FB;box-shadow:8px 8px 0 #05040A;overflow:hidden;transform:rotate(-4deg)"><img loading="lazy" decoding="async" src="assets/vitrine/icone-app.png" alt="Icône de l'application Boostz" style="display:block;width:100%;height:100%"></div>
 <h2 id="sortie" data-a class="h t3" style="margin-top:26px">Boostz sort le<br><span class="acc">14&nbsp;janvier 2027</span></h2>
 <div data-a style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:26px">
@@ -378,8 +397,10 @@
 </div>
 </section>
 
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M195 0 C60 40 330 70 195 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
+
 <!-- Questions fréquentes : utile au visiteur, et lu par les moteurs de recherche -->
-<section class="in" style="padding-top:90px" aria-labelledby="faq">
+<section class="in" id="questions" style="padding-top:20px" aria-labelledby="faq">
 <p class="kick" data-a style="color:#C4B5FD;text-align:center">Questions fréquentes</p>
 <h2 id="faq" class="h t4" data-a style="text-align:center;margin-bottom:24px">Tout savoir sur Boostz</h2>
 <div class="faq" data-a>
@@ -393,9 +414,10 @@
 <details><summary>À partir de quel âge&nbsp;?</summary><p>Catalogue, collection et personnalisation dès 15&nbsp;ans. Échanges, messagerie et forums à partir de 18&nbsp;ans.</p></details>
 </div>
 </section>
+<svg class="wave" viewBox="0 0 390 110" preserveAspectRatio="none" aria-hidden="true"><path d="M195 0 C330 40 60 70 195 110" fill="none" stroke="rgba(196,181,253,.55)" stroke-width="6" stroke-dasharray="12 16" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>
 </main>
 
-<footer class="legal" style="border-top:1px solid rgba(255,255,255,.08);margin-top:80px">
+<footer class="legal" style="border-top:1px solid rgba(255,255,255,.08)">
 <div class="in" style="padding-top:28px;padding-bottom:36px;font-size:13px;color:#A8A2B8">
 <nav aria-label="Liens du site" style="display:flex;flex-wrap:wrap;gap:12px 24px;font-family:'DM Sans',sans-serif;font-weight:700">
 <a href="mentions-legales.html">Mentions légales</a><a href="cgu.html">CGU</a><a href="cgv.html">CGV</a><a href="confidentialite.html">Politique de confidentialité</a><a href="traceurs.html">Cookies et traceurs</a><a href="conditions-boutiques.html">Conditions des boutiques</a><a href="support.html"><span class="lp-lock" data-lock hidden></span>Contacter le support</a><a href="suppression-compte.html" style="color:#F0899A"><span class="lp-lock" data-lock hidden></span>Supprimer mon compte</a>

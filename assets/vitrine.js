@@ -110,3 +110,57 @@ if (!reduced && 'IntersectionObserver' in window) {
 
 renderAccount();
 verifyAccount();
+
+// Sommaire : le point de la section à l'écran s'allume ; sur téléphone, le
+// bouton paraît une fois le booster passé, en remontant, et la liste se ferme
+// après un choix.
+const toc = document.getElementById('toc');
+if (toc) {
+  const btn = document.getElementById('toc-btn');
+  const links = [...toc.querySelectorAll('a')];
+  const setOpen = (open) => {
+    toc.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open));
+  };
+  btn.addEventListener('click', () => setOpen(!toc.classList.contains('open')));
+  links.forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && toc.classList.contains('open')) { setOpen(false); btn.focus(); }
+  });
+  document.addEventListener('click', (e) => { if (!toc.contains(e.target)) setOpen(false); });
+
+  if ('IntersectionObserver' in window) {
+    // Le bouton ne masque pas le texte qu'on lit : il se retire quand on descend
+    // et revient dès qu'on remonte.
+    const hero = document.getElementById('accueil');
+    let pastHero = false;
+    let goingUp = false;
+    let lastY = scrollY;
+    const showBtn = () => toc.classList.toggle('shown', pastHero && goingUp);
+    new IntersectionObserver(([e]) => { pastHero = !e.isIntersecting; showBtn(); }).observe(hero);
+    addEventListener('scroll', () => {
+      const y = scrollY;
+      if (Math.abs(y - lastY) < 8) return;
+      goingUp = y < lastY;
+      lastY = y;
+      if (!toc.classList.contains('open')) showBtn();
+    }, { passive: true });
+    // Une bande au milieu de l'écran : la section qui la traverse est la section en cours.
+    const current = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        links.forEach((a) => {
+          const on = a.getAttribute('href') === '#' + e.target.id;
+          a.classList.toggle('on', on);
+          if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+        });
+      }
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    links.forEach((a) => {
+      const target = document.getElementById(a.getAttribute('href').slice(1));
+      if (target) current.observe(target);
+    });
+  } else {
+    toc.classList.add('shown');
+  }
+}

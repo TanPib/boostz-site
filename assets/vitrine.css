@@ -261,3 +261,33 @@ div.grow{overflow:hidden}
 .lp-lock{display:inline-flex;margin-right:5px;vertical-align:-1px;color:#A8A2B8}
 /* En-tête : le bouton de connexion et le menu du compte, dessinés par chrome.js */
 #lp-account{display:flex;align-items:center;gap:8px;margin-left:auto}
+
+/* Sommaire. Hors de .pg : son container-type ferait de lui le repère des position:fixed.
+   Téléphone : un bouton rond en bas à gauche, qui paraît une fois le booster passé, ouvre la liste.
+   Ordinateur : une colonne de points reliés par le fil violet ; survolée ou parcourue au
+   clavier, elle s'ouvre avec le nom des sections. */
+html{scroll-padding-top:16px}
+.toc{position:fixed;z-index:40;left:14px;bottom:18px;font-family:'DM Sans',sans-serif}
+.toc-btn{width:48px;height:48px;border-radius:50%;border:2.5px solid #F5F2FB;background:#8B3DFF;box-shadow:4px 4px 0 #05040A;display:grid;place-items:center;cursor:pointer;padding:0;opacity:0;translate:0 12px;pointer-events:none;transition:opacity .3s ease,translate .3s ease}
+.toc.shown .toc-btn,.toc.open .toc-btn{opacity:1;translate:0 0;pointer-events:auto}
+.toc-list{list-style:none;margin:0;padding:10px 8px;position:absolute;left:0;bottom:62px;width:220px;background:#1B1330;border:2.5px solid #F5F2FB;border-radius:18px;box-shadow:6px 6px 0 #05040A;display:none}
+.toc.open .toc-list{display:block}
+.toc-list a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;color:#D7CCEC;font-weight:700;font-size:15px;line-height:1.2}
+.toc-list a:hover,.toc-list a:focus-visible{background:#2A2140;color:#fff}
+.toc-list b{color:#8F84A8;font-weight:700;margin-right:2px}
+.toc-list i{flex:none;width:10px;height:10px;border-radius:50%;border:2px solid #C4B5FD;box-sizing:border-box}
+.toc-list a.on{color:#fff}
+.toc-list a.on i{background:#C4B5FD;box-shadow:0 0 0 4px rgba(196,181,253,.25)}
+@media (min-width: 1100px){
+.toc{left:0;top:50%;bottom:auto;translate:0 -50%}
+.toc-btn{display:none}
+.toc-list{display:block;position:relative;bottom:auto;width:auto;padding:12px 10px 12px 18px;background:transparent;border-color:transparent;box-shadow:none;border-radius:0 18px 18px 0;transition:background .2s ease,border-color .2s ease,box-shadow .2s ease}
+/* le fil violet qui relie les points */
+.toc-list::before{content:"";position:absolute;left:30px;top:26px;bottom:26px;border-left:3px dashed rgba(196,181,253,.45)}
+.toc-list a{padding:7px 10px 7px 6px;gap:0}
+.toc-list i{position:relative;width:14px;height:14px;border-width:2.5px;background:#150E22}
+.toc-list span{max-width:0;overflow:hidden;opacity:0;white-space:nowrap;transition:max-width .25s ease,padding .25s ease,opacity .2s ease}
+.toc-list:hover,.toc-list:focus-within{background:#1B1330;border-color:#F5F2FB;border-left-color:transparent;box-shadow:6px 6px 0 #05040A}
+.toc-list:hover span,.toc-list:focus-within span{max-width:220px;padding-left:14px;opacity:1}
+}
+@media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
