@@ -108,6 +108,46 @@ if (!reduced && 'IntersectionObserver' in window) {
   pg.querySelectorAll('section').forEach((n) => live.observe(n));
 }
 
+// Le fil violet se dessine au rythme du défilement : chaque tronçon suit son
+// tracé (un masque révèle le pointillé) à mesure qu'il passe aux trois quarts
+// de l'écran. Les tronçons s'enchaînent bout à bout, d'un bord à l'autre.
+if (!reduced) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const waves = [...pg.querySelectorAll('svg.wave')].map((svg, i) => {
+    const path = svg.querySelector('path');
+    const mask = document.createElementNS(NS, 'mask');
+    mask.id = 'fil-' + i;
+    mask.setAttribute('maskUnits', 'userSpaceOnUse');
+    for (const [k, v] of [['x', -40], ['y', -40], ['width', 480], ['height', 200]]) mask.setAttribute(k, v);
+    const reveal = path.cloneNode();
+    reveal.setAttribute('stroke', '#fff');
+    reveal.setAttribute('stroke-width', '16');
+    reveal.setAttribute('pathLength', '1');
+    reveal.setAttribute('stroke-dasharray', '1 1');
+    reveal.setAttribute('stroke-dashoffset', '1');
+    mask.append(reveal);
+    svg.prepend(mask);
+    path.setAttribute('mask', 'url(#fil-' + i + ')');
+    return { svg, reveal };
+  });
+  let queued = false;
+  const draw = () => {
+    queued = false;
+    const line = innerHeight * 0.75;
+    for (const w of waves) {
+      const r = w.svg.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (line - r.top) / Math.max(r.height, 1)));
+      w.reveal.setAttribute('stroke-dashoffset', String(1 - p));
+    }
+  };
+  const ask = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
+  addEventListener('scroll', ask, { passive: true });
+  addEventListener('resize', ask);
+  // Le premier tronçon grandit à l'ouverture du booster : on suit sa transition.
+  pg.addEventListener('transitionend', ask);
+  draw();
+}
+
 renderAccount();
 verifyAccount();
 

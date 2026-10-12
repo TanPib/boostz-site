@@ -221,8 +221,7 @@ div.grow{overflow:hidden}
 .anim [data-a="pop"]{scale:.3;rotate:-120deg;translate:0 0}
 .anim [data-a="drop"]{scale:1.3;translate:0 -40px;transition-delay:1.1s}
 .anim [data-a].vu{opacity:1;translate:0 0;scale:1;rotate:0deg}
-.anim .wave{clip-path:inset(0 100% 0 0);transition:clip-path 1.6s ease-out,height .8s ease .6s,opacity .6s ease 1.3s}
-.anim .wave.vu{clip-path:inset(0 0 0 0)}
+.anim .wave{transition:height .8s ease .6s,opacity .6s ease 1.3s}
 .anim .draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.8s ease-out .6s}
 .anim .draw.vu{stroke-dashoffset:0}
 .anim .fillbar{transform-origin:left;scale:0 1;transition:scale 1.6s ease-out .5s}
