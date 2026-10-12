@@ -108,11 +108,9 @@ if (!reduced && 'IntersectionObserver' in window) {
   pg.querySelectorAll('section').forEach((n) => live.observe(n));
 }
 
-// Le fil violet : une seule ligne qui descend la page. Elle part sous le booster,
-// longe le bord droit dans les sections (là où il n'y a jamais de texte) et
-// plonge vers le centre dans chaque espace entre deux sections. Elle se
-// construit de haut en bas au rythme du défilement : la partie dessinée
-// s'arrête aux trois quarts de l'écran.
+// Le fil violet : une seule ligne qui descend la page en serpentant, du dessous
+// du booster jusqu'au pied de page. Elle se construit de haut en bas au rythme
+// du défilement : la partie dessinée s'arrête aux trois quarts de l'écran.
 const fil = $('fil');
 if (fil) {
   const NS = 'http://www.w3.org/2000/svg';
@@ -132,42 +130,77 @@ if (fil) {
   let total = 0;
   let samples = []; // [longueur, y] le long du tracé, pour savoir jusqu'où dessiner
 
+  // Le tracé est une suite de couloirs verticaux, reliés par des courbes en S.
+  // Un couloir ne passe jamais sur du texte : dans la colonne des captures
+  // (derrière les téléphones et les stickers), ou à côté d'un bloc de texte.
+  // Les couloirs alternent de côté, si bien que le fil serpente sur toute la
+  // largeur de la page.
   const build = () => {
     const W = pg.clientWidth;
     const H = pg.scrollHeight;
     const top0 = pg.getBoundingClientRect().top;
+    const box = (el) => {
+      const r = el.getBoundingClientRect();
+      return { l: r.left, r: r.right, t: r.top - top0, b: r.bottom - top0, cx: (r.left + r.right) / 2 };
+    };
     const desk = W >= 900;
-    const inRight = Math.min(W, (W + 1240) / 2);
-    const gx = inRight - (desk ? 24 : 7);
-    const gaps = [...pg.querySelectorAll('.wave')].map((g) => {
-      const r = g.getBoundingClientRect();
-      return { t: r.top - top0, b: r.bottom - top0 };
-    });
-    if (!gaps.length) return;
     const cx = W / 2;
-    const first = gaps[0];
-    let d = 'M' + cx + ' ' + first.t;
-    // Du dessous du booster vers le bord droit
-    const fb = Math.max(first.b, first.t + 60);
-    d += ' C' + cx + ' ' + (first.t + (fb - first.t) * 0.6) + ' ' + gx + ' ' + (first.t + (fb - first.t) * 0.4) + ' ' + gx + ' ' + fb;
-    gaps.slice(1).forEach((g, i) => {
-      const m = (g.t + g.b) / 2;
-      const last = i === gaps.length - 2;
-      const dip = W * (i % 2 ? 0.62 : 0.38);
-      d += ' L' + gx + ' ' + g.t;
-      if (last) {
-        // Le fil finit au centre, juste au-dessus du pied de page
-        d += ' C' + gx + ' ' + m + ' ' + cx + ' ' + g.t + ' ' + cx + ' ' + g.b;
+    const edge = desk ? 24 : 7;
+    const gaps = [...pg.querySelectorAll('.wave')].map(box);
+    if (!gaps.length) return;
+
+    const lanes = [{ x: cx, t: gaps[0].t, b: gaps[0].t }];
+    let side = 1; // 1 : à droite du centre, -1 : à gauche
+    // À côté d'un bloc de texte : au milieu de l'espace libre, sinon dans la marge.
+    const beside = (b, s) => {
+      const room = s > 0 ? W - b.r : b.l;
+      if (room >= 60) return s > 0 ? (b.r + W) / 2 : b.l / 2;
+      return s > 0 ? W - edge : edge;
+    };
+    for (const sec of pg.querySelectorAll('main > section:not(.hero)')) {
+      const vis = sec.querySelector('.zvis');
+      const text = sec.querySelector('.ztext');
+      if (vis && text) {
+        const v = box(vis.firstElementChild || vis);
+        const t = box(text);
+        if (desk) {
+          // La colonne des captures : elle change de côté d'une section à l'autre.
+          lanes.push({ x: v.cx, t: Math.min(v.t, t.t), b: Math.max(v.b, t.b) });
+          side = v.cx > cx ? -1 : 1;
+        } else {
+          // Le long du texte, puis en travers de la capture.
+          lanes.push({ x: side > 0 ? W - edge : edge, t: t.t, b: t.b });
+          lanes.push({ x: cx + side * -0.22 * W, t: v.t + 90, b: v.b - 20 });
+          side = -side;
+        }
       } else {
-        d += ' C' + gx + ' ' + m + ' ' + dip + ' ' + g.t + ' ' + dip + ' ' + m;
-        d += ' C' + dip + ' ' + g.b + ' ' + gx + ' ' + m + ' ' + gx + ' ' + g.b;
+        const kids = [...sec.children].map(box).filter((k) => k.b > k.t);
+        if (!kids.length) continue;
+        const b = {
+          l: Math.min(...kids.map((k) => k.l)), r: Math.max(...kids.map((k) => k.r)),
+          t: Math.min(...kids.map((k) => k.t)), b: Math.max(...kids.map((k) => k.b))
+        };
+        lanes.push({ x: beside(b, side), t: b.t, b: b.b });
+        side = -side;
       }
+    }
+    const last = gaps[gaps.length - 1];
+    lanes.push({ x: cx, t: last.b, b: last.b });
+
+    let d = 'M' + lanes[0].x + ' ' + lanes[0].t;
+    lanes.forEach((ln, i) => {
+      if (i) {
+        const p = lanes[i - 1];
+        const m = (p.b + ln.t) / 2;
+        d += ' C' + p.x + ' ' + m + ' ' + ln.x + ' ' + m + ' ' + ln.x + ' ' + ln.t;
+      }
+      if (ln.b > ln.t) d += ' L' + ln.x + ' ' + ln.b;
     });
     fil.setAttribute('width', W);
     fil.setAttribute('height', H);
     fil.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     for (const [k, v] of [['x', 0], ['y', 0], ['width', W], ['height', H]]) mask.setAttribute(k, v);
-    // Sur téléphone, un trait plus fin : la marge du bord droit ne fait que 16 px.
+    // Sur téléphone, un trait plus fin : les marges ne font que 16 px.
     line.setAttribute('stroke-width', desk ? '6' : '4');
     line.setAttribute('stroke-dasharray', desk ? '12 16' : '10 14');
     line.setAttribute('d', d);

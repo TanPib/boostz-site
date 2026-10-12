@@ -292,7 +292,9 @@ html{scroll-padding-top:16px}
 @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
 
 /* Le fil violet : un seul tracé, construit par vitrine.js à partir de la mise en page.
-   Il longe le bord droit (jamais de texte à cet endroit) et plonge vers le centre
-   dans chaque espace entre deux sections. Posé sous le contenu. */
-.fil{position:absolute;left:0;top:0;z-index:0;pointer-events:none;overflow:visible}
+   Il serpente d'un côté à l'autre sans passer sur le texte. Posé sous le contenu,
+   il glisse derrière les captures et les stickers. */
+.fil{position:absolute;left:0;top:0;z-index:1;pointer-events:none;overflow:visible}
+/* Le contenu passe au-dessus du fil ; le fil, lui, passe au-dessus des fonds de section (bande du Pass). */
+.pg .in{z-index:2}
 .fil path{fill:none;stroke-linecap:round}
