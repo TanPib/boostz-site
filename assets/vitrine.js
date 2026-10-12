@@ -108,44 +108,100 @@ if (!reduced && 'IntersectionObserver' in window) {
   pg.querySelectorAll('section').forEach((n) => live.observe(n));
 }
 
-// Le fil violet se dessine au rythme du défilement : chaque tronçon suit son
-// tracé (un masque révèle le pointillé) à mesure qu'il passe aux trois quarts
-// de l'écran. Les tronçons s'enchaînent bout à bout, d'un bord à l'autre.
-if (!reduced) {
+// Le fil violet : une seule ligne qui descend la page. Elle part sous le booster,
+// longe le bord droit dans les sections (là où il n'y a jamais de texte) et
+// plonge vers le centre dans chaque espace entre deux sections. Elle se
+// construit de haut en bas au rythme du défilement : la partie dessinée
+// s'arrête aux trois quarts de l'écran.
+const fil = $('fil');
+if (fil) {
   const NS = 'http://www.w3.org/2000/svg';
-  const waves = [...pg.querySelectorAll('svg.wave')].map((svg, i) => {
-    const path = svg.querySelector('path');
-    const mask = document.createElementNS(NS, 'mask');
-    mask.id = 'fil-' + i;
-    mask.setAttribute('maskUnits', 'userSpaceOnUse');
-    for (const [k, v] of [['x', -40], ['y', -40], ['width', 480], ['height', 200]]) mask.setAttribute(k, v);
-    const reveal = path.cloneNode();
-    reveal.setAttribute('stroke', '#fff');
-    reveal.setAttribute('stroke-width', '16');
-    reveal.setAttribute('pathLength', '1');
-    reveal.setAttribute('stroke-dasharray', '1 1');
-    reveal.setAttribute('stroke-dashoffset', '1');
-    mask.append(reveal);
-    svg.prepend(mask);
-    path.setAttribute('mask', 'url(#fil-' + i + ')');
-    return { svg, reveal };
-  });
-  let queued = false;
-  const draw = () => {
-    queued = false;
-    const line = innerHeight * 0.75;
-    for (const w of waves) {
-      const r = w.svg.getBoundingClientRect();
-      const p = Math.min(1, Math.max(0, (line - r.top) / Math.max(r.height, 1)));
-      w.reveal.setAttribute('stroke-dashoffset', String(1 - p));
-    }
+  const make = (attrs) => {
+    const n = document.createElementNS(NS, 'path');
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
   };
-  const ask = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
-  addEventListener('scroll', ask, { passive: true });
-  addEventListener('resize', ask);
-  // Le premier tronçon grandit à l'ouverture du booster : on suit sa transition.
-  pg.addEventListener('transitionend', ask);
-  draw();
+  const mask = document.createElementNS(NS, 'mask');
+  mask.id = 'fil-masque';
+  mask.setAttribute('maskUnits', 'userSpaceOnUse');
+  const reveal = make({ stroke: '#fff', 'stroke-width': '16' });
+  mask.append(reveal);
+  const line = make({ stroke: 'rgba(196,181,253,.6)', 'stroke-width': '6', 'stroke-dasharray': '12 16', mask: 'url(#fil-masque)' });
+  fil.append(mask, line);
+
+  let total = 0;
+  let samples = []; // [longueur, y] le long du tracé, pour savoir jusqu'où dessiner
+
+  const build = () => {
+    const W = pg.clientWidth;
+    const H = pg.scrollHeight;
+    const top0 = pg.getBoundingClientRect().top;
+    const desk = W >= 900;
+    const inRight = Math.min(W, (W + 1240) / 2);
+    const gx = inRight - (desk ? 24 : 7);
+    const gaps = [...pg.querySelectorAll('.wave')].map((g) => {
+      const r = g.getBoundingClientRect();
+      return { t: r.top - top0, b: r.bottom - top0 };
+    });
+    if (!gaps.length) return;
+    const cx = W / 2;
+    const first = gaps[0];
+    let d = 'M' + cx + ' ' + first.t;
+    // Du dessous du booster vers le bord droit
+    const fb = Math.max(first.b, first.t + 60);
+    d += ' C' + cx + ' ' + (first.t + (fb - first.t) * 0.6) + ' ' + gx + ' ' + (first.t + (fb - first.t) * 0.4) + ' ' + gx + ' ' + fb;
+    gaps.slice(1).forEach((g, i) => {
+      const m = (g.t + g.b) / 2;
+      const last = i === gaps.length - 2;
+      const dip = W * (i % 2 ? 0.62 : 0.38);
+      d += ' L' + gx + ' ' + g.t;
+      if (last) {
+        // Le fil finit au centre, juste au-dessus du pied de page
+        d += ' C' + gx + ' ' + m + ' ' + cx + ' ' + g.t + ' ' + cx + ' ' + g.b;
+      } else {
+        d += ' C' + gx + ' ' + m + ' ' + dip + ' ' + g.t + ' ' + dip + ' ' + m;
+        d += ' C' + dip + ' ' + g.b + ' ' + gx + ' ' + m + ' ' + gx + ' ' + g.b;
+      }
+    });
+    fil.setAttribute('width', W);
+    fil.setAttribute('height', H);
+    fil.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    for (const [k, v] of [['x', 0], ['y', 0], ['width', W], ['height', H]]) mask.setAttribute(k, v);
+    // Sur téléphone, un trait plus fin : la marge du bord droit ne fait que 16 px.
+    line.setAttribute('stroke-width', desk ? '6' : '4');
+    line.setAttribute('stroke-dasharray', desk ? '12 16' : '10 14');
+    line.setAttribute('d', d);
+    reveal.setAttribute('d', d);
+    total = line.getTotalLength();
+    samples = [];
+    for (let l = 0; l <= total; l += 12) samples.push([l, line.getPointAtLength(l).y]);
+    samples.push([total, line.getPointAtLength(total).y]);
+    reveal.setAttribute('stroke-dasharray', total + ' ' + total);
+    draw();
+  };
+
+  const draw = () => {
+    if (!total) return;
+    let len = total;
+    if (!reduced) {
+      // La première longueur dont le point passe sous la ligne de lecture
+      const target = innerHeight * 0.75 - pg.getBoundingClientRect().top;
+      len = 0;
+      for (const [l, y] of samples) { if (y > target) break; len = l; }
+    }
+    reveal.setAttribute('stroke-dashoffset', String(total - len));
+  };
+
+  const ask = (fn) => {
+    let queued = false;
+    return () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; fn(); }); } };
+  };
+  addEventListener('scroll', ask(draw), { passive: true });
+  // Le tracé suit la mise en page : images qui se chargent, booster qui s'ouvre, rotation…
+  if ('ResizeObserver' in window) new ResizeObserver(ask(build)).observe(pg);
+  addEventListener('resize', ask(build));
+  addEventListener('load', build);
+  build();
 }
 
 renderAccount();

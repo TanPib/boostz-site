@@ -290,3 +290,9 @@ html{scroll-padding-top:16px}
 .toc-list:hover span,.toc-list:focus-within span{max-width:220px;padding-left:14px;opacity:1}
 }
 @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+
+/* Le fil violet : un seul tracé, construit par vitrine.js à partir de la mise en page.
+   Il longe le bord droit (jamais de texte à cet endroit) et plonge vers le centre
+   dans chaque espace entre deux sections. Posé sous le contenu. */
+.fil{position:absolute;left:0;top:0;z-index:0;pointer-events:none;overflow:visible}
+.fil path{fill:none;stroke-linecap:round}
