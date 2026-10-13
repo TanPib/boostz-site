@@ -8,6 +8,7 @@ import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
 import { renderRevenue, passSummary, hasPassData } from './revenue.js';
 import { loadData, renderData, dataRedCount } from './data.js';
+import { renderBeta } from './beta.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
 
 const REASONS = {
@@ -141,7 +142,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', beta: 'Bêta', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -153,6 +154,8 @@ const ICONS = {
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
   data: 'M3 12h4l3-8 4 16 3-8h4',
+  // La fiole de la bêta, comme sur l'accueil de boostz.fr.
+  beta: 'M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3M7.2 15h9.6',
   caret: 'M6 9l6 6 6-6',
   filter: 'M4 6h16M7 12h10M10 18h4',
   send: 'M5 12h13M13 6l6 6-6 6',
@@ -1816,7 +1819,7 @@ function goTo(tab) {
 // affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['venues', 'ideas', 'agent', 'journal', 'data'];
+const MORE_TABS = ['venues', 'ideas', 'agent', 'journal', 'data', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1877,6 +1880,7 @@ function render() {
         : state.tab === 'agent' ? renderAgent()
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
+          : state.tab === 'beta' ? renderBeta({ rerender: () => { if (state.tab === 'beta') render(); }, toast, phone })
           : renderJournal();
 
   const scrollY = window.scrollY;
@@ -1884,7 +1888,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1899,7 +1903,8 @@ function render() {
       tab('ideas', 'Idées', state.ideas.unread),
       tab('agent', 'Agent'),
       tab('journal', 'Journal'),
-      tab('data', 'Data', dataRedCount(), 'is-red')
+      tab('data', 'Data', dataRedCount(), 'is-red'),
+      tab('beta', 'Bêta')
     ),
     panel,
     phone ? null : el('p', { class: 'bz-tiny', style: { marginTop: '12px' },
