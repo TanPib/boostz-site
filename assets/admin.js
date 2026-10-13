@@ -9,6 +9,7 @@ import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, ro
 import { renderRevenue, passSummary, hasPassData } from './revenue.js';
 import { loadData, renderData, dataRedCount } from './data.js';
 import { renderBeta } from './beta.js';
+import { loadTodo, renderTodo, todoMineCount } from './todo.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
 
 const REASONS = {
@@ -142,7 +143,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', beta: 'Bêta', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', beta: 'Bêta', todo: 'Todo', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -154,6 +155,8 @@ const ICONS = {
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
   data: 'M3 12h4l3-8 4 16 3-8h4',
+  // Une liste cochée, pour la todolist officielle.
+  todo: 'M10 6h10M10 12h10M10 18h10M4 6l1.2 1.2L7.5 5M4 12l1.2 1.2L7.5 11M4 18l1.2 1.2L7.5 17',
   // La fiole de la bêta, comme sur l'accueil de boostz.fr.
   beta: 'M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3M7.2 15h9.6',
   caret: 'M6 9l6 6 6-6',
@@ -359,7 +362,7 @@ async function loadActions() {
 }
 
 async function loadAll() {
-  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData(), loadVenues()]);
+  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData(), loadVenues(), loadTodo()]);
   const failed = results.find((r) => r.status === 'rejected');
   state.loaded = true;
   if (failed) {
@@ -1819,7 +1822,7 @@ function goTo(tab) {
 // affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['venues', 'ideas', 'agent', 'journal', 'data', 'beta'];
+const MORE_TABS = ['todo', 'venues', 'ideas', 'agent', 'journal', 'data', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1827,13 +1830,13 @@ function bottomNav(openReports, pending) {
   },
   el('span', { class: 'adm-nav-icon' }, icon(id, 22), badge ? el('span', { class: 'adm-nav-badge', text: badge > 99 ? '99+' : String(badge) }) : null),
   el('span', { class: 'adm-nav-label', text: SECTIONS[id] }));
-  const more = item('more', venuesPendingCount() + state.ideas.unread + dataRedCount(), () => {
+  const more = item('more', venuesPendingCount() + state.ideas.unread + dataRedCount() + todoMineCount(), () => {
     const buttons = [];
     togglePopover(more, buttons, () => el('div', { class: 'bz-menu', role: 'menu', 'aria-label': 'Autres sections' },
       el('div', { class: 'bz-menu-title', text: 'Autres sections' }),
       MORE_TABS.map((id) => {
         const b = el('button', { class: 'bz-menu-item adm-more-item', type: 'button', role: 'menuitem', 'aria-current': state.tab === id ? 'page' : null, onclick: () => { closePopover(); goTo(id); } },
-          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'venues' && venuesPendingCount() ? ' · ' + venuesPendingCount() : '') + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') })));
+          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'venues' && venuesPendingCount() ? ' · ' + venuesPendingCount() : '') + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') + (id === 'todo' && todoMineCount() ? ' · ' + todoMineCount() : '') })));
         buttons.push(b);
         return b;
       })
@@ -1880,6 +1883,7 @@ function render() {
         : state.tab === 'agent' ? renderAgent()
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
+          : state.tab === 'todo' ? renderTodo({ rerender: () => { if (state.tab === 'todo') render(); }, toast, ask })
           : state.tab === 'beta' ? renderBeta({ rerender: () => { if (state.tab === 'beta') render(); }, toast, phone })
           : renderJournal();
 
@@ -1888,13 +1892,14 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta' || state.tab === 'todo')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
       kpi('Comptes bannis', 'Bannis', banned, null, () => { state.userKinds = new Set(['banned']); state.q = ''; goTo('users'); })
     ),
     phone ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginTop: '22px' } },
+      tab('todo', 'Todo', todoMineCount()),
       tab('users', 'Utilisateurs'),
       tab('revenue', 'Revenus'),
       tab('reports', 'Signalements', openReports),
