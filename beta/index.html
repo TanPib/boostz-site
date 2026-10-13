@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08070B">
+<title>Tester boostZ sur Android — boostZ</title>
+<meta name="description" content="Rejoins la bêta de boostZ sur Google Play : trois gestes depuis ton téléphone Android.">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  /* LA BÊTA DE GOOGLE PLAY (13/10/2026). Le test fermé de la Play Console a
+     pour liste de testeurs le groupe Google boostz-beta : rejoindre le groupe,
+     c'est s'inscrire, sans formulaire chez nous ni adresse à recopier. Et
+     c'est le compte Google de la personne qui rejoint, donc forcément celui
+     que son Play Store reconnaît. Google exige au moins 12 testeurs inscrits
+     14 jours d'affilée avant d'ouvrir la production.
+
+     Les trois liens, dans l'ordre : le groupe, la page d'inscription du test
+     fermé (format fixe de Google pour app.boostz.mobile), la fiche Play Store.
+     Le deuxième ne marche qu'une fois la version du test fermé validée par
+     Google, et pour un compte déjà membre du groupe.
+
+     Aucun script : la page ne fait que des liens. Chemins absolus, elle vit
+     dans un sous-dossier. */
+  /* Le fond tient sur un calque fixe : posé sur body, il était dimensionné
+     à l'écran et laissait une cassure sous la troisième étape en défilant. */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      radial-gradient(900px 600px at 80% -10%, rgba(139,61,255,.16), transparent 62%),
+      linear-gradient(158deg, #08070B, #0F0A17 45%, #130D1E);
+  }
+  .bt-steps { margin: 26px 0 0; padding: 0; list-style: none; counter-reset: s; }
+  .bt-steps > li { position: relative; margin-top: 14px; padding: 18px 18px 18px 58px; counter-increment: s; }
+  .bt-steps > li::before {
+    content: counter(s); position: absolute; left: 18px; top: 18px; width: 26px; height: 26px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(139,61,255,.6); background: rgba(139,61,255,.14); color: #CDB5FF;
+    font-family: var(--font-ui); font-weight: 700; font-size: 12.5px;
+  }
+  .bt-steps h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: 16px; line-height: 1.35; color: var(--text); }
+  .bt-steps p { margin: 6px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--text-muted); }
+  .bt-steps .bz-btn { margin-top: 14px; }
+  .bt-notes { margin: 28px 0 0; padding: 0; list-style: none; }
+  .bt-notes li { margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: var(--text-muted); }
+  .bt-notes b { color: var(--text); }
+</style>
+</head>
+<body>
+<header class="bz-top">
+  <a class="bz-logo" href="/" aria-label="boostZ, accueil">
+    <span class="bz-logo-boost">boost</span><span class="bz-logo-z" aria-hidden="true"><span class="g1">Z</span><span class="g2">Z</span><span class="z">Z</span></span>
+  </a>
+  <span class="bz-top-label">BÊTA</span>
+</header>
+
+<main class="bz-page is-narrow">
+  <h1 class="bz-h1">Teste boostZ avant sa sortie.</h1>
+  <p class="bz-lead">boostZ est en bêta sur Google Play. Inscris-toi depuis ton téléphone Android, installe l'appli, et dis-nous ce qui marche et ce qui coince&nbsp;: c'est ce qui décide de ce qu'on corrige avant la sortie.</p>
+
+  <ol class="bt-steps">
+    <li class="bz-card">
+      <h2>Rejoins le groupe des testeurs</h2>
+      <p>Avec le compte Google de ton téléphone&nbsp;: c'est celui que Google Play reconnaît. Un seul appui sur «&nbsp;Rejoindre le groupe&nbsp;», et tu es inscrit.</p>
+      <a class="bz-btn is-cta is-block" href="https://groups.google.com/g/boostz-beta">Rejoindre les testeurs</a>
+    </li>
+    <li class="bz-card">
+      <h2>Accepte l'invitation</h2>
+      <p>Sur la page de Google, touche «&nbsp;Devenir testeur&nbsp;». Si elle dit que tu n'as pas accès, attends une minute après l'étape 1 et recharge-la.</p>
+      <a class="bz-btn is-violet is-block" href="https://play.google.com/apps/testing/app.boostz.mobile">Devenir testeur</a>
+    </li>
+    <li class="bz-card">
+      <h2>Installe boostZ</h2>
+      <p>Déjà installé depuis un fichier APK&nbsp;? Google Play le met à jour&nbsp;: pas besoin de le désinstaller, ton compte et ta collection restent.</p>
+      <a class="bz-btn is-violet is-block" href="https://play.google.com/store/apps/details?id=app.boostz.mobile">Installer depuis Google Play</a>
+    </li>
+  </ol>
+
+  <ul class="bt-notes">
+    <li><b>Reste au moins deux semaines.</b> Google compte les testeurs jour après jour avant d'ouvrir boostZ à tous&nbsp;: garde l'appli et reste dans le groupe.</li>
+    <li><b>Un souci, une idée&nbsp;?</b> Dans l'appli, Profil › Contacter le support, ou sur <a href="https://discord.gg/adGa9qgbER">notre Discord</a>.</li>
+    <li><b>Dès 15 ans, comme l'appli.</b> Le Boostz Pass et les packs payants sont réservés aux 18 ans et plus, et pendant la bêta ce sont de vrais achats.</li>
+    <li><b>Sur iPhone, pas encore.</b> La bêta n'existe que sur Android pour l'instant&nbsp;; boostZ arrivera sur l'App Store plus tard.</li>
+  </ul>
+
+  <p class="bz-tiny" style="margin-top:26px"><a href="/">← Retour à l'accueil</a></p>
+</main>
+</body>
+</html>
