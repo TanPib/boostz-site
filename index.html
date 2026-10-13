@@ -106,10 +106,28 @@
 </nav>
 <div class="pg" id="pg">
 <svg class="fil" id="fil" aria-hidden="true"></svg>
+<!-- La fiole de la bêta (13/10/2026), dessinée une fois et reprise par la
+     pastille du haut de page et la section de sortie. À retirer à la sortie,
+     avec elles. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs><linearGradient id="bt-potion" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4FA0"/><stop offset=".55" stop-color="#8B3DFF"/><stop offset="1" stop-color="#3AA9FF"/></linearGradient></defs>
+<symbol id="bt-fiole" viewBox="-6 -30 132 186">
+<path class="bt-liq" d="M33 88c9-4 18 4 27 0s18-4 27 0l15 34c4 9-2 18-12 18H30c-10 0-16-9-12-18Z" fill="url(#bt-potion)"/>
+<circle cx="48" cy="114" r="4" fill="#fff" opacity=".55"/><circle cx="66" cy="104" r="3" fill="#fff" opacity=".5"/><circle cx="76" cy="124" r="5" fill="#fff" opacity=".45"/>
+<path d="M50 10v42L18 122c-4 9 2 18 12 18h60c10 0 16-9 12-18L70 52V10" fill="none" stroke="#F5F2FB" stroke-width="6" stroke-linejoin="round"/>
+<path d="M42 8h36" stroke="#F5F2FB" stroke-width="6" stroke-linecap="round"/>
+<path d="M82 100h-9M86 112h-9" stroke="#F5F2FB" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+<circle class="bt-bul" cx="58" cy="-4" r="5" fill="#C4B5FD"/><circle class="bt-bul b2" cx="66" cy="-2" r="3.5" fill="#FF7AB8"/><circle class="bt-bul b3" cx="54" cy="0" r="3" fill="#3AA9FF"/>
+</symbol>
+</svg>
 
 <header class="in" style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;z-index:3">
 <a href="index.html" aria-label="Boostz, accueil" class="wm" style="font-size:26px"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.59em;color:#3AA9FF;opacity:.12">Z</span><span class="word g" style="left:-0.39em;color:#8B3DFF;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#FF4FA0;opacity:.3">Z</span><span class="word grad" style="position:relative">Z</span></span></a>
+<div class="bt-head-wrap">
+<!-- Hors de #lp-account, que vitrine.js vide pour y mettre l'état du compte. -->
+<a class="bt-head" href="beta/"><svg width="14" height="18" aria-hidden="true"><use href="#bt-fiole"/></svg>Bêta</a>
 <nav id="lp-account" class="bz-top-right" aria-label="Compte"><a class="bz-btn is-primary is-sm" href="connexion.html">Se connecter</a></nav>
+</div>
 </header>
 
 <main>
@@ -394,9 +412,10 @@
 </div>
 <!-- La bêta de Google Play (13/10/2026) : boostz.fr/beta, inscription par le
      groupe Google des testeurs. À retirer à la sortie. -->
-<p data-a class="p" style="margin-top:28px">En attendant, la bêta est ouverte sur Android.</p>
-<div data-a class="cta" style="margin-top:14px">
-<a class="btn" href="beta/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3"/><path d="M7.2 15h9.6"/></svg>Teste la bêta Android</a>
+<div data-a class="bt-cta">
+<a class="bt-flask" href="beta/" tabindex="-1" aria-hidden="true"><svg width="132" height="166"><use href="#bt-fiole"/></svg><span class="bt-flask-tag">BÊTA</span></a>
+<p class="h t4 bt-cta-title">La bêta Android<br><span class="acc">est ouverte</span></p>
+<div class="cta"><a class="btn" href="beta/">Teste-la maintenant</a></div>
 </div>
 <p data-a class="h t4" style="margin-top:46px">Abonne-toi pour<br><span class="acc">ne rien manquer</span></p>
 <div data-a class="cta">

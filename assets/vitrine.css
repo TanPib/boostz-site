@@ -298,3 +298,24 @@ html{scroll-padding-top:16px}
 /* Le contenu passe au-dessus du fil ; le fil, lui, passe au-dessus des fonds de section (bande du Pass). */
 .pg .in{z-index:2}
 .fil path{fill:none;stroke-linecap:round}
+/* La bêta de Google Play (13/10/2026) : la pastille du haut de page et la grande
+   fiole de la section de sortie, vers /beta. La fiole est le symbole #bt-fiole
+   de index.html. Ses bulles ne bougent que si l'appareil accepte les animations.
+   À retirer à la sortie, avec elles. */
+.bt-head-wrap{display:flex;align-items:center;gap:10px}
+.bt-head{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:9px;border:1.5px solid #C4B5FD;color:#C4B5FD;font-family:"DM Sans",sans-serif;font-weight:700;font-size:12px;box-sizing:border-box}
+.bt-head:hover{color:#DDD3FE;border-color:#DDD3FE}
+.bt-cta{display:flex;flex-direction:column;align-items:center;margin-top:44px}
+.bt-flask{position:relative;display:block;width:132px;height:166px;transform:rotate(-8deg);filter:drop-shadow(7px 7px 0 #05040A)}
+.bt-flask svg{display:block}
+.bt-flask-tag{position:absolute;right:-26px;top:38px;padding:5px 10px;border-radius:10px;border:3px solid #F5F2FB;background:#C4B5FD;box-shadow:4px 4px 0 #05040A;color:#1D1730;font-family:"DM Sans",sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;transform:rotate(14deg)}
+.bt-cta-title{margin-top:22px}
+.bt-cta .cta{width:100%}
+.bt-bul{opacity:0}
+@media (prefers-reduced-motion: no-preference){
+.bt-bul{animation:bt-bulle 2.4s ease-in infinite;transform-box:fill-box;transform-origin:center}
+.bt-bul.b2{animation-delay:.8s}.bt-bul.b3{animation-delay:1.6s}
+.bt-liq{animation:bt-remous 3s ease-in-out infinite;transform-box:fill-box}
+}
+@keyframes bt-bulle{0%{transform:translateY(0) scale(.5);opacity:0}25%{opacity:1}100%{transform:translateY(-22px) scale(1);opacity:0}}
+@keyframes bt-remous{0%,100%{transform:translateX(0)}50%{transform:translateX(-3px)}}
