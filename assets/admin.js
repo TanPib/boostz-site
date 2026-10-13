@@ -10,6 +10,7 @@ import { renderRevenue, passSummary, hasPassData } from './revenue.js';
 import { loadData, renderData, dataRedCount } from './data.js';
 import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js';
+import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
 
 const REASONS = {
@@ -105,7 +106,10 @@ const ACTIONS = {
   venue_event: 'Événement de boutique',
   age_override: 'Âge simulé',
   pass_override: 'Pass simulé',
-  venue_simulation: 'Gérant simulé'
+  venue_simulation: 'Gérant simulé',
+  // L'onglet Sources (13/10/2026, mise en conformité).
+  source_cut: 'Source coupée',
+  source_restore: 'Source rétablie'
 };
 // Les champs d'une fiche boutique corrigés dans la console, nommés en français
 // dans le journal : le serveur y écrit les clés de l'API.
@@ -143,7 +147,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', beta: 'Bêta', todo: 'Todo', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -155,6 +159,8 @@ const ICONS = {
   journal: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   agent: 'M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9L12 3.5ZM18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z',
   data: 'M3 12h4l3-8 4 16 3-8h4',
+  // Des ciseaux, pour l'onglet des coupures de sources.
+  sources: 'M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12',
   // Une liste cochée, pour la todolist officielle.
   todo: 'M10 6h10M10 12h10M10 18h10M4 6l1.2 1.2L7.5 5M4 12l1.2 1.2L7.5 11M4 18l1.2 1.2L7.5 17',
   // La fiole de la bêta, comme sur l'accueil de boostz.fr.
@@ -362,7 +368,7 @@ async function loadActions() {
 }
 
 async function loadAll() {
-  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData(), loadVenues(), loadTodo()]);
+  const results = await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData(), loadVenues(), loadTodo(), loadSources()]);
   const failed = results.find((r) => r.status === 'rejected');
   state.loaded = true;
   if (failed) {
@@ -1765,6 +1771,9 @@ function detailText(a) {
     case 'age_override': return d.mode === 'adult' ? 'majeur' : d.mode === 'minor' ? 'mineur' : 'âge réel';
     case 'pass_override': return d.mode === 'active' ? (d.plan === 'year' ? 'abonné annuel' : 'abonné mensuel') : d.mode === 'none' ? 'sans Pass' : 'abonnement réel';
     case 'venue_simulation': return d.venue_id ? (d.name || 'boutique supprimée') : 'arrêtée';
+    // L'onglet Sources : ce qui a été coupé ou rétabli.
+    case 'source_cut':
+    case 'source_restore': return (d.kind === 'actus' ? 'Actualités · ' : '') + (d.label || d.target || '');
     default: return '';
   }
 }
@@ -1822,7 +1831,7 @@ function goTo(tab) {
 // affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'venues', 'ideas', 'agent', 'journal', 'data', 'beta'];
+const MORE_TABS = ['todo', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1836,7 +1845,7 @@ function bottomNav(openReports, pending) {
       el('div', { class: 'bz-menu-title', text: 'Autres sections' }),
       MORE_TABS.map((id) => {
         const b = el('button', { class: 'bz-menu-item adm-more-item', type: 'button', role: 'menuitem', 'aria-current': state.tab === id ? 'page' : null, onclick: () => { closePopover(); goTo(id); } },
-          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'venues' && venuesPendingCount() ? ' · ' + venuesPendingCount() : '') + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') + (id === 'todo' && todoMineCount() ? ' · ' + todoMineCount() : '') })));
+          el('span', { class: 'bz-menu-label' }, icon(id, 18), el('span', { text: SECTIONS[id] + (id === 'venues' && venuesPendingCount() ? ' · ' + venuesPendingCount() : '') + (id === 'ideas' && state.ideas.unread ? ' · ' + state.ideas.unread : '') + (id === 'data' && dataRedCount() ? ' · ' + dataRedCount() : '') + (id === 'todo' && todoMineCount() ? ' · ' + todoMineCount() : '') + (id === 'sources' && sourcesCutCount() ? ' · ' + sourcesCutCount() + ' coupée' + (sourcesCutCount() > 1 ? 's' : '') : '') })));
         buttons.push(b);
         return b;
       })
@@ -1885,6 +1894,7 @@ function render() {
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
           : state.tab === 'todo' ? renderTodo({ rerender: () => { if (state.tab === 'todo') render(); }, toast, ask })
           : state.tab === 'beta' ? renderBeta({ rerender: () => { if (state.tab === 'beta') render(); }, toast, phone })
+          : state.tab === 'sources' ? renderSources({ rerender: () => { if (state.tab === 'sources') render(); }, toast, ask })
           : renderJournal();
 
   const scrollY = window.scrollY;
@@ -1892,7 +1902,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta' || state.tab === 'todo')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta' || state.tab === 'todo' || state.tab === 'sources')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1909,6 +1919,9 @@ function render() {
       tab('agent', 'Agent'),
       tab('journal', 'Journal'),
       tab('data', 'Data', dataRedCount(), 'is-red'),
+      // Le compteur dit combien de coupures sont en cours : en rouge, parce
+      // qu'une coupure retire quelque chose aux membres.
+      tab('sources', 'Sources', sourcesCutCount(), 'is-red'),
       tab('beta', 'Bêta')
     ),
     panel,
