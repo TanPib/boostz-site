@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08070B">
+<title>Installer boostZ sur Android — boostZ</title>
+<meta name="description" content="Installe boostZ sur ton téléphone Android depuis Google Play.">
+<!-- Tant que boostZ n'est qu'en test sur Google Play, cette page n'a pas à
+     remonter dans un moteur de recherche. -->
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  /* QUI ARRIVE ICI (13/10/2026) : les téléphones installés par un fichier APK.
+     Leur application ne reçoit plus les mises à jour, qui partent vers la
+     version du Play Store. Elle affiche alors « Installe la nouvelle version
+     de Boostz », dont le bouton ouvre cette adresse (boostz-mobile,
+     lib/reinstall.js, DOWNLOAD_PAGE_URL) : l'adresse ne doit donc jamais
+     changer. L'avis ne s'affiche que si /assets/app-latest.json existe et
+     annonce une empreinte (runtime_version = ota_runtime_version) différente
+     de celle du téléphone. Ce fichier est écrit à la main : à mettre à jour
+     quand un nouveau build du Play Store change l'empreinte.
+
+     QUAND BOOSTZ SERA PUBLIC sur Google Play : retirer le bloc « en test » et
+     les étapes d'inscription, ne garder que le bouton, et ôter le noindex.
+
+     Aucun script : la page ne fait que des liens. Chemins absolus, elle vit
+     dans un sous-dossier. */
+  body { background-image:
+    radial-gradient(900px 600px at 80% -10%, rgba(139,61,255,.16), transparent 62%),
+    linear-gradient(158deg, #08070B, #0F0A17 45%, #130D1E); }
+  .dl-card { margin-top: 22px; padding: 22px; }
+  .dl-card p { margin: 12px 0 0; }
+  .dl-steps { margin: 22px 0 0; padding: 0; list-style: none; counter-reset: s; }
+  .dl-steps li { position: relative; padding: 0 0 16px 38px; font-size: 14px; line-height: 1.6; color: var(--text-muted); counter-increment: s; }
+  .dl-steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(139,61,255,.6); background: rgba(139,61,255,.14); color: #CDB5FF;
+    font-family: var(--font-ui); font-weight: 700; font-size: 12px;
+  }
+  .dl-steps b { color: var(--text); }
+</style>
+</head>
+<body>
+<header class="bz-top">
+  <a class="bz-logo" href="/" aria-label="boostZ, accueil">
+    <span class="bz-logo-boost">boost</span><span class="bz-logo-z" aria-hidden="true"><span class="g1">Z</span><span class="g2">Z</span><span class="z">Z</span></span>
+  </a>
+  <span class="bz-top-label">ANDROID</span>
+</header>
+
+<main class="bz-page is-narrow">
+  <h1 class="bz-h1">boostZ s'installe depuis Google&nbsp;Play.</h1>
+  <p class="bz-lead">C'est par Google Play qu'arrivent maintenant les nouvelles versions et toutes les mises à jour. Ton compte et ta collection ne changent pas&nbsp;: reconnecte-toi avec ton adresse habituelle.</p>
+
+  <section class="bz-card dl-card">
+    <a class="bz-btn is-cta is-block" href="https://play.google.com/store/apps/details?id=app.boostz.mobile">Ouvrir boostZ sur Google Play</a>
+    <p class="bz-small bz-muted">Déjà installé depuis un fichier APK&nbsp;? Google Play le met à jour&nbsp;: pas besoin de le désinstaller.</p>
+  </section>
+
+  <div class="bz-msg is-note" style="margin-top:18px">
+    <span><b>boostZ est encore en test sur Google Play.</b> Pour l'instant, seuls les testeurs inscrits peuvent l'installer. Si Google Play répond «&nbsp;Élément introuvable&nbsp;», ton compte n'est pas encore inscrit&nbsp;: suis ces trois étapes.</span>
+  </div>
+
+  <ol class="dl-steps">
+    <li><b>Demande ton accès.</b> Écris à <a href="mailto:boostz.info@gmail.com?subject=Tester%20boostZ%20sur%20Google%20Play">boostz.info@gmail.com</a> avec l'adresse Gmail utilisée sur ton téléphone.</li>
+    <li><b>Accepte l'invitation.</b> On te répond avec un lien&nbsp;: ouvre-le sur ton téléphone, avec ce même compte Google, et accepte.</li>
+    <li><b>Installe boostZ.</b> Reviens ici et touche «&nbsp;Ouvrir boostZ sur Google Play&nbsp;», puis «&nbsp;Installer&nbsp;» ou «&nbsp;Mettre à jour&nbsp;».</li>
+  </ol>
+
+  <p class="bz-small bz-muted">Sur iPhone, boostZ n'est pas encore disponible&nbsp;: il arrivera sur l'App Store plus tard.</p>
+
+  <p class="bz-tiny" style="margin-top:26px"><a href="/">← Retour à l'accueil</a></p>
+</main>
+</body>
+</html>

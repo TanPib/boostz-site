@@ -1,0 +1,10 @@
+{
+  "platform": "android",
+  "distribution": "google_play",
+  "package": "app.boostz.mobile",
+  "app_version": "1.0.19",
+  "completed_at": "2026-10-13T16:55:00.000Z",
+  "runtime_version": "97e26afc431e5bca6ccbbbbf3e51ac8978d4f1bb",
+  "ota_runtime_version": "97e26afc431e5bca6ccbbbbf3e51ac8978d4f1bb",
+  "store_url": "https://play.google.com/store/apps/details?id=app.boostz.mobile"
+}
