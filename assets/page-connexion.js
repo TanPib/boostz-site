@@ -84,7 +84,7 @@ form.addEventListener('submit', async (e) => {
     // le membre qui ne se connecte à l'appli qu'avec Google, et n'a donc pas
     // de mot de passe à taper ici.
     const text = err instanceof ApiError && err.status === 401
-      ? 'Adresse ou mot de passe incorrect. Si tu te connectes à l’appli avec Google, utilise « Continuer avec Google » plus bas.'
+      ? 'Adresse ou mot de passe incorrect. Si tu te connectes à l’appli avec Google, utilise « Continuer avec Google » plus haut.'
       : err.message;
     say(message, text, 'err');
     submit.disabled = false;

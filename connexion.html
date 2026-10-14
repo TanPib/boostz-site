@@ -29,12 +29,13 @@
   .soon { display: flex; align-items: center; gap: 10px; border: 1.5px solid rgba(255,255,255,.1); border-radius: 13px; padding: 12px 14px; opacity: .55; }
   .soon b { font-family: var(--font-ui); font-size: 13px; }
   .soon .bz-pill { margin-left: auto; }
-  /* « Continuer avec Google » : le même cadre que la ligne Apple, grisée, mais
-     un vrai bouton. */
-  .alt-btn { width: 100%; display: flex; align-items: center; gap: 10px; border: 1.5px solid rgba(255,255,255,.18); border-radius: 13px; padding: 12px 14px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-  .alt-btn b { font-family: var(--font-ui); font-size: 13px; }
-  .alt-btn:hover, .alt-btn:focus-visible { border-color: rgba(196,181,253,.6); }
-  .alt-btn:disabled { opacity: .55; cursor: default; }
+  /* « Continuer avec Google », en tête et en blanc, avec le G de Google en
+     couleurs, comme Google le présente : c'est la porte la plus courte, et la
+     seule pour qui ne s'est jamais connecté à l'appli qu'avec Google. */
+  .google-btn { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 18px; border-radius: 14px; border: 1px solid #FFFFFF; background: #FFFFFF; color: #1F1F1F; font-family: var(--font-ui); font-weight: 700; font-size: 15px; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+  .google-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+  .google-btn:focus-visible { outline: 3px solid #C4B5FD; outline-offset: 2px; }
+  .google-btn:disabled { opacity: .6; cursor: default; transform: none; box-shadow: none; }
   .forgot-link { align-self: flex-end; margin-top: -4px; background: none; border: 0; padding: 4px 0; color: var(--text-muted); font: inherit; font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .forgot-link:hover, .forgot-link:focus-visible { color: var(--text, #fff); }
   .forgot-head { margin: 0 0 4px; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
@@ -47,8 +48,9 @@
     .login-box .bz-card { margin-top: 16px !important; padding: 16px !important; }
     .login-box .bz-btn.is-block { padding: 12px 16px; font-size: 13px; }
     .sep { margin: 14px 0; }
-    .soon, .alt-btn { padding: 10px 12px; border-radius: 12px; border-width: 1px; }
-    .soon b, .alt-btn b { font-size: 12.5px; }
+    .soon { padding: 10px 12px; border-radius: 12px; border-width: 1px; }
+    .soon b { font-size: 12.5px; }
+    .google-btn { height: 46px; font-size: 14px; border-radius: 12px; }
   }
 </style>
 </head>
@@ -67,6 +69,24 @@
 
     <div class="bz-card" style="margin-top:22px;padding:22px">
       <div id="login-panel">
+      <!-- Google d'abord, Apple grisé dessous, puis l'adresse et le mot de passe.
+           Le bouton Google est désactivé jusqu'au chargement du script, comme
+           SE CONNECTER. -->
+      <div class="bz-stack" style="gap:9px">
+        <button id="google" class="google-btn" type="button" disabled>
+          <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          <span>Continuer avec Google</span>
+        </button>
+        <div id="google-message" aria-live="polite"></div>
+        <a id="google-continue" class="bz-btn is-primary is-block" href="compte.html" hidden>CONTINUER</a>
+        <div class="soon" aria-disabled="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.8)" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
+          <b>Continuer avec Apple</b><span class="bz-pill">Bientôt</span>
+        </div>
+      </div>
+
+      <div class="sep"><span></span><span class="bz-eyebrow">ou avec ton e-mail</span><span></span></div>
+
       <!-- Sans action ni name sur les champs, et bouton désactivé jusqu'au chargement du
            script : si le formulaire partait avant que le JavaScript soit prêt, le
            navigateur l'enverrait en GET et le mot de passe finirait dans l'adresse. -->
@@ -88,22 +108,6 @@
         <div id="message" aria-live="polite"></div>
         <button id="submit" class="bz-btn is-primary is-block" type="submit" disabled>SE CONNECTER</button>
       </form>
-
-      <div class="sep"><span></span><span class="bz-eyebrow">ou</span><span></span></div>
-
-      <div class="bz-stack" style="gap:9px">
-        <div class="soon" aria-disabled="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.8)" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
-          <b>Continuer avec Apple</b><span class="bz-pill">Bientôt</span>
-        </div>
-        <!-- Désactivé jusqu'au chargement du script, comme SE CONNECTER. -->
-        <button id="google" class="alt-btn" type="button" disabled>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.8)" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3ZM12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Zm-5.6-8a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9l3.3-2.5ZM12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.5l3.3 2.6C7.2 7.8 9.4 6 12 6Z"/></svg>
-          <b>Continuer avec Google</b>
-        </button>
-        <div id="google-message" aria-live="polite"></div>
-        <a id="google-continue" class="bz-btn is-primary is-block" href="compte.html" hidden>CONTINUER</a>
-      </div>
       </div>
 
       <!-- Mot de passe oublié : un code à six chiffres part par e-mail, puis le
@@ -145,6 +149,9 @@
   </div>
 </main>
 
-<script type="module" src="assets/page-connexion.js"></script>
+<!-- Daté : GitHub Pages garde un script dix minutes en cache. Le 14/10, une
+     page neuve avec l'ancien script laissait le bouton Google grisé, sans
+     réaction. Changer la date à chaque modification du script. -->
+<script type="module" src="assets/page-connexion.js?v=2026-10-14b"></script>
 </body>
 </html>
