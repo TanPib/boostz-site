@@ -47,8 +47,26 @@ const stage = document.querySelector('.hstage');
 const pack = document.querySelector('.pack');
 let cycle = null;
 
+// LA SCÈNE GARDE SA HAUTEUR PENDANT L'OUVERTURE (14/10/2026). Le booster
+// s'efface et la consigne se replie tout de suite, quand l'éventail, le nom du
+// jeu et « 8 TCG couverts » n'arrivent qu'avec un délai : la scène perdait
+// environ 200 px en 0,4 s puis les reprenait, et tout ce qui l'entoure sautait
+// (sur ordinateur, le texte de gauche, centré sur elle, montait de 100 px puis
+// redescendait). La fermeture faisait l'inverse : le booster revient avant que
+// « 8 TCG couverts » ne parte, et la scène prenait 180 px de trop un instant.
+// Fermée, elle est plus haute qu'ouverte : sa hauteur de départ est tenue dans
+// les deux sens. Ce qui dépasse un instant à la fermeture déborde sur le fil,
+// encore déplié dessous, sans rien pousser.
+let release = null;
+function holdHeight() {
+  clearTimeout(release);
+  if (!stage.style.height) stage.style.height = stage.offsetHeight + 'px';
+}
+addEventListener('resize', () => { stage.style.height = ''; });
+
 function open() {
   if (pg.classList.contains('is-open')) return;
+  holdHeight();
   pg.classList.remove('cyc');
   stage.dataset.hi = '0';
   pg.classList.add('is-open');
@@ -65,6 +83,9 @@ function open() {
 function close() {
   clearInterval(cycle);
   pg.classList.remove('is-open', 'cyc');
+  // Refermée, la scène retrouve d'elle-même sa hauteur de départ : la tenue
+  // se lâche une fois les transitions finies, sauf si on a rouvert entre-temps.
+  release = setTimeout(() => { if (!pg.classList.contains('is-open')) stage.style.height = ''; }, 1500);
 }
 
 pack.addEventListener('click', open);
