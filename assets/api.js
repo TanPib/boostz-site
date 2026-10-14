@@ -112,6 +112,24 @@ export async function resetPassword(email, code, password) {
   return openSession(await call('/auth/password/reset', { method: 'POST', body: { email, code, password } }));
 }
 
+// « Continuer avec Google » (14/10/2026) : la route de l'appli, telle quelle.
+// L'identifiant client vient du serveur, comme dans l'appli : sans lui, la
+// connexion avec Google n'est pas ouverte.
+export async function googleConfig() {
+  return call('/auth/google/config');
+}
+
+// Le site ne crée jamais de compte. Un compte Google qu'aucun compte Boostz ne
+// porte rend `needs_registration`, et la page renvoie vers l'appli. Une
+// liaison peut avoir rendu l'ancien mot de passe inutilisable (adresse jamais
+// vérifiée) : la page doit le dire, l'appli le dit aussi.
+export async function googleLogin(idToken) {
+  const data = await call('/auth/google', { method: 'POST', body: { id_token: idToken } });
+  if (data && data.needs_registration) return { needsRegistration: true, email: data.email || '' };
+  const opened = await openSession(data);
+  return { ...opened, passwordReset: !!data.password_reset };
+}
+
 async function openSession(data) {
   saveSession(data.token, data.user);
   try {

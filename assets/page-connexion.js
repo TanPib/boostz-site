@@ -1,4 +1,4 @@
-import { login, forgotPassword, resetPassword, session, isAdmin, ApiError } from './api.js';
+import { login, forgotPassword, resetPassword, googleConfig, googleLogin, session, isAdmin, ApiError } from './api.js';
 import { logo, say } from './chrome.js';
 
 document.getElementById('logo').append(logo());
@@ -27,11 +27,18 @@ if (CONTEXT[next]) {
   box.hidden = false;
 }
 
+// Le retour de Google, s'il y en a un, se lit avant tout le reste : son jeton
+// est dans le fragment de l'adresse (#id_token=…), effacé aussitôt pour qu'il
+// ne reste ni dans l'historique ni dans un lien copié. Voir plus bas.
+const fragment = new URLSearchParams(location.hash.slice(1));
+const googleReturn = fragment.has('id_token') || fragment.has('error');
+if (googleReturn) history.replaceState(null, '', location.pathname + location.search);
+
 // Déjà connecté : la copie locale de la session n'est pas une preuve de rôle, donc
 // pas de détour par la console sur sa seule foi. Mon compte relit le compte et
 // n'y propose la console qu'à un admin confirmé.
 const existing = session();
-if (existing) location.replace(DESTINATIONS[next] || 'compte.html');
+if (existing && !googleReturn) location.replace(DESTINATIONS[next] || 'compte.html');
 
 const form = document.getElementById('form');
 const email = document.getElementById('email');
@@ -67,8 +74,12 @@ form.addEventListener('submit', async (e) => {
     location.href = destinationFor(user);
   } catch (err) {
     clearTimeout(slow);
+    // Le serveur ne dit pas si l'adresse a un compte (ce serait apprendre à
+    // n'importe qui quelles adresses sont inscrites) : la phrase couvre aussi
+    // le membre qui ne se connecte à l'appli qu'avec Google, et n'a donc pas
+    // de mot de passe à taper ici.
     const text = err instanceof ApiError && err.status === 401
-      ? 'Adresse ou mot de passe incorrect.'
+      ? 'Adresse ou mot de passe incorrect. Si tu te connectes à l’appli avec Google, utilise « Continuer avec Google » plus bas.'
       : err.message;
     say(message, text, 'err');
     submit.disabled = false;
@@ -167,3 +178,158 @@ resetForm.addEventListener('submit', async (e) => {
     resetCode.focus();
   }
 });
+
+// CONTINUER AVEC GOOGLE (14/10/2026).
+//
+// Depuis le 06/10, un compte créé avec Google dans l'appli n'a pas de mot de
+// passe utilisable, et une liaison peut avoir rendu l'ancien inutilisable :
+// sans ce bouton, ces membres n'entraient sur le site que par « Mot de passe
+// oublié ».
+//
+// Un aller-retour par la page de Google, sans charger ici le moindre script de
+// Google : la CSP de cette page et la politique de confidentialité n'admettent
+// que les fichiers du site. Google revient sur cette page avec un jeton
+// d'identité dans le fragment de l'adresse, que la page passe à la route de
+// l'appli (POST /auth/google). Son audience est le client « Web » que le
+// serveur vérifie déjà.
+//
+// state et nonce, tirés au hasard et gardés le temps de l'aller-retour, disent
+// que le jeton répond à une demande partie de cette page : un jeton glissé
+// dans l'adresse par quelqu'un d'autre ne les porte pas.
+//
+// Côté Google Cloud, le client « Boostz serveur » doit admettre l'origine
+// https://boostz.fr et la redirection https://boostz.fr/connexion.html
+// (boostz-dev/CONNEXION-GOOGLE/GUIDE.md). Sans elles, Google affiche
+// « redirect_uri_mismatch ».
+const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GOOGLE_FLOW = 'boostz.google';
+const REDIRECT = location.origin + '/connexion.html';
+const googleButton = document.getElementById('google');
+const googleMessage = document.getElementById('google-message');
+const googleContinue = document.getElementById('google-continue');
+
+// La configuration est demandée dès l'ouverture : la requête réveille aussi le
+// serveur, qui dort après quinze minutes. Un échec n'est pas gardé, le
+// prochain appui redemande.
+let configPromise = null;
+function loadConfig() {
+  if (!configPromise) configPromise = googleConfig().catch((err) => { configPromise = null; throw err; });
+  return configPromise;
+}
+loadConfig().catch(() => {});
+
+googleButton.disabled = false;
+
+function randomToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+googleButton.addEventListener('click', async () => {
+  googleButton.disabled = true;
+  say(googleMessage, '');
+  const slow = setTimeout(() => say(googleMessage, 'Connexion… le serveur peut mettre une trentaine de secondes à se réveiller.', 'note'), 2000);
+  let config;
+  try {
+    config = await loadConfig();
+  } catch (err) {
+    clearTimeout(slow);
+    say(googleMessage, err.message, 'err');
+    googleButton.disabled = false;
+    return;
+  }
+  clearTimeout(slow);
+  if (!config || !config.enabled || !config.web_client_id) {
+    say(googleMessage, 'La connexion avec Google n’est pas encore ouverte.', 'err');
+    googleButton.disabled = false;
+    return;
+  }
+  const state = randomToken();
+  const nonce = randomToken();
+  try {
+    sessionStorage.setItem(GOOGLE_FLOW, JSON.stringify({ state, nonce, next }));
+  } catch {
+    say(googleMessage, 'Ton navigateur bloque le stockage de cette page : la connexion avec Google ne peut pas aboutir. Utilise ton adresse et ton mot de passe.', 'err');
+    googleButton.disabled = false;
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: config.web_client_id,
+    redirect_uri: REDIRECT,
+    response_type: 'id_token',
+    scope: 'openid email profile',
+    nonce,
+    state,
+    prompt: 'select_account'
+  });
+  location.assign(GOOGLE_AUTH + '?' + params.toString());
+});
+
+function readFlow() {
+  try {
+    const flow = JSON.parse(sessionStorage.getItem(GOOGLE_FLOW) || 'null');
+    sessionStorage.removeItem(GOOGLE_FLOW);
+    return flow;
+  } catch {
+    return null;
+  }
+}
+
+// Le nonce inscrit dans le jeton, lu sans en vérifier la signature : c'est le
+// serveur qui vérifie le jeton. La page ne s'assure ici que d'une chose, qu'il
+// répond à sa propre demande.
+function tokenNonce(idToken) {
+  try {
+    const part = idToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(part + '='.repeat((4 - (part.length % 4)) % 4)));
+    return payload.nonce || null;
+  } catch {
+    return null;
+  }
+}
+
+async function finishGoogle() {
+  const flow = readFlow();
+  if (fragment.has('error')) {
+    say(googleMessage, fragment.get('error') === 'access_denied'
+      ? 'Connexion avec Google annulée.'
+      : 'Google n’a pas pu te connecter. Réessaie.', 'err');
+    return;
+  }
+  const idToken = fragment.get('id_token');
+  if (!flow || fragment.get('state') !== flow.state || tokenNonce(idToken) !== flow.nonce) {
+    say(googleMessage, 'Cette connexion avec Google n’a pas pu être vérifiée. Recommence depuis cette page.', 'err');
+    return;
+  }
+  const destination = (user) => DESTINATIONS[flow.next] || (isAdmin(user) ? 'admin.html' : 'compte.html');
+  googleButton.disabled = true;
+  say(googleMessage, 'Connexion avec Google…', 'note');
+  const slow = setTimeout(() => say(googleMessage, 'Connexion… le serveur peut mettre une trentaine de secondes à se réveiller.', 'note'), 2000);
+  try {
+    const r = await googleLogin(idToken);
+    clearTimeout(slow);
+    if (r.needsRegistration) {
+      say(googleMessage, (r.email
+        ? 'Aucun compte boostZ n’est relié à ' + r.email + '. '
+        : 'Aucun compte boostZ n’est relié à ce compte Google. ')
+        + 'Ton compte se crée dans l’appli ; ensuite, tu pourras te connecter ici avec Google.', 'err');
+      googleButton.disabled = false;
+      return;
+    }
+    if (r.passwordReset) {
+      say(googleMessage, 'Ton compte boostZ est maintenant relié à ce compte Google. Ton ancien mot de passe ne sert plus : connecte-toi avec Google, ici comme dans l’appli.', 'info');
+      googleContinue.href = destination(r.user);
+      googleContinue.hidden = false;
+      googleContinue.focus();
+      return;
+    }
+    location.href = destination(r.user);
+  } catch (err) {
+    clearTimeout(slow);
+    say(googleMessage, err.message, 'err');
+    googleButton.disabled = false;
+  }
+}
+
+if (googleReturn) finishGoogle();
