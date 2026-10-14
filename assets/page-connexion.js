@@ -1,4 +1,9 @@
-import { login, forgotPassword, resetPassword, googleConfig, googleLogin, session, isAdmin, ApiError } from './api.js';
+import { login, forgotPassword, resetPassword, session, isAdmin, ApiError } from './api.js';
+// Les fonctions de Google arrivent par l'espace de noms, pas par leur nom :
+// GitHub Pages garde api.js dix minutes en cache, et un nom absent d'un
+// api.js d'avant le 14/10 ferait échouer tout ce module, connexion par mot de
+// passe comprise. Absentes, seul le bouton Google le dit.
+import * as api from './api.js';
 import { logo, say } from './chrome.js';
 
 document.getElementById('logo').append(logo());
@@ -211,9 +216,11 @@ const googleContinue = document.getElementById('google-continue');
 // La configuration est demandée dès l'ouverture : la requête réveille aussi le
 // serveur, qui dort après quinze minutes. Un échec n'est pas gardé, le
 // prochain appui redemande.
+const STALE = 'La page vient d’être mise à jour : recharge-la pour te connecter avec Google.';
 let configPromise = null;
 function loadConfig() {
-  if (!configPromise) configPromise = googleConfig().catch((err) => { configPromise = null; throw err; });
+  if (!api.googleConfig) return Promise.reject(new Error(STALE));
+  if (!configPromise) configPromise = api.googleConfig().catch((err) => { configPromise = null; throw err; });
   return configPromise;
 }
 loadConfig().catch(() => {});
@@ -303,11 +310,15 @@ async function finishGoogle() {
     return;
   }
   const destination = (user) => DESTINATIONS[flow.next] || (isAdmin(user) ? 'admin.html' : 'compte.html');
+  if (!api.googleLogin) {
+    say(googleMessage, STALE, 'err');
+    return;
+  }
   googleButton.disabled = true;
   say(googleMessage, 'Connexion avec Google…', 'note');
   const slow = setTimeout(() => say(googleMessage, 'Connexion… le serveur peut mettre une trentaine de secondes à se réveiller.', 'note'), 2000);
   try {
-    const r = await googleLogin(idToken);
+    const r = await api.googleLogin(idToken);
     clearTimeout(slow);
     if (r.needsRegistration) {
       say(googleMessage, (r.email
