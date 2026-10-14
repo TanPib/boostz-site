@@ -3,6 +3,9 @@
    mobile/scripts/export-legal-site.mjs. Reprend la mise en page de l'ancienne
    politique de confidentialité. */
 .doc h2 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin: 32px 0 8px; }
+/* Une rubrique visée par une ancre (« #sources-de-donnees-et-credits ») ne
+   doit pas passer sous la barre fixe du haut. */
+.doc h2[id] { scroll-margin-top: 76px; }
 .doc h3 { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; margin: 20px 0 6px; }
 .doc p, .doc li { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
 .doc strong { color: var(--text); }
