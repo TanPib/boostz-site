@@ -62,7 +62,14 @@ function holdHeight() {
   clearTimeout(release);
   if (!stage.style.height) stage.style.height = stage.offsetHeight + 'px';
 }
-addEventListener('resize', () => { stage.style.height = ''; });
+// Seule une largeur nouvelle lâche la tenue : sur téléphone, la barre
+// d'adresse déclenche « resize » à chaque changement de sens du défilement.
+let largeurScene = innerWidth;
+addEventListener('resize', () => {
+  if (innerWidth === largeurScene) return;
+  largeurScene = innerWidth;
+  stage.style.height = '';
+});
 
 function open() {
   if (pg.classList.contains('is-open')) return;
@@ -170,41 +177,44 @@ if (fil) {
     }
     return [x, y];
   };
-  const gommer = (left0, top0) => {
+  const gommer = (pts, left0, top0) => {
     trous.replaceChildren();
     // Les points du tracé, rangés par bandes de 40 px de haut.
     const bandes = new Map();
-    for (let l = 0; l <= total; l += 6) {
-      const p = line.getPointAtLength(l);
+    for (const p of pts) {
       const k = Math.floor(p.y / 40);
       if (!bandes.has(k)) bandes.set(k, []);
       bandes.get(k).push(p);
     }
+    const touche = (x0, x1, y0, y1) => {
+      for (let k = Math.floor(y0 / 40); k <= Math.floor(y1 / 40); k++) {
+        for (const p of bandes.get(k) || []) if (p.x > x0 && p.x < x1 && p.y > y0 && p.y < y1) return true;
+      }
+      return false;
+    };
     // Seul un trait qui passe à moins de 5 px des lettres ouvre un trou, qui
     // déborde ensuite de 6 px pour laisser de l'air. Sur téléphone, le fil
     // longe le texte dans la marge (7 px du bord, le texte commence à 16) :
     // mesurer depuis le trou lui-même l'effaçait sur des écrans entiers.
+    // Un premier tri large (le texte pas encore révélé est jusqu'à 80 px plus
+    // bas, ou 24 px de côté) évite de lire le style des textes loin du fil.
     const PAD = 6;
     const PROCHE = 5;
     const range = document.createRange();
     for (const el of pg.querySelectorAll(TEXTE)) {
-      const [dx, dy] = decalage(el);
       range.selectNodeContents(el);
-      for (const r of range.getClientRects()) {
-        if (r.width < 1 || r.height < 1) continue;
+      const rects = [...range.getClientRects()].filter((r) => r.width >= 1 && r.height >= 1);
+      const pres = rects.filter((r) => touche(r.left - left0 - 30, r.right - left0 + 30, r.top - top0 - 90, r.bottom - top0 + PROCHE));
+      if (!pres.length) continue;
+      const [dx, dy] = decalage(el);
+      for (const r of pres) {
         const lx = r.left - left0 - dx;
         const ly = r.top - top0 - dy;
-        let frole = false;
-        for (let k = Math.floor((ly - PROCHE) / 40); k <= Math.floor((ly + r.height + PROCHE) / 40) && !frole; k++) {
-          for (const p of bandes.get(k) || []) {
-            if (p.x > lx - PROCHE && p.x < lx + r.width + PROCHE && p.y > ly - PROCHE && p.y < ly + r.height + PROCHE) { frole = true; break; }
-          }
-        }
+        if (!touche(lx - PROCHE, lx + r.width + PROCHE, ly - PROCHE, ly + r.height + PROCHE)) continue;
         const x = lx - PAD;
         const y = ly - PAD / 2;
         const w = r.width + 2 * PAD;
         const h = r.height + PAD;
-        if (!frole) continue;
         const trou = document.createElementNS(NS, 'rect');
         for (const [k, v] of [['x', x], ['y', y], ['width', w], ['height', h], ['rx', 6], ['fill', '#000']]) trou.setAttribute(k, v);
         trous.append(trou);
@@ -291,11 +301,42 @@ if (fil) {
     line.setAttribute('d', d);
     reveal.setAttribute('d', d);
     total = line.getTotalLength();
-    samples = [];
-    for (let l = 0; l <= total; l += 12) samples.push([l, line.getPointAtLength(l).y]);
-    samples.push([total, line.getPointAtLength(total).y]);
+
+    // LES POINTS DU TRACÉ, CALCULÉS ICI (14/10/2026). Ils étaient demandés au
+    // navigateur un par un (getPointAtLength), qui reparcourt le tracé depuis
+    // le début à chaque appel : un recalcul figeait un téléphone plus d'une
+    // seconde, et près de cinq avec le gommage. Le tracé n'est fait que de
+    // couloirs droits et de courbes de Bézier connues : on les échantillonne
+    // tous les 6 px environ, et la longueur cumulée est recalée sur celle du
+    // navigateur, qui sert au dessin progressif.
+    const pts = [];
+    let acc = 0;
+    const point = (x, y) => {
+      const q = pts[pts.length - 1];
+      if (q) acc += Math.hypot(x - q.x, y - q.y);
+      pts.push({ x, y, l: acc });
+    };
+    point(lanes[0].x, lanes[0].t);
+    lanes.forEach((ln, i) => {
+      if (i) {
+        const p = lanes[i - 1];
+        const m = (p.b + ln.t) / 2;
+        const n = Math.max(8, Math.ceil(Math.hypot(ln.x - p.x, ln.t - p.b) / 6));
+        for (let j = 1; j <= n; j++) {
+          const s = j / n;
+          const u = 1 - s;
+          point(
+            (u * u * u + 3 * u * u * s) * p.x + (3 * u * s * s + s * s * s) * ln.x,
+            u * u * u * p.b + 3 * u * u * s * m + 3 * u * s * s * m + s * s * s * ln.t
+          );
+        }
+      }
+      if (ln.b > ln.t) for (let y = ln.t + 6; y < ln.b + 6; y += 6) point(ln.x, Math.min(y, ln.b));
+    });
+    const k = acc ? total / acc : 1;
+    samples = pts.map((p) => [p.l * k, p.y]);
     reveal.setAttribute('stroke-dasharray', total + ' ' + total);
-    gommer(pg.getBoundingClientRect().left, top0);
+    gommer(pts, pg.getBoundingClientRect().left, top0);
     draw();
   };
 
@@ -317,8 +358,14 @@ if (fil) {
   };
   addEventListener('scroll', ask(draw), { passive: true });
   // Le tracé suit la mise en page : images qui se chargent, booster qui s'ouvre, rotation…
-  if ('ResizeObserver' in window) new ResizeObserver(ask(build)).observe(pg);
-  addEventListener('resize', ask(build));
+  const rebuild = ask(build);
+  if ('ResizeObserver' in window) new ResizeObserver(rebuild).observe(pg);
+  // Sur téléphone, la barre d'adresse qui paraît et disparaît en défilant
+  // déclenche « resize » sans rien changer à la largeur : seul un changement
+  // de largeur (rotation, fenêtre) refait le tracé ici, le reste passe par
+  // le ResizeObserver de la page.
+  let largeur = innerWidth;
+  addEventListener('resize', () => { if (innerWidth !== largeur) { largeur = innerWidth; rebuild(); } });
   addEventListener('load', build);
   build();
 }

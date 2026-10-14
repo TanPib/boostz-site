@@ -325,13 +325,14 @@ html{scroll-padding-top:16px}
    Il serpente d'un côté à l'autre sans passer sur le texte. Posé sous le contenu,
    il glisse derrière les captures et les stickers. */
 .fil{position:absolute;left:0;top:0;z-index:1;pointer-events:none;overflow:visible}
-/* La pluie de cartes (14/10/2026) : fixée à l'écran, sous le fil (z-index 1)
-   et le contenu (.in, z-index 2), au-dessus du seul fond de page. Les mêmes
-   contours que les cartes fantômes, plus pâles ; un tiers de moins sur
-   téléphone. */
+/* La pluie de cartes (14/10/2026) : sur le premier écran, sous le fil
+   (z-index 1) et le contenu (.in, z-index 2), au-dessus du seul fond de page.
+   Pas en position:fixed : le container-type de .pg en ferait le repère, comme
+   pour le sommaire, et le calque couvrirait toute la page. Les mêmes contours
+   que les cartes fantômes, plus pâles ; un tiers de moins sur téléphone. */
 .rain{display:none}
 @media (prefers-reduced-motion: no-preference){
-.rain{display:block;position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.rain{display:block;position:absolute;left:0;right:0;top:0;height:100vh;z-index:0;overflow:hidden;pointer-events:none}
 .rain i{position:absolute;top:0;left:var(--x);width:calc(var(--h) * .72);height:var(--h);border:3px solid rgba(255,255,255,.08);border-radius:10px;box-sizing:border-box;animation:pluie var(--d) linear var(--t) infinite;will-change:transform}
 .rain i::before{content:"";display:block;width:60%;height:4px;margin:10% auto 0;border-radius:2px;background:rgba(255,255,255,.08)}
 }
