@@ -51,8 +51,21 @@ button{font:inherit}
 .hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:30px}
 .hero-wm{font-size:72px}
 .htitle{margin:0;display:flex;flex-direction:column;align-items:center}
-.base{display:block;margin:12px 0 0;font-family:Exo,sans-serif;font-weight:600;font-size:18px;line-height:1.4;color:#BFB9CB;letter-spacing:0}
+.base{display:block;margin:2px 0 0;font-family:Exo,sans-serif;font-weight:600;font-size:18px;line-height:1.4;color:#BFB9CB;letter-spacing:0}
 .lead{margin:12px auto 0;max-width:340px;font-size:14px;line-height:1.55;color:#A8A2B8}
+/* La bêta Android sous l'accroche (14/10/2026) : la fiole de la section de
+   sortie en petit, penchée, et l'encart entier mène à /beta. */
+.hbeta{display:flex;align-items:center;gap:14px;max-width:340px;margin:22px auto 0;padding:10px 14px 10px 12px;border-radius:18px;border:3px solid #F5F2FB;background:#1D1730;box-shadow:6px 6px 0 #05040A;box-sizing:border-box;text-align:left;color:#F5F2FB;text-decoration:none;transition:translate .2s ease,box-shadow .2s ease}
+.hbeta:hover{color:#F5F2FB;text-decoration:none;translate:-1px -1px;box-shadow:7px 7px 0 #05040A}
+.hbeta:focus-visible{outline:3px solid #C4B5FD;outline-offset:3px}
+.hbeta-fiole{flex:none;display:block;transform:rotate(-8deg);filter:drop-shadow(3px 3px 0 #05040A)}
+.hbeta-fiole svg{display:block}
+.hbeta-txt{flex:1;min-width:0;display:flex;flex-direction:column;font-family:Outfit,sans-serif;font-weight:800;font-size:16px;line-height:1.2;white-space:nowrap}
+.hbeta-txt b{font-weight:800}
+/* Sur téléphone, la flèche seule : avec le mot, le texte passait sur quatre
+   lignes. « Inscris-toi » reste lu par les lecteurs d'écran. */
+.hbeta-go{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:5px;width:36px;height:36px;border-radius:10px;border:2px solid #F5F2FB;background:#C4B5FD;color:#1D1730;font-family:"DM Sans",sans-serif;font-weight:700;font-size:12px;box-sizing:border-box}
+.hbeta-go-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Les réseaux sous l'accroche (14/10/2026) : un carré par marque, à sa
    couleur, avec le trait clair et l'ombre dure des autocollants du site. */
 .socials{display:flex;justify-content:center;gap:14px;margin:24px auto 0}
@@ -182,8 +195,13 @@ div.grow{overflow:hidden}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center;text-align:left;padding-top:70px}
 .htitle{align-items:flex-start}
 .hero-wm{font-size:150px}
-.base{font-size:28px;margin-top:22px}
+.base{font-size:28px;margin-top:-8px}
 .lead{margin:20px 0 0;max-width:470px;font-size:18px}
+.hbeta{max-width:470px;margin:28px 0 0;gap:18px;padding:12px 18px 12px 14px}
+.hbeta-fiole svg{width:58px;height:82px}
+.hbeta-txt{font-size:22px}
+.hbeta-go{width:auto;height:auto;font-size:14px;padding:9px 13px}
+.hbeta-go-t{position:static;width:auto;height:auto;overflow:visible;clip:auto}
 .socials{justify-content:flex-start;gap:16px;margin:30px 0 0}
 .soc{width:58px;height:58px;border-radius:18px}
 .stage{zoom:1.6}
