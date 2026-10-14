@@ -148,6 +148,70 @@ if (fil) {
   const line = make({ stroke: 'rgba(196,181,253,.6)', 'stroke-width': '6', 'stroke-dasharray': '12 16', mask: 'url(#fil-masque)' });
   fil.append(mask, line);
 
+  // LE FIL S'EFFACE SOUS LE TEXTE (14/10/2026). Il passe bien sous le contenu,
+  // mais un texte n'a pas de fond : ses pointillés se voyaient entre les
+  // lettres (« LANGUES SERVIES AU 23 SEPTEMBRE 2026 », signalé par TanPib).
+  // Chaque ligne de texte que le fil frôle découpe le masque, au plus près de
+  // ses lettres. Une révélation en cours décale le texte (propriété
+  // translate) : c'est sa place finale qu'on découpe.
+  const trous = document.createElementNS(NS, 'g');
+  mask.append(trous);
+  const TEXTE = ['h1', 'h2', 'h3', 'p', 'li', 'summary', 'dt', 'dd', 'figcaption', 'label', '.gn', '.btn'].map((s) => 'main ' + s).join(', ');
+  const decalage = (el) => {
+    let x = 0;
+    let y = 0;
+    for (let n = el; n && n !== pg; n = n.parentElement) {
+      const t = getComputedStyle(n).translate;
+      if (t && t !== 'none') {
+        const [a, b = '0'] = t.split(' ');
+        x += parseFloat(a) || 0;
+        y += parseFloat(b) || 0;
+      }
+    }
+    return [x, y];
+  };
+  const gommer = (left0, top0) => {
+    trous.replaceChildren();
+    // Les points du tracé, rangés par bandes de 40 px de haut.
+    const bandes = new Map();
+    for (let l = 0; l <= total; l += 6) {
+      const p = line.getPointAtLength(l);
+      const k = Math.floor(p.y / 40);
+      if (!bandes.has(k)) bandes.set(k, []);
+      bandes.get(k).push(p);
+    }
+    // Seul un trait qui passe à moins de 5 px des lettres ouvre un trou, qui
+    // déborde ensuite de 6 px pour laisser de l'air. Sur téléphone, le fil
+    // longe le texte dans la marge (7 px du bord, le texte commence à 16) :
+    // mesurer depuis le trou lui-même l'effaçait sur des écrans entiers.
+    const PAD = 6;
+    const PROCHE = 5;
+    const range = document.createRange();
+    for (const el of pg.querySelectorAll(TEXTE)) {
+      const [dx, dy] = decalage(el);
+      range.selectNodeContents(el);
+      for (const r of range.getClientRects()) {
+        if (r.width < 1 || r.height < 1) continue;
+        const lx = r.left - left0 - dx;
+        const ly = r.top - top0 - dy;
+        let frole = false;
+        for (let k = Math.floor((ly - PROCHE) / 40); k <= Math.floor((ly + r.height + PROCHE) / 40) && !frole; k++) {
+          for (const p of bandes.get(k) || []) {
+            if (p.x > lx - PROCHE && p.x < lx + r.width + PROCHE && p.y > ly - PROCHE && p.y < ly + r.height + PROCHE) { frole = true; break; }
+          }
+        }
+        const x = lx - PAD;
+        const y = ly - PAD / 2;
+        const w = r.width + 2 * PAD;
+        const h = r.height + PAD;
+        if (!frole) continue;
+        const trou = document.createElementNS(NS, 'rect');
+        for (const [k, v] of [['x', x], ['y', y], ['width', w], ['height', h], ['rx', 6], ['fill', '#000']]) trou.setAttribute(k, v);
+        trous.append(trou);
+      }
+    }
+  };
+
   let total = 0;
   let samples = []; // [longueur, y] le long du tracé, pour savoir jusqu'où dessiner
 
@@ -231,6 +295,7 @@ if (fil) {
     for (let l = 0; l <= total; l += 12) samples.push([l, line.getPointAtLength(l).y]);
     samples.push([total, line.getPointAtLength(total).y]);
     reveal.setAttribute('stroke-dasharray', total + ' ' + total);
+    gommer(pg.getBoundingClientRect().left, top0);
     draw();
   };
 
