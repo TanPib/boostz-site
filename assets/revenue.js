@@ -66,7 +66,7 @@
 // Tout texte venu de l'API passe par textContent (el() ou .textContent).
 
 import { call } from './api.js';
-import { el, clear, put, dateFr } from './chrome.js';
+import { el, clear, put, dateFr, dateTimeShort } from './chrome.js';
 
 export const PLANS = { monthly: 'Mensuel', annual: 'Annuel' };
 // Validées par le script du skill dataviz sur le fond des cartes (#171221) :
@@ -624,13 +624,140 @@ function subscribersCard(list, phone) {
   );
 }
 
+// ---------- Les achats, et leur remboursement (14/10/2026) ----------
+// GET /admin/billing/purchases et POST /admin/billing/purchases/:id/refund
+// (server/src/services/billing.js, refundPurchase). Les CGV promettent que
+// l'Éditeur rembourse lui-même : une rétractation du Pass, au prorata des jours
+// écoulés (article 8), le geste commercial sur un pack intact (article 7), une
+// réclamation fondée (article 11). Chaque remboursement demande un motif,
+// inscrit au journal, et une confirmation : Google rembourse pour de bon.
+const ach = { status: 'idle', list: [], error: null, busy: new Set() };
+
+async function loadPurchases(rerender) {
+  ach.status = ach.list.length ? 'refreshing' : 'loading';
+  try {
+    const data = await call('/admin/billing/purchases?take=50');
+    ach.list = data.purchases || [];
+    ach.status = 'ready';
+    ach.error = null;
+  } catch (e) {
+    if (e.status === 404) ach.status = 'absent';
+    else { ach.status = ach.list.length ? 'ready' : 'error'; ach.error = e.message; }
+  }
+  rerender();
+}
+
+const PURCHASE_STATE = {
+  delivered: ['Livré', 'bz-pill is-green'],
+  paid: ['Payé, à livrer', 'bz-pill is-amber'],
+  active: ['Actif', 'bz-pill is-green'],
+  canceled: ['Résilié, actif jusqu’à l’échéance', 'bz-pill is-amber'],
+  grace: ['Paiement en échec', 'bz-pill is-red'],
+  on_hold: ['Suspendu', 'bz-pill is-red'],
+  paused: ['En pause', 'bz-pill is-grey'],
+  expired: ['Expiré', 'bz-pill is-grey'],
+  pending: ['Paiement en attente', 'bz-pill is-amber'],
+  refused_minor: ['Refusé : compte mineur', 'bz-pill is-red'],
+  cancelled: ['Annulé', 'bz-pill is-grey'],
+  refunded: ['Remboursé', 'bz-pill is-grey']
+};
+
+function purchaseLabel(p) {
+  if (p.kind === 'pass') return 'Boostz Pass ' + (p.base_plan_id === 'annuel' ? 'annuel' : 'mensuel');
+  if (p.kind === 'boosties') return p.amount ? int(p.amount) + ' Boosties' : p.product_id;
+  if (p.kind === 'analyses') return p.credits ? int(p.credits) + ' analyse' + (p.credits > 1 ? 's' : '') : p.product_id;
+  return p.product_id;
+}
+
+async function refundPurchase(p, mode, ctx) {
+  const prorata = p.kind === 'pass' && mode === 'prorata';
+  const values = await ctx.ask({
+    title: prorata ? 'Rétractation : rembourser ce Pass au prorata ?' : 'Rembourser cet achat en entier ?',
+    text: purchaseLabel(p) + ' de ' + (p.user.pseudo || p.user.email || 'ce membre') + ', commande ' + (p.order_id || 'sans numéro') + '. '
+      + (prorata
+        ? 'Google rembourse le prix payé moins la part des jours écoulés (CGV, article 8) et arrête le Pass tout de suite.'
+        : 'Google rembourse la totalité et retire l’achat' + (p.kind === 'pass' ? ' ; le Pass s’arrête tout de suite.' : '.'))
+      + ' Ce que cet achat a crédité et qui reste sur le compte (Boosties du pack ou du mois, crédits) est repris. On ne peut pas revenir en arrière.',
+    fields: [{ name: 'reason', label: 'Motif : la demande à laquelle tu réponds', type: 'textarea', required: true, placeholder: 'Ex. : rétractation reçue par courriel le 15/10/2026' }],
+    confirmLabel: 'Rembourser',
+    tone: 'red'
+  });
+  if (!values) return;
+  ach.busy.add(p.id);
+  ctx.rerender();
+  try {
+    const r = await call('/admin/billing/purchases/' + encodeURIComponent(p.id) + '/refund', { method: 'POST', body: { mode, reason: values.reason } });
+    ctx.toast('Remboursé' + (r.refund === 'prorata' ? ' au prorata' : ' en entier') + (r.shortfall ? ' · ' + int(r.shortfall) + ' déjà dépensés, non repris' : '') + '.');
+    await loadPurchases(ctx.rerender);
+  } catch (e) {
+    ctx.toast(e.message, 'err');
+  } finally {
+    ach.busy.delete(p.id);
+    ctx.rerender();
+  }
+}
+
+function refundButtons(p, ctx) {
+  if (p.state === 'refunded' || p.voided_at) return null;
+  // Rien n'a été encaissé : un paiement en attente, refusé ou annulé ne se
+  // rembourse pas (Google le rend de lui-même au bout de trois jours).
+  if (['pending', 'refused_minor', 'cancelled'].includes(p.state)) return null;
+  const busy = ach.busy.has(p.id);
+  return el('div', { class: 'rv-refund', style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' } },
+    p.kind === 'pass' ? el('button', { class: 'bz-btn is-sm', type: 'button', disabled: busy, text: 'Rétractation (prorata)', onclick: () => refundPurchase(p, 'prorata', ctx) }) : null,
+    el('button', { class: 'bz-btn is-sm is-red', type: 'button', disabled: busy, text: p.kind === 'pass' ? 'Rembourser en entier' : 'Rembourser', onclick: () => refundPurchase(p, 'full', ctx) }));
+}
+
+function purchasesCard(phone, ctx) {
+  if (ach.status === 'idle') { ach.status = 'loading'; loadPurchases(ctx.rerender); }
+  const head = el('div', { class: 'rv-card-head' }, el('div', {},
+    el('h3', { class: 'bz-h3', text: 'Achats' }),
+    el('p', { class: 'bz-tiny', text: 'Les 50 derniers, du plus récent au plus ancien · rembourser une rétractation, un geste commercial ou une réclamation (CGV, articles 7, 8 et 11)' })));
+  if (ach.status === 'absent') return null;
+  if (ach.status === 'loading') return el('section', { class: 'bz-card rv-card' }, head, el('div', { class: 'bz-skeleton', style: { height: '62px', marginTop: '10px' } }));
+  if (ach.status === 'error') {
+    return el('section', { class: 'bz-card rv-card' }, head, el('div', { class: 'bz-msg is-err', role: 'alert' },
+      el('span', { text: 'Achats indisponibles : ' + ach.error + ' ' }),
+      el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Réessayer', onclick: () => loadPurchases(ctx.rerender) })));
+  }
+  if (!ach.list.length) return el('section', { class: 'bz-card rv-card' }, head, el('p', { class: 'bz-small bz-muted', style: { margin: '10px 0 0' }, text: 'Aucun achat pour l’instant.' }));
+
+  const who = (p) => p.user.pseudo || p.user.email || 'Membre supprimé';
+  const state = (p) => {
+    const [label, cls] = PURCHASE_STATE[p.state] || [p.state, 'bz-pill is-grey'];
+    return el('span', {}, el('span', { class: cls, text: label }), p.test_purchase ? el('span', { class: 'bz-pill is-grey', title: 'Achat d’un testeur de licence Google Play : aucun prélèvement réel', text: 'Test' }) : null);
+  };
+  if (phone) {
+    return el('section', { class: 'bz-card rv-card' }, head,
+      el('ul', { class: 'rv-sub-list' }, ach.list.map((p) => el('li', {},
+        el('div', { class: 'rv-sub-top' }, el('b', { text: purchaseLabel(p) }), state(p)),
+        el('div', { class: 'rv-sub-meta' },
+          el('span', { text: who(p) }),
+          el('span', { text: dateTimeShort(p.created_date) }),
+          p.order_id ? el('span', { text: p.order_id }) : null),
+        refundButtons(p, ctx)))));
+  }
+  return el('section', { class: 'bz-card rv-card' }, head,
+    el('div', { class: 'bz-table-wrap' },
+      el('table', { class: 'bz-table rv-table' },
+        el('thead', {}, el('tr', {}, ['Date', 'Membre', 'Achat', 'État', 'Commande', ''].map((t) => el('th', { text: t })))),
+        el('tbody', {}, ach.list.map((p) => el('tr', {},
+          el('td', { text: dateTimeShort(p.created_date) }),
+          el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: who(p) }), p.user.email && p.user.pseudo ? el('div', { class: 'bz-tiny', text: p.user.email }) : null),
+          el('td', {}, el('div', { text: purchaseLabel(p) }), p.confirmation_sent_at ? el('div', { class: 'bz-tiny', text: 'confirmation envoyée' }) : null),
+          el('td', {}, state(p), p.take_back_shortfall ? el('div', { class: 'bz-tiny', text: int(p.take_back_shortfall) + ' déjà dépensés, non repris' }) : null),
+          el('td', { class: 'bz-tiny', text: p.order_id || '—' }),
+          el('td', {}, refundButtons(p, ctx))
+        ))))));
+}
+
 // ---------- Branché, mais rien de vendu ----------
 // L'état dans lequel la console vit depuis le 23/09/2026 : le serveur répond,
 // les abonnements sont réels, et il n'y a pas un euro. Montrer ici les
 // graphiques de revenus reviendrait à dessiner douze mois plats et à laisser
 // croire à une mesure ; on montre donc ce qui existe, et on nomme ce qui
 // manque.
-function wiredNotSellingView(d, subscribers, phone, rerender) {
+function wiredNotSellingView(d, subscribers, phone, rerender, ctx) {
   const a = d.active || {};
   const qa = d.qa || {};
   const cur = d.currency || 'EUR';
@@ -667,11 +794,13 @@ function wiredNotSellingView(d, subscribers, phone, rerender) {
     kpis,
     a.total ? splitCard(d) : null,
     subscribers.length ? subscribersCard(subscribers, phone) : null,
+    purchasesCard(phone, ctx),
     attente));
 }
 
 // ---------- La vue ----------
-export function renderRevenue({ users, phone, rerender }) {
+export function renderRevenue({ users, phone, rerender, toast = () => {}, ask = async () => null }) {
+  const ctx = { rerender, toast, ask };
   if (rv.status === 'idle') { rv.status = 'loading'; load(rerender); }
   const wrap = (...kids) => el('div', { class: 'rv' }, ...kids);
 
@@ -715,7 +844,7 @@ export function renderRevenue({ users, phone, rerender }) {
   const passRows = rv.demo ? demoSubscribers() : (hasPassData(users) ? users.filter((u) => u.boostz_pass).map((u) => ({ user: u, boostz_pass: u.boostz_pass })) : []);
   // La facturation n'est pas branchée : la vue complète mentirait par ses
   // graphiques. On sert l'état réel du Pass à la place.
-  if (!rv.demo && d.billing && d.billing.connected === false) return wiredNotSellingView(d, passRows, phone, rerender);
+  if (!rv.demo && d.billing && d.billing.connected === false) return wiredNotSellingView(d, passRows, phone, rerender, ctx);
 
   const cur = d.currency || 'EUR';
   const keys = seriesKeys();
@@ -758,10 +887,11 @@ export function renderRevenue({ users, phone, rerender }) {
           () => activeChart(d, phone), () => monthsTable(d, 'active', int))
       ),
       el('div', { class: 'rv-grid is-split' }, splitCard(d), cohortCard(d, phone)),
-      subscribers.length || rv.demo || hasPassData(users) ? subscribersCard(subscribers, phone) : null
+      subscribers.length || rv.demo || hasPassData(users) ? subscribersCard(subscribers, phone) : null,
+      rv.demo ? null : purchasesCard(phone, ctx)
     )
   );
 }
 
 // Pour les tests et le rechargement de la console.
-export function resetRevenue() { rv.status = 'idle'; rv.data = null; rv.demo = false; }
+export function resetRevenue() { rv.status = 'idle'; rv.data = null; rv.demo = false; ach.status = 'idle'; ach.list = []; }

@@ -1890,7 +1890,7 @@ function render() {
           narrow: NARROW.matches, phone, pane: state.pane, openPane, closePane, paneTop, backButton, paneHead
         })
         : state.tab === 'agent' ? renderAgent()
-          : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); } })
+          : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); }, toast, ask })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
           : state.tab === 'todo' ? renderTodo({ rerender: () => { if (state.tab === 'todo') render(); }, toast, ask })
           : state.tab === 'beta' ? renderBeta({ rerender: () => { if (state.tab === 'beta') render(); }, toast, phone })
