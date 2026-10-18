@@ -36,6 +36,18 @@ export function todoMineCount() {
   return td.items.filter((t) => !t.done && t.owner === 'tanpib').length;
 }
 
+// L'accueil de la console : les prochaines actions de TanPib, celles qui ont
+// une échéance d'abord, la plus proche en tête. `late` : l'échéance est passée.
+export function todoMineNext(n = 5) {
+  const now = new Date().toISOString().slice(0, 10);
+  const mine = td.items.filter((t) => !t.done && t.owner === 'tanpib');
+  const sorted = [...mine].sort((a, b) => (a.due_day ? 0 : 1) - (b.due_day ? 0 : 1) || String(a.due_day || '').localeCompare(String(b.due_day || '')));
+  return {
+    late: mine.filter((t) => t.due_day && t.due_day < now).length,
+    items: sorted.slice(0, n).map((t) => ({ title: t.title, due_day: t.due_day || null, late: !!(t.due_day && t.due_day < now), status: t.status }))
+  };
+}
+
 const TONES = { a_faire: 'is-grey', en_cours: 'is-violet', bloque: 'is-red', attente: 'is-amber' };
 const FILTERS = [
   ['ouvertes', 'Ouvertes', (t) => !t.done],

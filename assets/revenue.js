@@ -557,6 +557,46 @@ function splitCard(d) {
   );
 }
 
+// Les trois choses que Boostz vend, ce mois-ci : le Pass, les packs de
+// boosties et les packs d'analyses (GET /admin/business/overview, champ
+// `this_month_by_kind`, depuis le 18/10/2026). Exportée pour l'accueil de la
+// console, qui montre la même chose en plus court. Null quand le serveur ne
+// sépare pas encore les ventes.
+export function salesRows(d, cur = 'EUR') {
+  const k = d && d.this_month_by_kind;
+  if (!k) return null;
+  const t = d.tests_by_kind || {};
+  const plural = (n, one, many) => int(n) + ' ' + (n > 1 ? many : one);
+  return [
+    { key: 'pass', label: 'Boostz Pass', cents: k.pass.cents, sub: plural(k.pass.payments, 'paiement', 'paiements') + ' · ' + plural((d.active || {}).total || 0, 'abonné actif', 'abonnés actifs'), tests: t.pass || 0 },
+    { key: 'boosties', label: 'Packs de boosties', cents: k.boosties.cents, sub: plural(k.boosties.purchases, 'pack', 'packs') + ' · ' + plural(k.boosties.units, 'boostie livré', 'boosties livrés'), tests: t.boosties || 0 },
+    { key: 'analyses', label: 'Packs d’analyses', cents: k.analyses.cents, sub: plural(k.analyses.purchases, 'pack', 'packs') + ' · ' + plural(k.analyses.units, 'crédit livré', 'crédits livrés'), tests: t.analyses || 0 }
+  ].map((r) => ({ ...r, money: money(r.cents, cur) }));
+}
+
+// La phrase qui dit quels achats de test sont écartés : sans elle, un zéro
+// ressemble à une mesure ratée.
+const TEST_NAMES = { pass: ['Pass', 'Pass'], boosties: ['pack de boosties', 'packs de boosties'], analyses: ['pack d’analyses', 'packs d’analyses'] };
+export function testsNote(rows) {
+  const parts = (rows || []).filter((r) => r.tests).map((r) => int(r.tests) + ' ' + TEST_NAMES[r.key][r.tests > 1 ? 1 : 0]);
+  return parts.length ? 'Achats de test exclus : ' + parts.join(', ') + '.' : 'Aucun achat de test.';
+}
+
+function salesCard(d) {
+  const rows = salesRows(d, d.currency || 'EUR');
+  if (!rows) return null;
+  const total = rows.reduce((s, r) => s + r.cents, 0);
+  return el('section', { class: 'bz-card rv-card', style: { marginTop: '12px' } },
+    el('div', { class: 'rv-card-head' }, el('div', {},
+      el('h3', { class: 'bz-h3' }, el('span', { text: 'Ventes du mois, par chose vendue' })),
+      el('p', { class: 'bz-tiny', text: 'Total ' + money(total, d.currency || 'EUR') + ' · prix TTC payés via Google Play, avant commission et TVA' }))),
+    el('ul', { class: 'rv-sales' }, rows.map((r) => el('li', {},
+      el('span', {}, el('b', { text: r.label }), el('small', { text: r.sub })),
+      el('b', { class: 'rv-sales-value', text: r.money })))),
+    el('p', { class: 'bz-tiny bz-muted', style: { margin: '8px 0 0' }, text: testsNote(rows) })
+  );
+}
+
 // Rétention par cohorte : une ligne par mois de départ, une colonne par mois
 // d'ancienneté. Une seule teinte, du fond vers le clair, pour la magnitude.
 function cohortCard(d, phone) {
@@ -898,6 +938,7 @@ export function renderRevenue({ users, phone, rerender, toast = () => {}, ask = 
     filters,
     el('div', { class: rv.status === 'refreshing' ? 'rv-body is-refreshing' : 'rv-body' },
       kpis,
+      rv.demo ? null : salesCard(d),
       el('div', { class: 'rv-grid' },
         chartCard('revenue', 'Revenus encaissés par mois', rv.plan !== 'all' ? 'Brut (TTC) · ' + PLANS[rv.plan].toLowerCase() : 'Brut (TTC), par formule et packs', revenueKeys(),
           () => revenueChart(d, phone), () => monthsTable(d, 'revenue_cents', (v) => money(v, cur), revenueKeys())),

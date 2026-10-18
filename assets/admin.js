@@ -6,13 +6,14 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
-import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-18b';
-import { loadData, renderData, dataRedCount } from './data.js';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-18c';
+import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-18c';
 import { renderBeta } from './beta.js';
-import { loadTodo, renderTodo, todoMineCount } from './todo.js';
+import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-18c';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
-import { renderAudience } from './audience.js?v=2026-10-18';
+import { renderAudience } from './audience.js?v=2026-10-18c';
+import { renderHome } from './home.js?v=2026-10-18c';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -119,7 +120,9 @@ const SUPER_ONLY = 'Réservé aux super admins.';
 
 const state = {
   me: null,
-  tab: 'users',
+  // L'accueil s'ouvre en premier : un tableau de bord (home.js), plus la
+  // liste des comptes.
+  tab: 'home',
   users: [], adminCount: 0, superCount: 0,
   reports: [], reportId: null,
   tickets: [], ticketCounts: { PENDING: 0, OPEN: 0, CLOSED: 0 }, ticketFilter: '', ticketId: null, ticket: null,
@@ -148,10 +151,12 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
+const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
+  home: 'M3 11 12 4l9 7M5 10v10h14V10',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-3.5-3.5',
   users: 'M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM20 20v-1.3a3.2 3.2 0 0 0-2.4-3.1M15.5 4.7a3.4 3.4 0 0 1 0 6.6',
   reports: 'M5 21V4M5 4h11.5l-2 4 2 4H5',
   support: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4V5.5Z',
@@ -1817,6 +1822,99 @@ function renderJournal() {
 }
 
 // ---------- Rendu général ----------
+// Les compteurs du menu, de la barre du téléphone et de l'accueil : une seule
+// source, pour qu'un chiffre ne dise jamais deux choses différentes.
+function counts() {
+  return {
+    todo: todoMineCount(),
+    reports: state.reports.filter((r) => r.status === 'OPEN').length,
+    tickets: state.ticketCounts.PENDING || 0,
+    venues: venuesPendingCount(),
+    ideas: state.ideas.unread,
+    data: dataRedCount(),
+    sources: sourcesCutCount()
+  };
+}
+
+// Le menu latéral (ordinateur, plus de 860 px). Les groupes suivent l'usage :
+// piloter, s'occuper des membres, tenir les contenus, puis les outils. La
+// lettre de chaque entrée sert au raccourci « G puis lettre ».
+const NAV = [
+  ['', [['home', 'h']]],
+  ['Pilotage', [['todo', 't'], ['audience', 'a'], ['revenue', 'r']]],
+  ['Membres', [['users', 'u'], ['reports', 's'], ['support', 'p']]],
+  ['Contenus', [['venues', 'b'], ['ideas', 'i'], ['sources', 'c'], ['data', 'd']]],
+  ['Outils', [['agent', 'e'], ['journal', 'j'], ['beta', 'k']]]
+];
+const NAV_KEYS = Object.fromEntries(NAV.flatMap(([, items]) => items.map(([id, key]) => [key, id])));
+
+// La pastille de chaque entrée : rouge pour ce qui retire quelque chose aux
+// membres ou qui est en panne, violette pour ce qui attend un geste.
+function navBadge(id, c) {
+  const n = { todo: c.todo, reports: c.reports, support: c.tickets, venues: c.venues, ideas: c.ideas, data: c.data, sources: c.sources,
+    home: c.reports + c.tickets + c.venues + c.ideas + c.data + c.sources }[id] || 0;
+  const red = id === 'data' || id === 'sources' || id === 'reports';
+  return n ? el('span', { class: 'adm-side-count' + (red ? ' is-red' : ''), text: n > 99 ? '99+' : String(n) }) : null;
+}
+
+function sidebar(c) {
+  const search = el('input', {
+    type: 'search', class: 'adm-side-input', placeholder: 'Chercher un membre…', 'aria-label': 'Chercher un membre', id: 'adm-search',
+    value: state.tab === 'users' ? state.q : '',
+    onkeydown: (e) => {
+      if (e.key !== 'Enter') return;
+      state.q = e.target.value.trim();
+      state.userKinds = new Set(DEFAULT_KINDS);
+      goTo('users');
+    }
+  });
+  const kbd = (t) => el('kbd', { text: t });
+  return el('aside', { class: 'adm-side' },
+    el('nav', { class: 'adm-side-nav', 'aria-label': 'Sections de la console' },
+      el('label', { class: 'adm-side-search' }, icon('search', 15), search, kbd('/')),
+      NAV.map(([title, items]) => el('div', { class: 'adm-side-group' },
+        title ? el('span', { class: 'adm-side-title', text: title }) : null,
+        items.map(([id, key]) => el('button', {
+          class: 'adm-side-item', type: 'button', 'aria-current': state.tab === id ? 'page' : null,
+          title: SECTIONS[id] + ' · G puis ' + key.toUpperCase(), onclick: () => goTo(id)
+        }, icon(id, 18), el('span', { text: SECTIONS[id] }), navBadge(id, c)))))),
+    el('div', { class: 'adm-side-keys' },
+      el('span', { class: 'adm-side-title', text: 'Raccourcis' }),
+      el('span', {}, 'Chercher un membre', kbd('/')),
+      el('span', {}, 'Aller à une page', kbd('G puis lettre')),
+      el('span', { class: 'bz-tiny bz-muted', text: 'La lettre de chaque page s’affiche au survol.' })),
+    el('div', { class: 'adm-side-foot' },
+      el('a', { href: 'compte.html', text: 'Mon compte' }),
+      el('a', { href: 'index.html', text: 'Retour au site ↗' })));
+}
+
+// « / » pour chercher, « G » puis une lettre pour changer de page. Jamais
+// pendant une saisie, ni avec une touche de modification.
+let pendingG = 0;
+function shortcuts(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey || !state.loaded) return;
+  const t = e.target;
+  if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+  const k = e.key.toLowerCase();
+  if (k === '/' && !PHONE.matches) {
+    const input = document.getElementById('adm-search');
+    if (input) { e.preventDefault(); input.focus(); }
+    return;
+  }
+  if (pendingG && Date.now() - pendingG < 1500 && NAV_KEYS[k]) {
+    pendingG = 0;
+    e.preventDefault();
+    goTo(NAV_KEYS[k]);
+    return;
+  }
+  pendingG = k === 'g' ? Date.now() : 0;
+}
+
+// Tout relire, sans redessiner : le bouton Actualiser de l'accueil.
+async function reloadAll() {
+  await Promise.allSettled([loadUsers(), loadReports(), loadTickets(), loadActions(), loadIdeas(), loadData(), loadVenues(), loadTodo(), loadSources()]);
+}
+
 function renderHeader() {
   renderTop(topHost, { label: 'ADMINISTRATION', next: 'admin', adminLabel: true, title: state.loaded ? SECTIONS[state.tab] : '' });
 }
@@ -1829,12 +1927,12 @@ function goTo(tab) {
 }
 
 // Téléphone : la navigation de la console, collée en bas, comme celle de l'app.
-// Cinq entrées au plus : Boutiques, Idées, Agent, Journal et Data passent sous
-// « Plus », qui les ouvre en panneau et reste allumé quand l'une des cinq est
-// affichée. Les badges des demandes de boutiques en attente, des idées jamais
+// Cinq entrées au plus : Accueil, Utilisateurs, Signalements, Support, et tout
+// le reste sous « Plus », qui l'ouvre en panneau et reste allumé quand l'une de
+// ces pages est affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
+const MORE_TABS = ['todo', 'revenue', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1856,35 +1954,33 @@ function bottomNav(openReports, pending) {
   });
   more.setAttribute('aria-haspopup', 'menu');
   return el('nav', { class: 'adm-nav', 'aria-label': 'Sections de la console' },
-    item('users', 0), item('revenue', 0), item('reports', openReports), item('support', pending), more);
-}
-
-// `short` : le libellé des chiffres clés sur téléphone, où ils tiennent en une
-// rangée au lieu de manger le premier écran.
-// Sur téléphone, chaque chiffre est un raccourci : il ouvre la liste qu'il compte.
-function kpi(label, short, value, color, go) {
-  return el(PHONE.matches && go ? 'button' : 'div', { class: 'bz-card is-tight adm-kpi', type: PHONE.matches && go ? 'button' : null, onclick: PHONE.matches ? go : null },
-    el('span', { class: 'bz-eyebrow' }, el('span', { class: 'bz-hide-sm', text: label }), el('span', { class: 'bz-show-sm', text: short })),
-    el('div', { class: 'adm-kpi-value', style: { color: color || 'var(--text)' }, text: String(value) })
-  );
+    item('home', 0), item('users', 0), item('reports', openReports), item('support', pending), more);
 }
 
 function render() {
   if (!state.loaded) return;
   closePopover();
   const phone = PHONE.matches;
+  // Plus de 860 px : le menu latéral. Entre 641 et 860 px : la barre d'onglets
+  // d'avant, faute de place pour un menu à côté du contenu. Téléphone : la barre
+  // collée en bas.
+  const wide = !NARROW.matches;
   renderHeader();
+  const c = counts();
   // `tone` : la couleur du compteur, rouge pour les points en panne de Data.
-  const tab = (id, label, count, tone) => el('button', {
+  const tab = (id, count, tone) => el('button', {
     class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(state.tab === id),
-    onclick: () => { state.tab = id; state.pane = null; render(); }
-  }, label, count ? el('span', { class: 'bz-count' + (tone ? ' ' + tone : ''), text: String(count) }) : null);
+    onclick: () => goTo(id)
+  }, SECTIONS[id], count ? el('span', { class: 'bz-count' + (tone ? ' ' + tone : ''), text: String(count) }) : null);
 
-  const openReports = state.reports.filter((r) => r.status === 'OPEN').length;
-  const openTickets = (state.ticketCounts.PENDING || 0) + (state.ticketCounts.OPEN || 0);
-  const banned = state.users.filter((u) => u.banned_at && !u.deleted).length;
-
-  const panel = state.tab === 'users' ? renderUsers()
+  const panel = state.tab === 'home' ? renderHome({
+    me: state.me, users: state.users, actions: state.actions, counts: c,
+    // Les tickets s'ouvrent sur ceux qui attendent une réponse, ceux qu'on compte.
+    go: (id) => (id === 'support' ? run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); }) : goTo(id)),
+    actionLabel: (a) => ACTIONS[a.action] || a.action,
+    refresh: reloadAll, rerender: () => { if (state.tab === 'home') render(); }
+  })
+    : state.tab === 'users' ? renderUsers()
     : state.tab === 'reports' ? renderReports()
       : state.tab === 'support' ? renderSupport()
         : state.tab === 'ideas' ? renderIdeas()
@@ -1905,40 +2001,30 @@ function render() {
   const chat = phone && state.pane === 'ticket';
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
+
+  // Le titre de la section, au-dessus de son contenu : le menu latéral ne le
+  // dit plus en surbrillance seulement. L'accueil a le sien.
+  const title = wide && state.tab !== 'home' ? el('h1', { class: 'bz-h2 adm-section-title', text: SECTIONS[state.tab] }) : null;
+  const tabs = phone || wide ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginBottom: '20px' } },
+    tab('home'), tab('todo', c.todo), tab('users'), tab('revenue'), tab('audience'),
+    tab('reports', c.reports), tab('support', c.tickets), tab('venues', c.venues), tab('ideas', c.ideas),
+    tab('agent'), tab('journal'),
+    tab('data', c.data, 'is-red'),
+    // Le compteur dit combien de coupures sont en cours : en rouge, parce
+    // qu'une coupure retire quelque chose aux membres.
+    tab('sources', c.sources, 'is-red'),
+    tab('beta'));
+  const note = phone ? null : el('p', { class: 'bz-tiny', style: { marginTop: '12px' },
+    text: state.me.is_super_admin
+      ? 'Tu es super admin : tu peux bannir, supprimer un compte et nommer un super admin. Chaque geste est inscrit au journal.'
+      : 'Seul un super admin peut bannir, supprimer un compte ou nommer un super admin. Chaque geste est inscrit au journal.' });
+  const foot = phone || wide ? null : el('nav', { class: 'bz-foot' },
+    el('a', { href: 'compte.html', text: 'Mon compte' }),
+    el('a', { href: 'index.html', class: 'push', text: '← Retour au site' }));
+
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta' || state.tab === 'todo' || state.tab === 'sources' || state.tab === 'audience')) ? null : el('div', { class: 'bz-grid adm-kpis' },
-      kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
-      kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
-      kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
-      kpi('Comptes bannis', 'Bannis', banned, null, () => { state.userKinds = new Set(['banned']); state.q = ''; goTo('users'); })
-    ),
-    phone ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginTop: '22px' } },
-      tab('todo', 'Todo', todoMineCount()),
-      tab('users', 'Utilisateurs'),
-      tab('revenue', 'Revenus'),
-      tab('audience', 'Audience'),
-      tab('reports', 'Signalements', openReports),
-      tab('support', 'Support', state.ticketCounts.PENDING || 0),
-      tab('venues', 'Boutiques', venuesPendingCount()),
-      tab('ideas', 'Idées', state.ideas.unread),
-      tab('agent', 'Agent'),
-      tab('journal', 'Journal'),
-      tab('data', 'Data', dataRedCount(), 'is-red'),
-      // Le compteur dit combien de coupures sont en cours : en rouge, parce
-      // qu'une coupure retire quelque chose aux membres.
-      tab('sources', 'Sources', sourcesCutCount(), 'is-red'),
-      tab('beta', 'Bêta')
-    ),
-    panel,
-    phone ? null : el('p', { class: 'bz-tiny', style: { marginTop: '12px' },
-      text: state.me.is_super_admin
-        ? 'Tu es super admin : tu peux bannir, supprimer un compte et nommer un super admin. Chaque geste est inscrit au journal.'
-        : 'Seul un super admin peut bannir, supprimer un compte ou nommer un super admin. Chaque geste est inscrit au journal.' }),
-    phone ? null : el('nav', { class: 'bz-foot' },
-      el('a', { href: 'compte.html', text: 'Mon compte' }),
-      el('a', { href: 'index.html', class: 'push', text: '← Retour au site' })
-    ),
-    phone && !chat ? bottomNav(openReports, state.ticketCounts.PENDING || 0) : null
+    wide ? el('div', { class: 'adm-shell' }, sidebar(c), el('div', { class: 'adm-main' }, title, panel, note)) : [tabs, panel, note, foot],
+    phone && !chat ? bottomNav(c.reports, c.tickets) : null
   );
   // Sans animation : html défile en douceur, et le redessin repartait du haut.
   window.scrollTo({ top: scrollY, behavior: 'instant' });
@@ -1976,5 +2062,6 @@ export async function start() {
   clear(toastHost);
   // Tourner le téléphone ou redimensionner la fenêtre change la mise en page.
   PHONE.addEventListener('change', () => render());
+  document.addEventListener('keydown', shortcuts);
   NARROW.addEventListener('change', () => { state.pane = null; render(); });
 }

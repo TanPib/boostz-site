@@ -555,7 +555,7 @@ function banner(r, leaves, ctx) {
   const title = down.length ? plural(down.length, 'point en difficulté', 'points en difficulté')
     : warn.length ? 'Tout répond · ' + plural(warn.length, 'point à surveiller', 'points à surveiller')
       : 'Tout fonctionne';
-  const sub = 'Mesuré à ' + timeFr(r.generated_at) + ' · ' + (r.environment === 'production' ? 'serveur de production' : 'serveur local');
+  const sub = 'Mesuré à ' + timeFr(r.generated_at) + ' · ' + (r.environment === 'production' ? 'serveur de production' : 'serveur local') + ' · remesuré chaque minute';
   const refresh = el('button', {
     class: 'bz-btn is-sm', type: 'button', disabled: dt.refreshing, text: dt.refreshing ? 'Actualisation…' : 'Actualiser',
     onclick: () => {
@@ -581,10 +581,57 @@ function banner(r, leaves, ctx) {
     el('div', { class: 'dt-banner-row' },
       dot(tone),
       el('div', { class: 'dt-banner-text' }, el('b', { text: title }), el('span', { class: 'bz-small bz-muted', text: sub })),
-      el('div', { class: 'dt-banner-actions' }, refresh, all)),
+      el('div', { class: 'dt-banner-actions' }, copyButton(r, leaves, title, sub, ctx), refresh, all)),
     named.length ? el('div', { class: 'dt-chips' },
       el('span', { class: 'bz-tiny dt-chips-label', text: down.length && warn.length ? 'En panne, puis à surveiller :' : down.length ? 'En panne :' : 'À surveiller :' }),
       named.map(chip)) : null);
+}
+
+// L'état complet en texte, à coller dans une session ou un ticket : ce qu'on
+// faisait jusque-là en recopiant les pastilles une à une.
+const STATUS_WORDS = { down: 'EN PANNE', warn: 'à surveiller', ok: 'OK' };
+function copyButton(r, leaves, title, sub, { toast }) {
+  return el('button', {
+    class: 'bz-btn is-sm', type: 'button', text: 'Copier le diagnostic',
+    title: 'Copie l’état de chaque point, les pannes d’abord',
+    onclick: async () => {
+      const rank = { down: 0, warn: 1, ok: 2 };
+      const lines = [...leaves].sort((a, b) => (rank[a.status] ?? 3) - (rank[b.status] ?? 3))
+        .map((l) => '- ' + l.label + ' : ' + (STATUS_WORDS[l.status] || l.status));
+      const text = ['Data boostZ · ' + title, sub, '', ...lines].join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('Diagnostic copié : ' + leaves.length + ' points.');
+      } catch {
+        toast('Copie impossible depuis ce navigateur.', 'note');
+      }
+    }
+  });
+}
+
+// Le résumé que l'accueil de la console affiche : les points en panne et à
+// surveiller, nommés. Null tant que /admin/data n'a pas répondu.
+export function dataProblems() {
+  if (!dt.report) return null;
+  const { leaves } = buildTree(dt.report, { rerender: () => {}, toast: () => {} });
+  return {
+    down: leaves.filter((l) => l.status === 'down').map((l) => l.label),
+    warn: leaves.filter((l) => l.status === 'warn').map((l) => l.label),
+    at: dt.report.generated_at
+  };
+}
+
+// Onglet ouvert, la mesure se refait seule chaque minute : une panne qui
+// revient pendant qu'on lit la page apparaît sans cliquer sur Actualiser. Rien
+// quand l'onglet du navigateur est caché ou que la console montre autre chose.
+let autoTimer = null;
+function autoRefresh(rerender) {
+  if (autoTimer) return;
+  autoTimer = setInterval(() => {
+    if (document.hidden || dt.refreshing || dt.probingAll) return;
+    if (!document.querySelector('.dt')) { clearInterval(autoTimer); autoTimer = null; return; }
+    loadData().then(rerender);
+  }, 60000);
 }
 
 export function renderData({ rerender, toast, icon }) {
@@ -593,6 +640,7 @@ export function renderData({ rerender, toast, icon }) {
     dt.status = 'loading';
     loadData().then(rerender);
   }
+  autoRefresh(rerender);
   const blocks = [];
   if (dt.report) {
     const { secs, leaves } = buildTree(dt.report, ctx);
