@@ -1,2 +1,2 @@
-import { start } from './admin.js';
+import { start } from './admin.js?v=2026-10-18';
 start();
