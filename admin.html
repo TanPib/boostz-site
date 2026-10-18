@@ -624,6 +624,39 @@
   .rv-sales li b { font-family: var(--font-ui); }
   .rv-sales li small { font-size: 12px; color: var(--text-muted); }
   .rv-sales-value { font-family: var(--font-display) !important; font-size: 17px; }
+
+  /* ---------- Facturation (assets/billing.js) ---------- */
+  .bl { display: flex; flex-direction: column; gap: 12px; }
+  .bl-qonto { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.03); font-size: 13px; }
+  .bl-qonto.is-off { border-color: var(--soft-red-border); background: var(--soft-red-fill); }
+  .bl-qonto .bz-btn { margin-left: auto; }
+  .bl-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+  .bl-partner { display: flex; flex-direction: column; gap: 4px; }
+  .bl-partner.is-archived { opacity: .6; }
+  .bl-partner-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .bl-partner-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .bl-partner-title .bz-h3 { margin: 0; }
+  .bl-partner-meta { margin: 2px 0 0; overflow-wrap: anywhere; }
+  .bl-warn { color: #F8C46A; }
+  .bl-form { margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .bl-form-grid { display: grid; gap: 10px 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .bl-form-grid .bz-field { margin: 0; }
+  .bl-wide { grid-column: 1 / -1; }
+  .bl-invs { display: flex; flex-direction: column; margin-top: 10px; border-top: 1px solid var(--line); }
+  .bl-inv { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(140px, 1fr) 80px 96px 330px; align-items: center; gap: 8px 14px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px; }
+  .bl-inv.is-late { background: linear-gradient(90deg, rgba(240,137,154,.08), transparent 60%); }
+  .bl-inv-main, .bl-inv-dates { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+  .bl-inv-main b { font-family: var(--font-ui); }
+  .bl-inv small { font-size: 12px; color: var(--text-muted); }
+  .bl-inv small.bl-late, .bl-late { color: var(--text-danger); }
+  .bl-inv-amount { font-family: var(--font-display); font-size: 15px; white-space: nowrap; text-align: right; }
+  .bl-inv-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  @media (max-width: 900px) { .bl-inv { grid-template-columns: minmax(0, 1fr) auto; } .bl-inv-dates, .bl-inv-actions { grid-column: 1 / -1; } .bl-inv-actions { justify-content: flex-start; } }
+  .bl-candidates .bz-h3 { margin: 0 0 6px; }
+  .bl-cand-list { display: flex; flex-direction: column; }
+  .bl-cand { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.05); }
+  .bl-cand > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .bl-cand small { font-size: 12px; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -637,6 +670,6 @@
     </div>
   </div>
 </main>
-<script type="module" src="assets/page-admin.js?v=2026-10-18c"></script>
+<script type="module" src="assets/page-admin.js?v=2026-10-18d"></script>
 </body>
 </html>

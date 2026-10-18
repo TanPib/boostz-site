@@ -6,14 +6,15 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
-import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-18c';
-import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-18c';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-18d';
+import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-18d';
 import { renderBeta } from './beta.js';
-import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-18c';
+import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-18d';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
-import { renderAudience } from './audience.js?v=2026-10-18c';
-import { renderHome } from './home.js?v=2026-10-18c';
+import { renderAudience } from './audience.js?v=2026-10-18d';
+import { renderHome } from './home.js?v=2026-10-18d';
+import { renderBilling } from './billing.js?v=2026-10-18d';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -111,7 +112,10 @@ const ACTIONS = {
   venue_simulation: 'Gérant simulé',
   // L'onglet Sources (13/10/2026, mise en conformité).
   source_cut: 'Source coupée',
-  source_restore: 'Source rétablie'
+  source_restore: 'Source rétablie',
+  // L'onglet Facturation (18/10/2026).
+  billing_partner: 'Partenaire facturé',
+  billing_invoice: 'Facture partenaire'
 };
 // Les champs d'une fiche boutique corrigés dans la console, nommés en français
 // dans le journal : le serveur y écrit les clés de l'API.
@@ -151,7 +155,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
+const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -177,6 +181,8 @@ const ICONS = {
   chevron: 'M9 6l6 6-6 6',
   back: 'M15 6l-6 6 6 6',
   revenue: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  // Un reçu, pour la facturation des partenaires.
+  billing: 'M5 3v18l2.5-1.5L10 21l2-1.5 2 1.5 2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5 5 3ZM9 9h6M9 13h6M9 17h3',
   // Un œil, pour l'audience du site.
   audience: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   more: 'M5 12h.01M12 12h.01M19 12h.01'
@@ -1782,6 +1788,9 @@ function detailText(a) {
     // L'onglet Sources : ce qui a été coupé ou rétabli.
     case 'source_cut':
     case 'source_restore': return (d.kind === 'actus' ? 'Actualités · ' : '') + (d.label || d.target || '');
+    // L'onglet Facturation : la fiche, ou l'étape de la facture et son montant.
+    case 'billing_partner': return (d.step === 'create' ? 'Fiche créée · ' : 'Fiche modifiée · ') + (d.name || '');
+    case 'billing_invoice': return ({ create: 'Brouillon créé', finalize: 'Finalisée', cancel: 'Annulée' }[d.step] || d.step) + ' · ' + (d.partner || '') + (d.number ? ' · ' + d.number : '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
     default: return '';
   }
 }
@@ -1841,7 +1850,7 @@ function counts() {
 // lettre de chaque entrée sert au raccourci « G puis lettre ».
 const NAV = [
   ['', [['home', 'h']]],
-  ['Pilotage', [['todo', 't'], ['audience', 'a'], ['revenue', 'r']]],
+  ['Pilotage', [['todo', 't'], ['audience', 'a'], ['revenue', 'r'], ['billing', 'f']]],
   ['Membres', [['users', 'u'], ['reports', 's'], ['support', 'p']]],
   ['Contenus', [['venues', 'b'], ['ideas', 'i'], ['sources', 'c'], ['data', 'd']]],
   ['Outils', [['agent', 'e'], ['journal', 'j'], ['beta', 'k']]]
@@ -1932,7 +1941,7 @@ function goTo(tab) {
 // ces pages est affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'revenue', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
+const MORE_TABS = ['todo', 'revenue', 'billing', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1989,6 +1998,7 @@ function render() {
           narrow: NARROW.matches, phone, pane: state.pane, openPane, closePane, paneTop, backButton, paneHead
         })
         : state.tab === 'agent' ? renderAgent()
+          : state.tab === 'billing' ? renderBilling({ me: state.me, rerender: () => { if (state.tab === 'billing') render(); }, toast, ask })
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); }, toast, ask })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
           : state.tab === 'todo' ? renderTodo({ rerender: () => { if (state.tab === 'todo') render(); }, toast, ask })
@@ -2006,7 +2016,7 @@ function render() {
   // dit plus en surbrillance seulement. L'accueil a le sien.
   const title = wide && state.tab !== 'home' ? el('h1', { class: 'bz-h2 adm-section-title', text: SECTIONS[state.tab] }) : null;
   const tabs = phone || wide ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginBottom: '20px' } },
-    tab('home'), tab('todo', c.todo), tab('users'), tab('revenue'), tab('audience'),
+    tab('home'), tab('todo', c.todo), tab('users'), tab('revenue'), tab('billing'), tab('audience'),
     tab('reports', c.reports), tab('support', c.tickets), tab('venues', c.venues), tab('ideas', c.ideas),
     tab('agent'), tab('journal'),
     tab('data', c.data, 'is-red'),

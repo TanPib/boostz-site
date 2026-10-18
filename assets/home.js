@@ -7,9 +7,9 @@
 // site sur 30 jours et les bêta-testeurs. Si l'une échoue, sa carte le dit et le reste s'affiche.
 import { call } from './api.js';
 import { el } from './chrome.js';
-import { money, int, salesRows, testsNote } from './revenue.js?v=2026-10-18c';
-import { dataProblems } from './data.js?v=2026-10-18c';
-import { todoMineNext } from './todo.js?v=2026-10-18c';
+import { money, int, salesRows, testsNote } from './revenue.js?v=2026-10-18d';
+import { dataProblems } from './data.js?v=2026-10-18d';
+import { todoMineNext } from './todo.js?v=2026-10-18d';
 
 const DAY = 86400000;
 const hm = { status: 'idle', overview: null, overviewError: null, audience: null, audienceError: null, beta: null, at: null, seq: 0 };
