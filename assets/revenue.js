@@ -92,7 +92,7 @@ export function money(cents, currency = 'EUR', { compact = false } = {}) {
   }
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: whole ? 0 : 2 }).format(value);
 }
-const int = (n) => new Intl.NumberFormat('fr-FR').format(Number(n) || 0);
+export const int = (n) => new Intl.NumberFormat('fr-FR').format(Number(n) || 0);
 const pct = (n) => (n === null || n === undefined ? '—' : new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(n) + ' %');
 
 function monthDate(key) {
@@ -271,14 +271,15 @@ async function load(rerender) {
 }
 
 // ---------- SVG ----------
+// Exportés pour l'onglet Audience (audience.js), qui dessine de la même façon.
 const NS = 'http://www.w3.org/2000/svg';
-function svg(tag, attrs = {}, ...kids) {
+export function svg(tag, attrs = {}, ...kids) {
   const n = document.createElementNS(NS, tag);
   for (const [k, v] of Object.entries(attrs)) if (v !== null && v !== undefined && v !== false) n.setAttribute(k, String(v));
   for (const c of kids.flat()) if (c) n.append(c);
   return n;
 }
-function svgText(attrs, text) {
+export function svgText(attrs, text) {
   const t = svg('text', attrs);
   t.textContent = text;
   return t;
@@ -286,12 +287,12 @@ function svgText(attrs, text) {
 
 // Un libellé tous les `every` mois, et toujours le dernier ; celui qui tomberait
 // trop près du dernier saute, sinon « août 26 » et « sept. 26 » se chevauchent.
-function showTick(i, n, every) {
+export function showTick(i, n, every) {
   if (i === n - 1) return true;
   return i % every === 0 && n - 1 - i >= every;
 }
 
-function niceMax(v) {
+export function niceMax(v) {
   if (v <= 0) return 1;
   const exp = Math.pow(10, Math.floor(Math.log10(v)));
   for (const m of [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * exp >= v) return m * exp;
@@ -299,13 +300,13 @@ function niceMax(v) {
 }
 
 // Colonne arrondie de 4 px côté donnée, carrée côté base.
-function columnPath(x, y, w, h, r) {
+export function columnPath(x, y, w, h, r) {
   const rr = Math.min(r, w / 2, h);
   return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`;
 }
 
 // Une infobulle par graphique : la valeur d'abord, le nom de la série ensuite.
-function tooltip(host) {
+export function tooltip(host) {
   const tip = el('div', { class: 'rv-tip', role: 'status', hidden: true });
   host.append(tip);
   return {
@@ -328,7 +329,7 @@ function tooltip(host) {
 
 // Dessine au format réel du conteneur, et redessine quand sa largeur change :
 // un viewBox fixe rétrécissait les libellés à 7 px sur téléphone.
-function responsiveChart(draw) {
+export function responsiveChart(draw) {
   const host = el('div', { class: 'rv-chart' });
   let lastW = 0;
   const paint = () => {

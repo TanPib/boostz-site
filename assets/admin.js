@@ -12,6 +12,7 @@ import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
+import { renderAudience } from './audience.js';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -147,7 +148,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', more: 'Plus' };
+const SECTIONS = { users: 'Comptes', revenue: 'Revenus', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -171,6 +172,8 @@ const ICONS = {
   chevron: 'M9 6l6 6-6 6',
   back: 'M15 6l-6 6 6 6',
   revenue: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  // Un œil, pour l'audience du site.
+  audience: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   more: 'M5 12h.01M12 12h.01M19 12h.01'
 };
 function icon(name, size = 20) {
@@ -1831,7 +1834,7 @@ function goTo(tab) {
 // affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
+const MORE_TABS = ['todo', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1893,6 +1896,7 @@ function render() {
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); }, toast, ask })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
           : state.tab === 'todo' ? renderTodo({ rerender: () => { if (state.tab === 'todo') render(); }, toast, ask })
+          : state.tab === 'audience' ? renderAudience({ phone, rerender: () => { if (state.tab === 'audience') render(); } })
           : state.tab === 'beta' ? renderBeta({ rerender: () => { if (state.tab === 'beta') render(); }, toast, phone })
           : state.tab === 'sources' ? renderSources({ rerender: () => { if (state.tab === 'sources') render(); }, toast, ask })
           : renderJournal();
@@ -1902,7 +1906,7 @@ function render() {
   document.body.classList.toggle('adm-with-nav', phone && !chat);
   document.body.classList.toggle('adm-with-composer', chat && !!state.ticket);
   put(clear(host),
-    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta' || state.tab === 'todo' || state.tab === 'sources')) ? null : el('div', { class: 'bz-grid adm-kpis' },
+    (phone && state.pane) || (phone && (state.tab === 'agent' || state.tab === 'revenue' || state.tab === 'ideas' || state.tab === 'data' || state.tab === 'venues' || state.tab === 'beta' || state.tab === 'todo' || state.tab === 'sources' || state.tab === 'audience')) ? null : el('div', { class: 'bz-grid adm-kpis' },
       kpi('Comptes', 'Comptes', state.users.filter((u) => !u.deleted).length, null, () => { state.userKinds = new Set(DEFAULT_KINDS); state.q = ''; goTo('users'); }),
       kpi('Signalements ouverts', 'Signal.', openReports, openReports ? 'var(--text-danger)' : null, () => goTo('reports')),
       kpi('Tickets à traiter', 'Tickets', openTickets, openTickets ? 'var(--soft-violet-text)' : null, () => run(async () => { state.ticketFilter = 'PENDING'; await loadTickets(); goTo('support'); })),
@@ -1912,6 +1916,7 @@ function render() {
       tab('todo', 'Todo', todoMineCount()),
       tab('users', 'Utilisateurs'),
       tab('revenue', 'Revenus'),
+      tab('audience', 'Audience'),
       tab('reports', 'Signalements', openReports),
       tab('support', 'Support', state.ticketCounts.PENDING || 0),
       tab('venues', 'Boutiques', venuesPendingCount()),

@@ -143,6 +143,15 @@
   .rv-card-head > div { flex: 1; min-width: 0; }
   .rv-card-head .bz-tiny { margin: 2px 0 0; }
   .rv-table-btn { flex: none; }
+  /* Audience : répartitions en barres horizontales (assets/audience.js). */
+  .au-split { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .au-bars { list-style: none; margin: 12px 0 2px; padding: 0; display: grid; gap: 10px; }
+  .au-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; gap: 5px 10px; align-items: baseline; font-size: 13px; }
+  .au-bar-label { grid-area: label; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .au-bar-value { grid-area: value; font-variant-numeric: tabular-nums; color: var(--text-muted); white-space: nowrap; }
+  .au-bar-value strong { font-family: var(--font-ui); color: var(--text); }
+  .au-bar-track { grid-area: track; display: block; height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .au-bar-fill { display: block; height: 100%; border-radius: 0 4px 4px 0; }
   .rv-legend { list-style: none; display: flex; gap: 14px; margin: 10px 0 0; padding: 0; font-size: 12px; color: var(--text-muted); }
   .rv-legend li { display: inline-flex; align-items: center; gap: 6px; }
   .rv-chart { position: relative; min-height: 190px; margin-top: 8px; }
@@ -489,6 +498,9 @@
     .rv-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
     .rv-kpis .adm-kpi-value { font-size: 15px; white-space: nowrap; }
     .rv-kpis .rv-delta { font-size: 10px; }
+    /* Audience : deux par ligne, à quatre « Pages par visite » était tronqué. */
+    .au-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .au-kpis .adm-kpi-value { font-size: 15px; white-space: nowrap; }
     .rv-grid { gap: 10px; margin-top: 10px; }
     .rv-card { padding: 12px 12px 10px; }
     .rv-chart { min-height: 180px; }
