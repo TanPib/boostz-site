@@ -126,7 +126,7 @@ function invoiceForm(ctx, partner) {
       el('label', { class: 'bz-field' }, el('span', { class: 'bz-label', text: 'Montant (€, sans TVA)' }), amount),
       el('label', { class: 'bz-field' }, el('span', { class: 'bz-label', text: 'Émise le' }), issue),
       el('label', { class: 'bz-field' }, el('span', { class: 'bz-label', text: 'À payer avant le' }), due)),
-    el('p', { class: 'bz-tiny bz-muted', style: { margin: '8px 0 0' }, text: 'Créée en brouillon chez Qonto : rien ne part chez le partenaire avant « Finaliser ». BoostZ est en franchise de TVA : aucune TVA n’est ajoutée.' }),
+    el('p', { class: 'bz-tiny bz-muted', style: { margin: '8px 0 0' }, text: 'Créée en brouillon chez Qonto : rien ne part chez le partenaire avant « Finaliser ». BoostZ est en franchise de TVA : aucune TVA n’est ajoutée, et la ligne porte la mention « TVA non applicable, art. 293 B du CGI ».' }),
     el('div', { class: 'bz-row', style: { justifyContent: 'flex-end', marginTop: '10px' } },
       el('button', { class: 'bz-btn', type: 'button', text: 'Annuler', onclick: () => { bl.invoicing = null; ctx.rerender(); } }),
       el('button', {
