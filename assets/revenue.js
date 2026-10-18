@@ -50,12 +50,13 @@
 //                                                        // affichés : jamais un revenu
 //      qa: { override_active, override_none },           // bascules d'administration
 //      expired,                                          // échéances déjà passées
-//      revenue: { this_month_cents, last_month_cents },  // encaissé, brut
+//      revenue: { this_month_cents, last_month_cents },  // encaissé, brut (TTC), packs compris
 //      new_this_month, churned_this_month,
 //      churn_rate_pct,                                   // départs du mois / actifs au 1er
 //      retention_pct: { m1, m3, m6, m12 },               // null tant qu'il n'y a pas le recul
+//      tests,                                            // achats de test, hors de tous les montants
 //      months: [{ month: "2026-09",                      // du plus ancien au plus récent
-//                 revenue_cents: { monthly, annual },
+//                 revenue_cents: { monthly, annual, packs },  // packs : Boosties et analyses
 //                 active: { monthly, annual },            // actifs en fin de mois
 //                 new: { monthly, annual }, churned: { monthly, annual } }],
 //      cohorts: [{ month: "2026-03", plan,                // all | monthly | annual
@@ -69,9 +70,14 @@ import { call } from './api.js';
 import { el, clear, put, dateFr, dateTimeShort } from './chrome.js';
 
 export const PLANS = { monthly: 'Mensuel', annual: 'Annuel' };
+// Le revenu a une série de plus que les abonnés : les packs, vendus à l'unité
+// (serveur, lib/billing/revenue.js, 17/10/2026). Elle n'existe que là.
+const SERIES_LABELS = { ...PLANS, packs: 'Packs' };
 // Validées par le script du skill dataviz sur le fond des cartes (#171221) :
-// écart de couleur 27,5 en vision normale, 27,3 pour la protanopie.
-const PLAN_COLORS = { monthly: '#9085e9', annual: '#c98500' };
+// écart de couleur 27,5 en vision normale, 27,3 pour la protanopie. Les packs
+// (18/10/2026), validés à trois : pire paire packs/annuel, 19,9 en vision
+// normale, 12,5 pour la protanopie.
+const PLAN_COLORS = { monthly: '#9085e9', annual: '#c98500', packs: '#2fa58e' };
 const PASS_STATUS = {
   active: ['Actif', 'bz-pill is-green'],
   canceled: ['Résilié', 'bz-pill is-amber'],
@@ -183,13 +189,15 @@ function demoOverview(monthsWanted) {
     annualStarts.push(newA);
     rows.push({
       month: key,
-      revenue_cents: { monthly: actM * PRICE_M, annual: (newA + (due - churnA)) * PRICE_A },
+      // Les packs suivent l'audience, une part de la recette des abonnements.
+      revenue_cents: { monthly: actM * PRICE_M, annual: (newA + (due - churnA)) * PRICE_A, packs: Math.round(actM * PRICE_M * (0.18 + r() * 0.06)) },
       active: { monthly: actM, annual: actA },
       new: { monthly: newM, annual: newA },
       churned: { monthly: churnM, annual: churnA }
     });
   }
   const months = rows.slice(-monthsWanted);
+  const sumOf = (o) => o.monthly + o.annual + o.packs;
   const last = rows[rows.length - 1];
   const prev = rows[rows.length - 2];
   const startActive = prev.active.monthly + prev.active.annual;
@@ -215,7 +223,7 @@ function demoOverview(monthsWanted) {
     as_of: now.toISOString(),
     active: { total: last.active.monthly + last.active.annual, monthly: last.active.monthly, annual: last.active.annual, canceling: Math.round(last.active.monthly * 0.07) },
     mrr_cents: last.active.monthly * PRICE_M + Math.round((last.active.annual * PRICE_A) / 12),
-    revenue: { this_month_cents: last.revenue_cents.monthly + last.revenue_cents.annual, last_month_cents: prev.revenue_cents.monthly + prev.revenue_cents.annual },
+    revenue: { this_month_cents: sumOf(last.revenue_cents), last_month_cents: sumOf(prev.revenue_cents) },
     new_this_month: last.new.monthly + last.new.annual,
     churned_this_month: churned,
     churn_rate_pct: startActive ? Math.round((churned / startActive) * 1000) / 10 : null,
@@ -351,11 +359,17 @@ function seriesKeys() {
   return rv.plan === 'all' ? ['monthly', 'annual'] : [rv.plan];
 }
 
+// Les séries du revenu : les packs s'ajoutent quand aucune formule n'est
+// choisie (un filtre « Mensuel » ne montre que le mensuel).
+function revenueKeys() {
+  return rv.plan === 'all' ? ['monthly', 'annual', 'packs'] : [rv.plan];
+}
+
 // Revenus encaissés par mois, empilés par formule.
 function revenueChart(d, phone) {
   return responsiveChart((host, W) => {
     const months = d.months || [];
-    const keys = seriesKeys();
+    const keys = revenueKeys();
     const H = phone ? 190 : 230;
     const m = { top: 18, right: 8, bottom: 24, left: phone ? 40 : 50 };
     const pw = W - m.left - m.right;
@@ -397,7 +411,7 @@ function revenueChart(d, phone) {
         hit.classList.add('is-on');
         tip.show(cx, y(totals[i]), monthLong(row.month), [
           { value: money(totals[i], d.currency), label: 'au total' },
-          ...keys.map((k) => ({ color: PLAN_COLORS[k], value: money((row.revenue_cents || {})[k] || 0, d.currency), label: PLANS[k] }))
+          ...keys.map((k) => ({ color: PLAN_COLORS[k], value: money((row.revenue_cents || {})[k] || 0, d.currency), label: SERIES_LABELS[k] }))
         ]);
       };
       hit.addEventListener('pointerenter', show);
@@ -494,7 +508,7 @@ function tile(label, short, value, sub, delta) {
 
 function legend(keys) {
   if (keys.length < 2) return null;
-  return el('ul', { class: 'rv-legend' }, keys.map((k) => el('li', {}, el('span', { class: 'rv-swatch', style: { background: PLAN_COLORS[k] } }), el('span', { text: PLANS[k] }))));
+  return el('ul', { class: 'rv-legend' }, keys.map((k) => el('li', {}, el('span', { class: 'rv-swatch', style: { background: PLAN_COLORS[k] } }), el('span', { text: SERIES_LABELS[k] }))));
 }
 
 const exampleTag = () => (rv.demo ? el('span', { class: 'rv-example', text: 'Exemple' }) : null);
@@ -516,11 +530,10 @@ function chartCard(id, title, sub, keys, chart, table) {
   return card;
 }
 
-function monthsTable(d, field, format) {
-  const keys = seriesKeys();
+function monthsTable(d, field, format, keys = seriesKeys()) {
   return el('div', { class: 'bz-table-wrap' },
     el('table', { class: 'bz-table rv-table' },
-      el('thead', {}, el('tr', {}, el('th', { text: 'Mois' }), keys.map((k) => el('th', { class: 'is-num', text: PLANS[k] })), keys.length > 1 ? el('th', { class: 'is-num', text: 'Total' }) : null)),
+      el('thead', {}, el('tr', {}, el('th', { text: 'Mois' }), keys.map((k) => el('th', { class: 'is-num', text: SERIES_LABELS[k] })), keys.length > 1 ? el('th', { class: 'is-num', text: 'Total' }) : null)),
       el('tbody', {}, (d.months || []).slice().reverse().map((row) => {
         const vals = keys.map((k) => (row[field] || {})[k] || 0);
         return el('tr', {}, el('td', { text: monthLong(row.month) }), vals.map((v) => el('td', { class: 'is-num', text: format(v) })), keys.length > 1 ? el('td', { class: 'is-num', text: format(vals.reduce((a, b) => a + b, 0)) }) : null);
@@ -658,6 +671,9 @@ const PURCHASE_STATE = {
   paused: ['En pause', 'bz-pill is-grey'],
   expired: ['Expiré', 'bz-pill is-grey'],
   pending: ['Paiement en attente', 'bz-pill is-amber'],
+  // Payé hors du récapitulatif, pas livré tant que le membre n'a pas coché
+  // les cases (serveur, pa-13, 17/10/2026).
+  consent_required: ['Payé, attend les cases', 'bz-pill is-amber'],
   refused_minor: ['Refusé : compte mineur', 'bz-pill is-red'],
   cancelled: ['Annulé', 'bz-pill is-grey'],
   refunded: ['Remboursé', 'bz-pill is-grey']
@@ -701,8 +717,9 @@ async function refundPurchase(p, mode, ctx) {
 function refundButtons(p, ctx) {
   if (p.state === 'refunded' || p.voided_at) return null;
   // Rien n'a été encaissé : un paiement en attente, refusé ou annulé ne se
-  // rembourse pas (Google le rend de lui-même au bout de trois jours).
-  if (['pending', 'refused_minor', 'cancelled'].includes(p.state)) return null;
+  // rembourse pas (Google le rend de lui-même au bout de trois jours). Un
+  // achat qui attend les cases non plus : jamais confirmé, Google le rend seul.
+  if (['pending', 'refused_minor', 'cancelled', 'consent_required'].includes(p.state)) return null;
   const busy = ach.busy.has(p.id);
   return el('div', { class: 'rv-refund', style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' } },
     p.kind === 'pass' ? el('button', { class: 'bz-btn is-sm', type: 'button', disabled: busy, text: 'Rétractation (prorata)', onclick: () => refundPurchase(p, 'prorata', ctx) }) : null,
@@ -882,8 +899,8 @@ export function renderRevenue({ users, phone, rerender, toast = () => {}, ask = 
     el('div', { class: rv.status === 'refreshing' ? 'rv-body is-refreshing' : 'rv-body' },
       kpis,
       el('div', { class: 'rv-grid' },
-        chartCard('revenue', 'Revenus encaissés par mois', 'Brut, par formule' + (rv.plan !== 'all' ? ' · ' + PLANS[rv.plan].toLowerCase() : ''), keys,
-          () => revenueChart(d, phone), () => monthsTable(d, 'revenue_cents', (v) => money(v, cur))),
+        chartCard('revenue', 'Revenus encaissés par mois', rv.plan !== 'all' ? 'Brut (TTC) · ' + PLANS[rv.plan].toLowerCase() : 'Brut (TTC), par formule et packs', revenueKeys(),
+          () => revenueChart(d, phone), () => monthsTable(d, 'revenue_cents', (v) => money(v, cur), revenueKeys())),
         chartCard('active', 'Abonnés actifs dans le temps', 'En fin de mois', keys,
           () => activeChart(d, phone), () => monthsTable(d, 'active', int))
       ),
