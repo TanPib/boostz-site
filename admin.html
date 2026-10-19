@@ -22,6 +22,8 @@
   .adm-kpis { grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px; }
   #toast { position: sticky; top: 64px; z-index: 50; margin-top: 12px; }
   #toast:empty { display: none; }
+  /* Avec le menu latéral, le message s'aligne sur le contenu et ne couvre pas le menu. */
+  @media (min-width: 861px) { #toast { margin-left: 256px; } }
   .adm-split { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-top: 16px; }
   .adm-list-card { flex: 1 1 420px; min-width: 0; padding: 0; overflow: hidden; }
   .adm-detail { flex: 1 1 380px; min-width: 0; position: sticky; top: 76px; }
@@ -716,6 +718,6 @@
     </div>
   </div>
 </main>
-<script type="module" src="assets/page-admin.js?v=2026-10-19f"></script>
+<script type="module" src="assets/page-admin.js?v=2026-10-19g"></script>
 </body>
 </html>

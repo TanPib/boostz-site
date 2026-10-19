@@ -6,16 +6,16 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
-import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-19f';
-import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19f';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-19g';
+import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta } from './beta.js';
-import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19f';
+import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
-import { renderAudience } from './audience.js?v=2026-10-19f';
-import { renderHome } from './home.js?v=2026-10-19f';
-import { renderBilling } from './billing.js?v=2026-10-19f';
-import { renderStudio } from './studio.js?v=2026-10-19f';
+import { renderAudience } from './audience.js?v=2026-10-19g';
+import { renderHome } from './home.js?v=2026-10-19g';
+import { renderBilling } from './billing.js?v=2026-10-19g';
+import { renderStudio } from './studio.js?v=2026-10-19g';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -1804,8 +1804,8 @@ function detailText(a) {
     case 'studio_catalog': return (d.label || d.key || '') + (Number.isInteger(d.to_cents) && d.to_cents !== d.from_cents ? ' · ' + (d.from_cents / 100).toFixed(2).replace('.', ',') + ' € → ' + (d.to_cents / 100).toFixed(2).replace('.', ',') + ' €' : '') + (d.active === false ? ' · retirée' : '');
     case 'studio_client': return (d.step === 'create' ? 'Fiche créée · ' : 'Fiche modifiée · ') + (d.name || '');
     case 'studio_quote': return ({ create: 'Créé', send: 'Envoyé', accept: 'Accepté', refuse: 'Refusé', deliver: 'Livré' }[d.step] || d.step) + ' · ' + (d.client || '') + (d.number ? ' · ' + d.number : '');
-    case 'studio_invoice': return ({ deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels' }[d.purpose] || 'Facture') + ' en brouillon · ' + (d.client || '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
-    case 'studio_contract': return ({ renew: 'Renouvelé', stop: 'Arrêté', restart: 'Repris' }[d.step] || d.step) + ' · ' + (d.client || '');
+    case 'studio_invoice': return ({ deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels', modification: 'Modifications' }[d.purpose] || 'Facture') + ' en brouillon · ' + (d.client || '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
+    case 'studio_contract': return d.step === 'modifications' ? 'Modifications · ' + (d.client || '') + ' · ' + d.pages + ' page' + (d.pages > 1 ? 's' : '') + (d.covered ? ' (' + d.covered + ' incluse' + (d.covered > 1 ? 's' : '') + ')' : '') : ({ renew: 'Renouvelé', stop: 'Arrêté', restart: 'Repris' }[d.step] || d.step) + ' · ' + (d.client || '');
     default: return '';
   }
 }

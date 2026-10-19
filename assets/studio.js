@@ -10,12 +10,12 @@
 // engage. Tout admin lit, seul un super admin agit.
 import { call, API, session } from './api.js';
 import { el, dateShort } from './chrome.js';
-import { money, int } from './revenue.js?v=2026-10-19f';
+import { money, int } from './revenue.js?v=2026-10-19g';
 
 const sw = {
   status: 'idle', data: null, error: null, seq: 0, view: 'quote', busy: new Set(),
   // Le devis en cours de composition.
-  draft: { clientId: '', base: 'five', items: { admin: 1, theme: 1, contact: 1, edits: 5, upkeep: 1 }, overrides: {}, depositPct: 30 },
+  draft: { clientId: '', base: 'five', items: { admin: 1, theme: 1, contact: 1, serenite: 1 }, overrides: {}, depositPct: 30 },
   newClient: false, editingClient: null, clientKind: 'particulier', openQuote: null,
   // Le catalogue : 'new' pour une prestation à créer, sinon la clé modifiée.
   editingItem: null, newItemKind: 'option'
@@ -30,7 +30,10 @@ const QUOTE_STATUS = {
   canceled: ['Annulé', 'bz-pill is-grey']
 };
 const INVOICE_STATUS = { draft: ['Brouillon', 'bz-pill is-grey'], unpaid: ['À payer', 'bz-pill is-violet'], paid: ['Payée', 'bz-pill is-green'], canceled: ['Annulée', 'bz-pill is-grey'] };
-const PURPOSE = { deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels' };
+const PURPOSE = { deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels', modification: 'Modifications' };
+// Ce que tout site comprend, et la règle des évolutions (lib/webStudio.js).
+const INCLUDED = 'Compris dans chaque site : 2 séries de retouches avant la mise en ligne, et 3 mois de garantie sur les bugs. Une évolution (nouvelle page, nouvelle fonction, refonte) fait l’objet d’un devis.';
+const includedText = (n) => (n ? n + (n > 1 ? ' pages modifiées par an incluses' : ' page modifiée par an incluse') : '');
 const dayFr = (d) => (d ? dateShort(d + 'T12:00:00') : '—');
 const today = () => new Date().toISOString().slice(0, 10);
 const eur = (cents) => money(cents);
@@ -93,11 +96,11 @@ function compute(catalog, d) {
     const catalogCents = item.price_cents * q;
     const o = d.overrides[item.key];
     const amount = Number.isFinite(o) ? o : catalogCents;
-    return { key: item.key, kind: item.kind, label: item.label, unit: item.unit, quantity: q, amount_cents: amount, catalog_cents: catalogCents, edited: amount !== catalogCents };
+    return { key: item.key, kind: item.kind, label: item.label, unit: item.unit, quantity: q, amount_cents: amount, catalog_cents: catalogCents, edited: amount !== catalogCents, included_pages: item.included_pages || 0 };
   };
   const lines = [line(base, 1)];
   for (const item of catalog) {
-    if (item.kind === 'formule' || !item.active) continue;
+    if (item.kind === 'formule' || item.kind === 'acte' || !item.active) continue;
     let q = qty(item.key);
     if (!q) continue;
     if (!item.unit) q = 1;
@@ -195,7 +198,7 @@ function quoteView(ctx, canWrite) {
     const toggle = () => { dr.items[item.key] = on ? 0 : (item.key === 'edits' && calc ? calc.sitePages : 1); ctx.rerender(); };
     return el('div', { class: 'st-opt' },
       el('button', { class: 'st-box' + (on ? ' is-on' : ''), type: 'button', role: 'checkbox', 'aria-checked': String(on), 'aria-label': item.label, text: on ? '✓' : '', onclick: toggle }),
-      el('span', { class: 'st-opt-main' }, el('span', { text: item.label }), el('small', { text: item.description || '' })),
+      el('span', { class: 'st-opt-main' }, el('span', { text: item.label }), el('small', { text: [item.description, includedText(item.included_pages)].filter(Boolean).join(', ') })),
       on && item.unit ? stepper(shownQty, (n) => { dr.items[item.key] = item.key === 'edits' && calc ? Math.min(n, calc.sitePages) : n; ctx.rerender(); }) : null,
       el('span', { class: 'st-money st-opt-price', text: eur(item.price_cents * (on && item.unit ? shownQty : 1)) + (item.kind === 'annuel' ? ' / an' : '') + (item.unit && !on ? ' / ' + item.unit : '') }));
   };
@@ -203,7 +206,7 @@ function quoteView(ctx, canWrite) {
     el('h3', { class: 'bz-h3', text: 'Options à la commande' }), el('p', { class: 'bz-tiny bz-muted st-sub', text: 'Payées une fois, avec le site' }),
     catalog.filter((i) => i.kind === 'option' && i.active).map(optionRow));
   const yearly = el('section', { class: 'bz-card st-card' },
-    el('h3', { class: 'bz-h3', text: 'Services annuels' }), el('p', { class: 'bz-tiny bz-muted st-sub', text: 'Dès la livraison, refacturés chaque année' + (calc ? ' · le site a ' + plural(calc.sitePages, 'page') : '') }),
+    el('h3', { class: 'bz-h3', text: 'Services annuels' }), el('p', { class: 'bz-tiny bz-muted st-sub', text: 'Dès la livraison, refacturés chaque année. Après la livraison, une modification se facture à la page modifiée, depuis la fiche du client.' }),
     catalog.filter((i) => i.kind === 'annuel' && i.active).map(optionRow));
 
   // Récapitulatif
@@ -234,6 +237,7 @@ function quoteView(ctx, canWrite) {
       calc.yearly.length ? el('div', { class: 'st-yearly' },
         calc.yearly.map(lineRow),
         el('div', { class: 'st-line st-year-total' }, el('b', { text: 'Puis chaque année, dès la livraison' }), el('b', { class: 'st-money', text: eur(calc.yearTotal) + ' / an' }))) : null,
+      el('p', { class: 'bz-tiny', style: { margin: '0', color: 'var(--soft-violet-text)' }, text: INCLUDED }),
       el('p', { class: 'bz-tiny bz-muted', style: { margin: '0' }, text: 'TVA non applicable, art. 293 B du CGI. Chaque prix se corrige à la main pour ce devis ; ↺ revient au catalogue.' + (client && client.kind === 'particulier' ? ' Particulier : 14 jours de rétractation après signature, sauf demande écrite de commencer avant.' : '') }),
       el('button', {
         class: 'bz-btn is-violet', type: 'button', style: { width: '100%' },
@@ -293,6 +297,26 @@ function invoiceRows(invoices, ctx, canWrite) {
       el('span', { class: cls, text: label }),
       el('span', { class: 'bl-inv-actions' }, actions));
   });
+}
+
+// ---------- Modifications après la livraison ----------
+// Une demande traitée : les pages incluses dans la Formule Sérénité du client
+// sont décomptées d'abord, le reste est facturé à la page modifiée, en
+// brouillon chez Qonto (POST /admin/studio/clients/:id/modifications).
+async function billModifications(client, ctx) {
+  const contract = sw.data.contracts.find((c) => c.client_id === client.id && !c.archived && c.included_pages > 0);
+  const left = contract ? Math.max(0, contract.included_pages - contract.pages_used) : 0;
+  const price = (key) => (sw.data.catalog.find((i) => i.key === key) || {}).price_cents;
+  const unit = contract ? price('modif-serenite') : price('modif');
+  const v = await ctx.ask({
+    title: 'Modifications pour ' + client.name,
+    text: (contract ? 'Formule Sérénité : ' + plural(left, 'page') + ' incluse' + (left > 1 ? 's' : '') + ' restante' + (left > 1 ? 's' : '') + ' cette année, puis ' : 'Sans Formule Sérénité : ') + (unit ? eur(unit) : '—') + ' par page modifiée, toutes les retouches de la page comprises. Ce qui reste à payer part en brouillon chez Qonto.',
+    fields: [{ name: 'pages', label: 'Nombre de pages modifiées', required: true, placeholder: '1' }, { name: 'detail', label: 'Quelles pages (écrit sur la facture)', placeholder: 'Accueil, Contact' }],
+    confirmLabel: 'Enregistrer'
+  });
+  if (!v) return;
+  act('modif:' + client.id, () => call('/admin/studio/clients/' + encodeURIComponent(client.id) + '/modifications', { method: 'POST', body: { pages: v.pages, detail: v.detail } }), ctx,
+    (r) => (!r ? '' : r.billed ? plural(r.billed, 'page') + ' à facturer (' + eur(r.amount_cents) + ') : brouillon créé chez Qonto' + (r.covered ? ', ' + plural(r.covered, 'page') + ' incluse' + (r.covered > 1 ? 's' : '') + ' dans la Sérénité.' : '.') : plural(r.covered, 'page') + ' incluse' + (r.covered > 1 ? 's' : '') + ' dans la Formule Sérénité : rien à facturer.'));
 }
 
 // ---------- Devis et projets ----------
@@ -364,6 +388,7 @@ function contractsView(ctx, canWrite) {
           c.archived ? el('span', { class: 'bz-pill is-grey', text: 'Arrêté' }) : el('span', { class: soon ? 'bz-pill is-amber' : 'bz-pill is-grey', text: c.due_in_days < 0 ? 'échu depuis ' + plural(-c.due_in_days, 'jour') : 'échéance ' + dayFr(c.next_due_on) })),
         el('span', { class: 'bl-inv-actions' },
           el('b', { class: 'bl-inv-amount', text: eur(c.amount_cents) + ' / an' }),
+          canWrite && !c.archived ? btn('Facturer des modifications', () => billModifications({ id: c.client_id, name: c.client_name }, ctx)) : null,
           canWrite && !c.archived ? btn(sw.busy.has(k) ? 'Création…' : 'Facturer le renouvellement', async () => {
             const ok = await ctx.ask({ title: 'Facturer le renouvellement ?', text: c.label + ' · ' + eur(c.amount_cents) + ' pour ' + c.client_name + '. La facture est créée en brouillon chez Qonto, et l’échéance passe au ' + dayFr(c.next_due_on.replace(/^(\d{4})/, (y) => String(Number(y) + 1))) + '.', confirmLabel: 'Créer la facture' });
             if (ok) act(k, () => call('/admin/studio/contracts/' + encodeURIComponent(c.id) + '/renew', { method: 'POST' }), ctx, 'Renouvellement créé en brouillon.');
@@ -372,6 +397,7 @@ function contractsView(ctx, canWrite) {
             const ok = c.archived || await ctx.ask({ title: 'Arrêter ce contrat ?', text: 'Le client ne renouvelle pas : la console ne proposera plus de le facturer.', confirmLabel: 'Arrêter', tone: 'red' });
             if (ok) act('stop:' + c.id, () => call('/admin/studio/contracts/' + encodeURIComponent(c.id), { method: 'PATCH', body: { archived: !c.archived } }), ctx, c.archived ? 'Contrat repris.' : 'Contrat arrêté.');
           }) : null)),
+      c.included_pages ? el('p', { class: 'bz-tiny ' + (c.pages_used >= c.included_pages ? 'bl-warn' : 'bz-muted'), style: { margin: '4px 0 0' }, text: 'Pages modifiées cette année : ' + c.pages_used + ' sur ' + c.included_pages + ' incluses' + (c.pages_used >= c.included_pages ? ' · les suivantes au tarif Sérénité' : '') }) : null,
       c.invoices.length ? el('div', { class: 'bl-invs' }, invoiceRows(c.invoices, ctx, canWrite)) : null);
   }));
 }
@@ -391,6 +417,7 @@ function clientsView(ctx, canWrite) {
             c.qonto_linked ? el('span', { class: 'bz-pill is-green', text: 'Qonto' }) : null),
           el('span', { class: 'bl-inv-actions' },
             btn('Nouveau devis', () => { sw.draft.clientId = c.id; sw.view = 'quote'; ctx.rerender(); window.scrollTo({ top: 0 }); }),
+            canWrite ? btn('Facturer des modifications', () => billModifications(c, ctx)) : null,
             canWrite ? btn('Modifier', () => { sw.editingClient = c.id; ctx.rerender(); }) : null)),
         el('p', { class: 'bz-small bz-muted bl-partner-meta', text: [c.email, c.phone, [c.street, c.postal_code, c.city].filter(Boolean).join(' '), c.siren ? 'SIREN ' + c.siren : null].filter(Boolean).join(' · ') || 'Fiche à compléter' }),
         c.missing_for_qonto.length ? el('p', { class: 'bz-tiny bl-warn', style: { margin: '2px 0 0' }, text: 'Avant le premier devis, il manque ' + c.missing_for_qonto.join(' et ') + '.' }) : null,
@@ -399,7 +426,7 @@ function clientsView(ctx, canWrite) {
 }
 
 // ---------- Catalogue ----------
-const KIND = { formule: ['Formule', 'bz-pill is-violet'], option: ['Option', 'bz-pill is-grey'], annuel: ['Annuel', 'bz-pill is-green'] };
+const KIND = { formule: ['Formule', 'bz-pill is-violet'], option: ['Option', 'bz-pill is-grey'], annuel: ['Annuel', 'bz-pill is-green'], acte: ['À l’acte', 'bz-pill is-amber'] };
 
 // La grille tarifaire : un PDF tiré du catalogue par le serveur. Téléchargé
 // avec la session (fetch), puis enregistré par le navigateur.
@@ -437,7 +464,7 @@ function itemForm(ctx, item) {
   };
   let unit = null;
   const kinds = item ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Type de prestation' },
-    [['formule', 'Formule'], ['option', 'Option'], ['annuel', 'Service annuel']].map(([id, label]) => el('button', {
+    [['formule', 'Formule'], ['option', 'Option'], ['annuel', 'Service annuel'], ['acte', 'À l’acte']].map(([id, label]) => el('button', {
       class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(kind === id), onclick: () => { sw.newItemKind = id; ctx.rerender(); }
     }, label)));
   if (!item && kind !== 'formule') {
@@ -464,7 +491,8 @@ function itemForm(ctx, item) {
       field('description_en', 'Ce qui est inclus (anglais)', item && item.description_en, { wide: true }),
       field('price', 'Prix (€' + (kind === 'annuel' ? ' par an' : '') + ')', item ? String(item.price_cents / 100).replace('.', ',') : '', { inputmode: 'decimal' }),
       unit ? el('label', { class: 'bz-field' }, el('span', { class: 'bz-label', text: 'Unité' }), unit) : null,
-      !item && kind === 'formule' ? field('base_pages', 'Pages comprises', '5', { type: 'number' }) : null),
+      !item && kind === 'formule' ? field('base_pages', 'Pages comprises', '5', { type: 'number' }) : null,
+      kind === 'annuel' ? field('included_pages', 'Pages modifiées incluses par an', item && item.included_pages ? String(item.included_pages) : '', { type: 'number' }) : null),
     el('p', { class: 'bz-tiny bz-muted', style: { margin: '8px 0 0' }, text: 'Sans libellé anglais, la grille anglaise reprend le français. ' + (item ? 'Le type et l’unité d’une prestation existante ne changent pas : un devis s’appuie dessus.' : 'Une option « par page » ou « par langue » aura un compteur dans le devis.') }),
     el('div', { class: 'bz-row', style: { justifyContent: 'flex-end', marginTop: '10px' } },
       btn('Annuler', () => { sw.editingItem = null; ctx.rerender(); }),
@@ -485,13 +513,13 @@ function catalogView(ctx, canWrite) {
         el('thead', {}, el('tr', {}, el('th', { text: 'Prestation' }), el('th', { text: 'Type' }), el('th', { text: 'Ce qui est inclus' }), el('th', { class: 'is-num', text: 'Prix' }), el('th', { text: 'Proposée' }), el('th'))),
         el('tbody', {}, sw.data.catalog.map((i) => {
           const [kl, kc] = KIND[i.kind] || [i.kind, 'bz-pill'];
-          const unitText = (i.kind === 'annuel' ? '€ / an' : '€') + (i.unit ? ' par ' + i.unit : '');
+          const unitText = (i.kind === 'annuel' ? '€ / an' : '€') + (i.kind === 'acte' && i.unit === 'page' ? ' par page modifiée' : i.unit ? ' par ' + i.unit : '');
           const input = el('input', { class: 'st-price', type: 'number', min: '0', step: '1', value: String(i.price_cents / 100), disabled: !canWrite, 'aria-label': 'Prix de ' + i.label,
             onchange: (e) => act('cat:' + i.key, () => call('/admin/studio/catalog/' + encodeURIComponent(i.key), { method: 'PATCH', body: { price: e.target.value } }), ctx, i.label + ' : prix enregistré.') });
           return el('tr', { class: i.active ? '' : 'st-off' },
             el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: i.label }), el('div', { class: 'bz-tiny ' + (i.label_en ? 'bz-muted' : 'bl-warn'), text: i.label_en ? 'EN · ' + i.label_en : 'Pas de libellé anglais' })),
             el('td', {}, el('span', { class: kc, text: kl }), i.base_pages ? el('div', { class: 'bz-tiny bz-muted', text: plural(i.base_pages, 'page') }) : null),
-            el('td', { class: 'bz-muted', text: i.description || '' }),
+            el('td', { class: 'bz-muted', text: [i.description, includedText(i.included_pages)].filter(Boolean).join(', ') }),
             el('td', { class: 'is-num' }, el('span', { class: 'st-price-cell' }, input, el('span', { class: 'bz-tiny bz-muted', text: unitText }))),
             el('td', {}, el('input', { type: 'checkbox', checked: i.active, disabled: !canWrite, 'aria-label': 'Proposer ' + i.label,
               onchange: (e) => act('cat:' + i.key, () => call('/admin/studio/catalog/' + encodeURIComponent(i.key), { method: 'PATCH', body: { active: e.target.checked } }), ctx, e.target.checked ? i.label + ' : de nouveau proposée.' : i.label + ' : retirée des nouveaux devis et de la grille.') })),
