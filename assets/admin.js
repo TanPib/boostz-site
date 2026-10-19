@@ -6,15 +6,16 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
-import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-18d';
-import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-18d';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-19e';
+import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19e';
 import { renderBeta } from './beta.js';
-import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-18d';
+import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19e';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
-import { renderAudience } from './audience.js?v=2026-10-18d';
-import { renderHome } from './home.js?v=2026-10-18d';
-import { renderBilling } from './billing.js?v=2026-10-18d';
+import { renderAudience } from './audience.js?v=2026-10-19e';
+import { renderHome } from './home.js?v=2026-10-19e';
+import { renderBilling } from './billing.js?v=2026-10-19e';
+import { renderStudio } from './studio.js?v=2026-10-19e';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -115,7 +116,13 @@ const ACTIONS = {
   source_restore: 'Source rétablie',
   // L'onglet Facturation (18/10/2026).
   billing_partner: 'Partenaire facturé',
-  billing_invoice: 'Facture partenaire'
+  billing_invoice: 'Facture (Qonto)',
+  // L'onglet Sites web (19/10/2026).
+  studio_catalog: 'Catalogue sites web',
+  studio_client: 'Client sites web',
+  studio_quote: 'Devis sites web',
+  studio_invoice: 'Facture sites web',
+  studio_contract: 'Contrat sites web'
 };
 // Les champs d'une fiche boutique corrigés dans la console, nommés en français
 // dans le journal : le serveur y écrit les clés de l'API.
@@ -155,7 +162,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
+const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', studio: 'Sites web', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -181,6 +188,8 @@ const ICONS = {
   chevron: 'M9 6l6 6-6 6',
   back: 'M15 6l-6 6 6 6',
   revenue: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  // Un globe, pour l'activité sites web de l'EI.
+  studio: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z',
   // Un reçu, pour la facturation des partenaires.
   billing: 'M5 3v18l2.5-1.5L10 21l2-1.5 2 1.5 2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5 5 3ZM9 9h6M9 13h6M9 17h3',
   // Un œil, pour l'audience du site.
@@ -1791,6 +1800,12 @@ function detailText(a) {
     // L'onglet Facturation : la fiche, ou l'étape de la facture et son montant.
     case 'billing_partner': return (d.step === 'create' ? 'Fiche créée · ' : 'Fiche modifiée · ') + (d.name || '');
     case 'billing_invoice': return ({ create: 'Brouillon créé', finalize: 'Finalisée', cancel: 'Annulée' }[d.step] || d.step) + ' · ' + (d.partner || '') + (d.number ? ' · ' + d.number : '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
+    // L'onglet Sites web : l'étape et ce qu'elle concerne.
+    case 'studio_catalog': return (d.label || d.key || '') + (Number.isInteger(d.to_cents) && d.to_cents !== d.from_cents ? ' · ' + (d.from_cents / 100).toFixed(2).replace('.', ',') + ' € → ' + (d.to_cents / 100).toFixed(2).replace('.', ',') + ' €' : '') + (d.active === false ? ' · retirée' : '');
+    case 'studio_client': return (d.step === 'create' ? 'Fiche créée · ' : 'Fiche modifiée · ') + (d.name || '');
+    case 'studio_quote': return ({ create: 'Créé', send: 'Envoyé', accept: 'Accepté', refuse: 'Refusé', deliver: 'Livré' }[d.step] || d.step) + ' · ' + (d.client || '') + (d.number ? ' · ' + d.number : '');
+    case 'studio_invoice': return ({ deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels' }[d.purpose] || 'Facture') + ' en brouillon · ' + (d.client || '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
+    case 'studio_contract': return ({ renew: 'Renouvelé', stop: 'Arrêté', restart: 'Repris' }[d.step] || d.step) + ' · ' + (d.client || '');
     default: return '';
   }
 }
@@ -1853,7 +1868,9 @@ const NAV = [
   ['Pilotage', [['todo', 't'], ['audience', 'a'], ['revenue', 'r'], ['billing', 'f']]],
   ['Membres', [['users', 'u'], ['reports', 's'], ['support', 'p']]],
   ['Contenus', [['venues', 'b'], ['ideas', 'i'], ['sources', 'c'], ['data', 'd']]],
-  ['Outils', [['agent', 'e'], ['journal', 'j'], ['beta', 'k']]]
+  ['Outils', [['agent', 'e'], ['journal', 'j'], ['beta', 'k']]],
+  // L'activité de création de sites de l'EI, sans lien avec l'appli.
+  ['Hors appli', [['studio', 'w']]]
 ];
 const NAV_KEYS = Object.fromEntries(NAV.flatMap(([, items]) => items.map(([id, key]) => [key, id])));
 
@@ -1941,7 +1958,7 @@ function goTo(tab) {
 // ces pages est affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'revenue', 'billing', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
+const MORE_TABS = ['todo', 'revenue', 'billing', 'studio', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -1998,6 +2015,7 @@ function render() {
           narrow: NARROW.matches, phone, pane: state.pane, openPane, closePane, paneTop, backButton, paneHead
         })
         : state.tab === 'agent' ? renderAgent()
+          : state.tab === 'studio' ? renderStudio({ me: state.me, rerender: () => { if (state.tab === 'studio') render(); }, toast, ask })
           : state.tab === 'billing' ? renderBilling({ me: state.me, rerender: () => { if (state.tab === 'billing') render(); }, toast, ask })
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); }, toast, ask })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
@@ -2016,7 +2034,7 @@ function render() {
   // dit plus en surbrillance seulement. L'accueil a le sien.
   const title = wide && state.tab !== 'home' ? el('h1', { class: 'bz-h2 adm-section-title', text: SECTIONS[state.tab] }) : null;
   const tabs = phone || wide ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginBottom: '20px' } },
-    tab('home'), tab('todo', c.todo), tab('users'), tab('revenue'), tab('billing'), tab('audience'),
+    tab('home'), tab('todo', c.todo), tab('users'), tab('revenue'), tab('billing'), tab('studio'), tab('audience'),
     tab('reports', c.reports), tab('support', c.tickets), tab('venues', c.venues), tab('ideas', c.ideas),
     tab('agent'), tab('journal'),
     tab('data', c.data, 'is-red'),
