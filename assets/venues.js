@@ -1225,7 +1225,7 @@ function hostingMembersText(n) {
 // l'appli (Ma fiche boutique › Échanges chez toi). Une boutique qui n'est pas
 // partenaire n'accueille rien, quelle que soit sa pause : elle garde pourtant
 // ses membres, qui la retrouvent si le partenariat reprend. Sans horaires ni
-// créneaux, l'appli propose un RDV chaque jour de 9 h à 21 h : la ligne le
+// créneaux, l'appli propose un RDV chaque jour de 8 h à 19 h : la ligne le
 // dit. Rien quand le serveur ne rend pas encore `hosting` (avant le lot C), ni
 // pour une boutique non partenaire qui n'a rien à dire (aucun membre, pas en
 // pause, aux heures d'ouverture) : c'est presque tout l'annuaire, et « inactif,
@@ -1241,7 +1241,7 @@ function hostingSection(v, flags) {
       : el('span', { class: 'bz-pill is-green', text: 'Ouvert' });
   const openingHours = !!(v.profile && v.profile.hours);
   const mode = h.uses_opening_hours
-    ? (openingHours ? 'aux heures d’ouverture' : 'aux heures d’ouverture · aucune saisie, de 9 h à 21 h')
+    ? (openingHours ? 'aux heures d’ouverture' : 'aux heures d’ouverture · aucune saisie, de 8 h à 19 h')
     : 'créneaux choisis';
   return el('div', { class: 'adm-quote' },
     el('span', { class: 'bz-eyebrow', text: 'Accueil des échanges' }),

@@ -11,7 +11,7 @@ import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
-import { loadVenues, renderVenues, venuesPendingCount } from './venues.js?v=2026-10-19h';
+import { loadVenues, renderVenues, venuesPendingCount } from './venues.js?v=2026-10-19i';
 import { renderAudience } from './audience.js?v=2026-10-19g';
 import { renderHome } from './home.js?v=2026-10-19g';
 import { renderBilling } from './billing.js?v=2026-10-19g';
