@@ -11,7 +11,7 @@ import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
-import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
+import { loadVenues, renderVenues, venuesPendingCount } from './venues.js?v=2026-10-19h';
 import { renderAudience } from './audience.js?v=2026-10-19g';
 import { renderHome } from './home.js?v=2026-10-19g';
 import { renderBilling } from './billing.js?v=2026-10-19g';
@@ -971,31 +971,37 @@ function renderReports() {
       class: 'bz-btn is-sm is-' + tone, type: 'button', text: label, disabled: r.status === status,
       onclick: () => setStatus(status, label.toLowerCase())
     });
+    // Masquer un contenu de boutique se motive (conditions des boutiques,
+    // art. 10, 19/10/2026) : le serveur refuse sans motif, et l'envoie aux
+    // gérants de la boutique, dans l'appli et par courriel.
+    const shopHideFields = [{ name: 'reason', label: 'Motif (envoyé aux gérants de la boutique)', type: 'textarea', required: true, placeholder: 'Ex. : propos injurieux envers l’auteur de l’avis.' }];
     // Une réponse de boutique signalée se masque d'ici ; la réafficher se fait
     // depuis la fiche de la boutique (onglet Boutiques › Annuaire).
     const hideReply = async () => {
-      const ok = await ask({
+      const values = await ask({
         title: 'Masquer cette réponse',
-        text: 'Les membres ne la verront plus. Les gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier.',
+        text: 'Les membres ne la verront plus. Les gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier. Ils reçoivent le motif.',
+        fields: shopHideFields,
         confirmLabel: 'Masquer', tone: 'red'
       });
-      if (!ok) return;
+      if (!values) return;
       run(async () => {
-        await call('/admin/venues/replies/' + r.context_id, { method: 'PATCH', body: { hidden: true } });
+        await call('/admin/venues/replies/' + r.context_id, { method: 'PATCH', body: { hidden: true, reason: values.reason } });
         await after('Réponse masquée.', loadReports);
       });
     };
     // Un événement signalé se masque d'ici ; le réafficher se fait depuis la
     // fiche de la boutique (onglet Boutiques › Annuaire).
     const hideEvent = async () => {
-      const ok = await ask({
+      const values = await ask({
         title: 'Masquer cet événement',
-        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. ' + (inSeries ? 'Seule cette date est masquée : les autres dates de la série restent, et l’avis de la série, envoyé une seule fois, ne change pas.' : 'La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.'),
+        text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier ; ils reçoivent le motif. ' + (inSeries ? 'Seule cette date est masquée : les autres dates de la série restent, et l’avis de la série, envoyé une seule fois, ne change pas.' : 'La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.'),
+        fields: shopHideFields,
         confirmLabel: 'Masquer', tone: 'red'
       });
-      if (!ok) return;
+      if (!values) return;
       run(async () => {
-        await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true } });
+        await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true, reason: values.reason } });
         await after('Événement masqué.', loadReports);
       });
     };
@@ -1005,14 +1011,15 @@ function renderReports() {
     const alreadyHidden = r.context_type === 'venue_event' && typeof r.content === 'string' && r.content.startsWith('[Masqué]');
     const seriesHidden = inSeries && r.content.includes('[Série masquée]');
     const hideSeries = async () => {
-      const ok = await ask({
+      const values = await ask({
         title: 'Masquer toute la série',
-        text: 'Les membres ne verront plus aucune date de cette série, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+        text: 'Les membres ne verront plus aucune date de cette série, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier ; ils reçoivent le motif. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+        fields: shopHideFields,
         confirmLabel: 'Masquer la série', tone: 'red'
       });
-      if (!ok) return;
+      if (!values) return;
       run(async () => {
-        await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true, scope: 'series' } });
+        await call('/admin/venues/events/' + encodeURIComponent(r.context_id), { method: 'PATCH', body: { hidden: true, scope: 'series', reason: values.reason } });
         await after('Série masquée.', loadReports);
       });
     };

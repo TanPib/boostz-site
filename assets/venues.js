@@ -770,9 +770,45 @@ async function venueGesture(ctx, v, send, { message, reset = [], busy = true }) 
   await ctx.after(typeof message === 'function' ? message(fresh || v) : message, loadDirectory);
 }
 
-function setPartner(ctx, v, next) {
-  return venueGesture(ctx, v, () => call(venuePath(v), { method: 'PATCH', body: { partner: next } }), {
-    message: next ? v.name + ' est partenaire.' : v.name + ' n’est plus partenaire.',
+// LA FIN D'UN STATUT OU D'UN ACCÈS SE MOTIVE ET S'ANNONCE (conditions des
+// boutiques, art. 10, 19/10/2026) : le motif part à la boutique, et la fin
+// attend 30 jours, sauf obligation légale ou manquements répétés. Le serveur
+// refuse sans motif, et prévient lui-même les gérants (dans l'appli et par
+// courriel, sans réglage qui l'en empêche).
+const END_FIELDS = [
+  { name: 'reason', label: 'Motif (envoyé à la boutique)', type: 'textarea', required: true, placeholder: 'Ex. : plus aucun événement publié depuis six mois (article 3).' },
+  {
+    name: 'mode', label: 'Délai', type: 'select',
+    options: [
+      { value: 'notice', label: 'Dans 30 jours : la règle' },
+      { value: 'legal', label: 'Tout de suite : obligation légale ou réglementaire' },
+      { value: 'repeated_breach', label: 'Tout de suite : manquements répétés aux conditions' }
+    ]
+  }
+];
+// Masquer un contenu : un motif, envoyé aux gérants, et c'est tout.
+const HIDE_FIELDS = [
+  { name: 'reason', label: 'Motif (envoyé aux gérants de la boutique)', type: 'textarea', required: true, placeholder: 'Ex. : propos injurieux envers l’auteur de l’avis.' }
+];
+const endBody = (values) => ({ end_reason: values.reason, end_mode: values.mode });
+// Une fin déjà annoncée ne s'avance que par une des deux exceptions : la boîte
+// ne propose alors plus la règle des 30 jours, que le serveur refuserait.
+const endFields = (alreadyAnnounced) => (alreadyAnnounced
+  ? [END_FIELDS[0], { ...END_FIELDS[1], options: END_FIELDS[1].options.filter((o) => o.value !== 'notice') }]
+  : END_FIELDS);
+
+// `end` : les valeurs de la boîte de dialogue, pour retirer le statut. Sans
+// elle, le statut est donné, ou la fin annoncée annulée.
+function setPartner(ctx, v, next, end = null) {
+  const body = next ? { partner: true } : { partner: false, ...endBody(end) };
+  return venueGesture(ctx, v, () => call(venuePath(v), { method: 'PATCH', body }), {
+    message: (f) => {
+      const endsAt = f.profile && f.profile.partner_ends_at;
+      if (next) return v.profile && v.profile.partner_ends_at ? v.name + ' reste partenaire : la fin annoncée est annulée, et la boutique prévenue.' : v.name + ' est partenaire.';
+      return endsAt
+        ? v.name + ' reste partenaire jusqu’au ' + dateFr(endsAt) + ' : la boutique est prévenue.'
+        : v.name + ' n’est plus partenaire : la boutique est prévenue.';
+    },
     busy: { partner: next }
   });
 }
@@ -832,15 +868,29 @@ async function clearProfile(ctx, v) {
 
 async function removeManager(ctx, v, m) {
   if (dir.busy) return;
-  const ok = await ctx.ask({
+  const values = await ctx.ask({
     title: 'Retirer ' + (m.pseudo || 'ce gérant') + ' des gérants',
-    // Le serveur ne prévient pas le gérant retiré (routes/adminVenues.js).
-    text: (m.pseudo || 'Ce compte') + ' ne pourra plus tenir la fiche de ' + v.name + ' depuis l’appli. Il n’en est pas prévenu.',
+    text: (m.pseudo || 'Ce compte') + ' est prévenu du motif et de la date, dans l’appli et par courriel. Dans 30 jours, il garde la fiche jusque-là ; tout de suite, seulement pour une obligation légale ou des manquements répétés.',
+    fields: endFields(!!m.ends_at),
     confirmLabel: 'Retirer', tone: 'red'
   });
-  if (!ok) return;
-  return venueGesture(ctx, v, () => call(venuePath(v) + '/managers/' + encodeURIComponent(m.user_id), { method: 'DELETE' }), {
-    message: (m.pseudo || 'Ce compte') + ' ne gère plus ' + v.name + '.'
+  if (!values) return;
+  const who = m.pseudo || 'Ce compte';
+  return venueGesture(ctx, v, () => call(venuePath(v) + '/managers/' + encodeURIComponent(m.user_id), { method: 'DELETE', body: endBody(values) }), {
+    message: (f) => {
+      const still = (f.managers || []).find((x) => x.user_id === m.user_id);
+      return still && still.ends_at
+        ? who + ' gère ' + v.name + ' jusqu’au ' + dateFr(still.ends_at) + ' : il est prévenu.'
+        : who + ' ne gère plus ' + v.name + ' : il est prévenu.';
+    }
+  });
+}
+
+// Annuler la fin annoncée d'un accès : affilier de nouveau le même compte,
+// que le serveur reconnaît et prévient.
+function keepManager(ctx, v, m) {
+  return venueGesture(ctx, v, () => call(venuePath(v) + '/managers', { method: 'POST', body: { identifier: m.email } }), {
+    message: (m.pseudo || 'Ce compte') + ' garde la fiche de ' + v.name + ' : la fin annoncée est annulée.'
   });
 }
 
@@ -1001,15 +1051,18 @@ function typedSection(ctx, v, busy) {
 // plus la modifier. Le serveur l'inscrit au journal (« Réponse de boutique »).
 async function setReplyHidden(ctx, v, r, hidden) {
   if (dir.busy) return;
+  let reason;
   if (hidden) {
-    const ok = await ctx.ask({
+    const values = await ctx.ask({
       title: 'Masquer cette réponse',
-      text: 'Les membres ne la verront plus. Les gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier.',
+      text: 'Les membres ne la verront plus. Les gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier. Ils reçoivent le motif, dans l’appli et par courriel.',
+      fields: HIDE_FIELDS,
       confirmLabel: 'Masquer', tone: 'red'
     });
-    if (!ok) return;
+    if (!values) return;
+    reason = values.reason;
   }
-  return venueGesture(ctx, v, () => call('/admin/venues/replies/' + r.id, { method: 'PATCH', body: { hidden } }), {
+  return venueGesture(ctx, v, () => call('/admin/venues/replies/' + r.id, { method: 'PATCH', body: { hidden, reason } }), {
     message: hidden ? 'Réponse masquée.' : 'Réponse réaffichée.'
   });
 }
@@ -1046,30 +1099,36 @@ function repliesSection(ctx, v, busy) {
 // modifier. Le serveur l'inscrit au journal (« Événement de boutique »).
 async function setEventHidden(ctx, v, e, hidden) {
   if (dir.busy) return;
+  let reason;
   if (hidden) {
-    const ok = await ctx.ask({
+    const values = await ctx.ask({
       title: 'Masquer cet événement',
-      text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+      text: 'Les membres ne le verront plus, ni sur la fiche ni dans les Tournois du département. Ses gérants le voient encore, marqué comme masqué, et ne peuvent plus le modifier ; ils reçoivent le motif. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+      fields: HIDE_FIELDS,
       confirmLabel: 'Masquer', tone: 'red'
     });
-    if (!ok) return;
+    if (!values) return;
+    reason = values.reason;
   }
-  return venueGesture(ctx, v, () => call('/admin/venues/events/' + encodeURIComponent(e.id), { method: 'PATCH', body: { hidden } }), {
+  return venueGesture(ctx, v, () => call('/admin/venues/events/' + encodeURIComponent(e.id), { method: 'PATCH', body: { hidden, reason } }), {
     message: hidden ? 'Événement masqué.' : 'Événement réaffiché.'
   });
 }
 
 async function setSeriesHidden(ctx, v, s, hidden) {
   if (dir.busy) return;
+  let reason;
   if (hidden) {
-    const ok = await ctx.ask({
+    const values = await ctx.ask({
       title: 'Masquer cette série',
-      text: 'Les membres ne verront plus aucune de ses dates, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+      text: 'Les membres ne verront plus aucune de ses dates, ni sur la fiche ni dans les Tournois du département, et aucune date ne s’ajoute. Ses gérants la voient encore, marquée comme masquée, et ne peuvent plus la modifier ; ils reçoivent le motif. La notification déjà reçue par les membres devient « événement masqué » ; un e-mail déjà parti ne se rappelle pas.',
+      fields: HIDE_FIELDS,
       confirmLabel: 'Masquer', tone: 'red'
     });
-    if (!ok) return;
+    if (!values) return;
+    reason = values.reason;
   }
-  return venueGesture(ctx, v, () => call('/admin/venues/event-series/' + encodeURIComponent(s.id), { method: 'PATCH', body: { hidden } }), {
+  return venueGesture(ctx, v, () => call('/admin/venues/event-series/' + encodeURIComponent(s.id), { method: 'PATCH', body: { hidden, reason } }), {
     message: hidden ? 'Série masquée.' : 'Série réaffichée.'
   });
 }
@@ -1229,15 +1288,19 @@ function venueFiche(ctx, v) {
   partnerBox.addEventListener('change', async () => {
     const next = partnerBox.checked;
     if (!next) {
-      const ok = await ctx.ask({
+      const values = await ctx.ask({
         title: 'Retirer le statut partenaire',
-        text: v.name + ' perd son badge PARTENAIRE, sa place en tête de liste et sa place parmi les lieux de RDV proposés. Sa date de partenariat est effacée. Les RDV déjà fixés chez elle restent. Ses événements déjà publiés restent affichés ; elle n’en publie plus, et ses séries n’ajoutent plus de dates.',
+        text: 'À la date de fin, ' + v.name + ' perd son badge PARTENAIRE, sa place en tête de liste et sa place parmi les lieux de RDV proposés. Les RDV déjà fixés chez elle restent ; ses événements publiés restent affichés, elle n’en publie plus. Ses gérants reçoivent le motif et la date, dans l’appli et par courriel ; dans 30 jours, elle reste partenaire jusque-là.',
+        fields: endFields(!!(v.profile && v.profile.partner_ends_at)),
         confirmLabel: 'Retirer', tone: 'red'
       });
-      if (!ok) { partnerBox.checked = true; return; }
+      if (!values) { partnerBox.checked = true; return; }
+      return setPartner(ctx, v, false, values);
     }
-    setPartner(ctx, v, next);
+    setPartner(ctx, v, true);
   });
+  // Une fin annoncée : la date, le motif envoyé, et de quoi l'annuler.
+  const partnerEndsAt = v.profile && v.profile.partner_ends_at;
 
   const note = el('textarea', { id: 'vd-note', class: 'bz-input', rows: '3', maxlength: '500', placeholder: 'Ex. : Contact : Julie, le samedi. Tournoi Lorcana chaque mois.' });
   note.value = d.note;
@@ -1306,7 +1369,12 @@ function venueFiche(ctx, v) {
       el('span', { class: 'bz-eyebrow', text: 'Partenaire' }),
       el('label', { class: 'bz-check', style: { margin: '6px -10px 0' } }, partnerBox,
         el('span', { text: flags.is_partner ? 'Partenaire depuis le ' + dateFr(v.profile.partner_since) : 'Pas partenaire' })),
-      el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire porte le badge PARTENAIRE, passe en tête de liste dans son département, et les membres peuvent le choisir comme lieu de RDV. L’appli dit aux membres que la place en tête de liste est réservée aux boutiques partenaires de Boostz.' })),
+      partnerEndsAt ? el('div', { class: 'bz-stack', style: { gap: '4px', marginTop: '6px' } },
+        el('span', { class: 'bz-pill is-amber', style: { alignSelf: 'flex-start' }, text: 'Fin annoncée le ' + dateFr(partnerEndsAt) }),
+        v.profile.partner_end_reason ? el('span', { class: 'bz-tiny', style: { overflowWrap: 'anywhere' }, text: 'Motif envoyé : ' + v.profile.partner_end_reason }) : null,
+        el('div', { class: 'bz-row' },
+          el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Annuler la fin annoncée', disabled: busy, onclick: () => setPartner(ctx, v, true) }))) : null,
+      el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire porte le badge PARTENAIRE, passe en tête de liste dans son département, et les membres peuvent le choisir comme lieu de RDV. L’appli dit aux membres que les partenaires sont liés à BoostZ par une convention de partenariat et apparaissent en premier.' })),
     hostingSection(v, flags),
     el('div', { class: 'bz-field', style: { marginTop: '14px' } },
       el('label', { class: 'bz-label', for: 'vd-note' }, 'Note interne · ', el('small', { text: 'lue par les seuls admins' })),
@@ -1319,8 +1387,10 @@ function venueFiche(ctx, v) {
         ? el('div', {}, managers.map((m) => el('div', { class: 'bz-row', style: { gap: '8px', flexWrap: 'nowrap', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,.06)' } },
           el('span', { style: { flex: '1', minWidth: '0' } },
             el('b', { style: { display: 'block', fontFamily: 'var(--font-ui)', fontSize: '13px', overflowWrap: 'anywhere' }, text: m.pseudo || '—' }),
-            el('span', { class: 'bz-tiny', style: { display: 'block', overflowWrap: 'anywhere' }, text: [m.email, m.added_date ? 'depuis le ' + dateFr(m.added_date) : null].filter(Boolean).join(' · ') })),
-          el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Retirer', disabled: busy, onclick: () => removeManager(ctx, v, m) }))))
+            el('span', { class: 'bz-tiny', style: { display: 'block', overflowWrap: 'anywhere' }, text: [m.email, m.added_date ? 'depuis le ' + dateFr(m.added_date) : null].filter(Boolean).join(' · ') }),
+            m.ends_at ? el('span', { class: 'bz-tiny', style: { display: 'block', overflowWrap: 'anywhere', color: 'var(--amber)' }, text: 'Fin annoncée le ' + dateFr(m.ends_at) + (m.end_reason ? ' · motif : ' + m.end_reason : '') }) : null),
+          m.ends_at ? el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Annuler la fin', disabled: busy || !m.email, onclick: () => keepManager(ctx, v, m) }) : null,
+          el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: m.ends_at ? 'Tout de suite' : 'Retirer', disabled: busy, onclick: () => removeManager(ctx, v, m) }))))
         : el('span', { class: 'bz-small bz-muted', style: { display: 'block', marginTop: '6px' }, text: 'Aucun gérant.' }),
       el('label', { class: 'bz-label', for: 'vd-identifier', style: { display: 'block', marginTop: '12px' }, text: 'Pseudo ou e-mail d’un compte majeur' }),
       el('div', { class: 'bz-row', style: { gap: '8px', marginTop: '6px', flexWrap: 'nowrap' } },
