@@ -13,6 +13,7 @@ import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js?v=2026-10-19i';
 import { renderAudience } from './audience.js?v=2026-10-19g';
+import { renderCrashes } from './plantages.js?v=2026-10-19j';
 import { renderHome } from './home.js?v=2026-10-19g';
 import { renderBilling } from './billing.js?v=2026-10-19g';
 import { renderStudio } from './studio.js?v=2026-10-19g';
@@ -162,7 +163,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', studio: 'Sites web', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', more: 'Plus' };
+const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', studio: 'Sites web', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', crashes: 'Plantages', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -194,6 +195,8 @@ const ICONS = {
   billing: 'M5 3v18l2.5-1.5L10 21l2-1.5 2 1.5 2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5 5 3ZM9 9h6M9 13h6M9 17h3',
   // Un œil, pour l'audience du site.
   audience: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+  // Un triangle d'alerte, pour les plantages de l'appli.
+  crashes: 'M10.3 4.2 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0ZM12 9.5v4M12 17h.01',
   more: 'M5 12h.01M12 12h.01M19 12h.01'
 };
 function icon(name, size = 20) {
@@ -1875,7 +1878,7 @@ const NAV = [
   ['Pilotage', [['todo', 't'], ['audience', 'a'], ['revenue', 'r'], ['billing', 'f']]],
   ['Membres', [['users', 'u'], ['reports', 's'], ['support', 'p']]],
   ['Contenus', [['venues', 'b'], ['ideas', 'i'], ['sources', 'c'], ['data', 'd']]],
-  ['Outils', [['agent', 'e'], ['journal', 'j'], ['beta', 'k']]],
+  ['Outils', [['crashes', 'l'], ['agent', 'e'], ['journal', 'j'], ['beta', 'k']]],
   // L'activité de création de sites de l'EI, sans lien avec l'appli.
   ['Hors appli', [['studio', 'w']]]
 ];
@@ -1965,7 +1968,7 @@ function goTo(tab) {
 // ces pages est affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'revenue', 'billing', 'studio', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'beta'];
+const MORE_TABS = ['todo', 'revenue', 'billing', 'studio', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'crashes', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -2028,6 +2031,7 @@ function render() {
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
           : state.tab === 'todo' ? renderTodo({ rerender: () => { if (state.tab === 'todo') render(); }, toast, ask })
           : state.tab === 'audience' ? renderAudience({ phone, rerender: () => { if (state.tab === 'audience') render(); } })
+          : state.tab === 'crashes' ? renderCrashes({ phone, rerender: () => { if (state.tab === 'crashes') render(); } })
           : state.tab === 'beta' ? renderBeta({ rerender: () => { if (state.tab === 'beta') render(); }, toast, phone })
           : state.tab === 'sources' ? renderSources({ rerender: () => { if (state.tab === 'sources') render(); }, toast, ask })
           : renderJournal();
@@ -2048,6 +2052,7 @@ function render() {
     // Le compteur dit combien de coupures sont en cours : en rouge, parce
     // qu'une coupure retire quelque chose aux membres.
     tab('sources', c.sources, 'is-red'),
+    tab('crashes'),
     tab('beta'));
   const note = phone ? null : el('p', { class: 'bz-tiny', style: { marginTop: '12px' },
     text: state.me.is_super_admin

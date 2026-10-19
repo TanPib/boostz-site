@@ -146,6 +146,16 @@
   .rv-card-head > div { flex: 1; min-width: 0; }
   .rv-card-head .bz-tiny { margin: 2px 0 0; }
   .rv-table-btn { flex: none; }
+  /* Plantages de l'appli (assets/plantages.js) : une carte par erreur. */
+  .crash-list { display: grid; gap: 12px; margin-top: 14px; }
+  .crash-card { display: grid; gap: 10px; }
+  .crash-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .crash-message { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
+  .crash-meta { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: 13px; }
+  .crash-meta dt { color: var(--text-muted); }
+  .crash-meta dd { margin: 0; overflow-wrap: anywhere; }
+  .crash-builds { display: flex; flex-wrap: wrap; gap: 6px; }
+  .crash-stack { margin: 10px 0 0; padding: 12px; max-height: 360px; overflow: auto; border: 1px solid var(--line-strong); border-radius: 12px; background: rgba(255,255,255,.03); font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
   /* Audience : répartitions en barres horizontales (assets/audience.js). */
   .au-split { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
   .au-bars { list-style: none; margin: 12px 0 2px; padding: 0; display: grid; gap: 10px; }
@@ -718,6 +728,6 @@
     </div>
   </div>
 </main>
-<script type="module" src="assets/page-admin.js?v=2026-10-19i"></script>
+<script type="module" src="assets/page-admin.js?v=2026-10-19j"></script>
 </body>
 </html>
