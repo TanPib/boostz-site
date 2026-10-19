@@ -9,7 +9,7 @@
 // seul un super admin écrit : le serveur refuse les autres, la console grise.
 import { call } from './api.js';
 import { el, dateShort } from './chrome.js';
-import { money, int } from './revenue.js?v=2026-10-19e';
+import { money, int } from './revenue.js?v=2026-10-19f';
 
 const bl = { status: 'idle', data: null, error: null, seq: 0, editing: null, prefill: null, invoicing: null, busy: new Set(), filter: 'live' };
 

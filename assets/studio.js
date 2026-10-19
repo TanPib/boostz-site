@@ -8,15 +8,17 @@
 // contrat refacturé chaque année. Toutes les factures naissent en brouillon :
 // « Finaliser » (routes de l'onglet Facturation) reste le seul geste qui
 // engage. Tout admin lit, seul un super admin agit.
-import { call } from './api.js';
+import { call, API, session } from './api.js';
 import { el, dateShort } from './chrome.js';
-import { money, int } from './revenue.js?v=2026-10-19e';
+import { money, int } from './revenue.js?v=2026-10-19f';
 
 const sw = {
   status: 'idle', data: null, error: null, seq: 0, view: 'quote', busy: new Set(),
   // Le devis en cours de composition.
   draft: { clientId: '', base: 'five', items: { admin: 1, theme: 1, contact: 1, edits: 5, upkeep: 1 }, overrides: {}, depositPct: 30 },
-  newClient: false, editingClient: null, clientKind: 'particulier', openQuote: null
+  newClient: false, editingClient: null, clientKind: 'particulier', openQuote: null,
+  // Le catalogue : 'new' pour une prestation à créer, sinon la clé modifiée.
+  editingItem: null, newItemKind: 'option'
 };
 
 const QUOTE_STATUS = {
@@ -397,26 +399,105 @@ function clientsView(ctx, canWrite) {
 }
 
 // ---------- Catalogue ----------
+const KIND = { formule: ['Formule', 'bz-pill is-violet'], option: ['Option', 'bz-pill is-grey'], annuel: ['Annuel', 'bz-pill is-green'] };
+
+// La grille tarifaire : un PDF tiré du catalogue par le serveur. Téléchargé
+// avec la session (fetch), puis enregistré par le navigateur.
+async function downloadGrid(lang, ctx) {
+  const key = 'grid:' + lang;
+  sw.busy.add(key);
+  ctx.rerender();
+  try {
+    const s = session();
+    const res = await fetch(API + '/admin/studio/pricing.pdf?lang=' + lang, { headers: s ? { Authorization: 'Bearer ' + s.token } : {} });
+    if (!res.ok) throw new Error('Grille indisponible (HTTP ' + res.status + ').');
+    const url = URL.createObjectURL(await res.blob());
+    const a = el('a', { href: url, download: (lang === 'en' ? 'price-list-' : 'grille-tarifaire-') + today() + '.pdf' });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    ctx.toast(lang === 'en' ? 'Grille tarifaire en anglais téléchargée.' : 'Grille tarifaire téléchargée.');
+  } catch (e) {
+    ctx.toast(e.message, 'err');
+  } finally {
+    sw.busy.delete(key);
+    ctx.rerender();
+  }
+}
+
+// Le formulaire d'une prestation : création (item absent) ou modification.
+function itemForm(ctx, item) {
+  const kind = item ? item.kind : sw.newItemKind;
+  const inputs = {};
+  const field = (k, label, value, opts = {}) => {
+    const input = el('input', { class: 'bz-input', autocomplete: 'off', type: opts.type || 'text', value: value ?? '', inputmode: opts.inputmode || null });
+    inputs[k] = input;
+    return el('label', { class: 'bz-field' + (opts.wide ? ' bl-wide' : '') }, el('span', { class: 'bz-label', text: label }), input);
+  };
+  let unit = null;
+  const kinds = item ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Type de prestation' },
+    [['formule', 'Formule'], ['option', 'Option'], ['annuel', 'Service annuel']].map(([id, label]) => el('button', {
+      class: 'bz-tab', type: 'button', role: 'tab', 'aria-selected': String(kind === id), onclick: () => { sw.newItemKind = id; ctx.rerender(); }
+    }, label)));
+  if (!item && kind !== 'formule') {
+    unit = el('select', { class: 'bz-input', 'aria-label': 'Unité' },
+      el('option', { value: '', text: 'Prix fixe' }), el('option', { value: 'page', text: 'Par page' }), el('option', { value: 'langue', text: 'Par langue' }));
+  }
+  const key = item ? 'item:' + item.key : 'item:new';
+  const save = () => {
+    const body = {};
+    for (const [k, input] of Object.entries(inputs)) body[k] = input.value.trim();
+    if (!item) { body.kind = kind; if (unit) body.unit = unit.value; }
+    act(key, () => (item
+      ? call('/admin/studio/catalog/' + encodeURIComponent(item.key), { method: 'PATCH', body })
+      : call('/admin/studio/catalog', { method: 'POST', body })), ctx, item ? 'Prestation enregistrée.' : 'Prestation ajoutée au catalogue.')
+      .then((r) => { if (r) { sw.editingItem = null; ctx.rerender(); } });
+  };
+  return el('section', { class: 'bz-card bl-partner' },
+    el('h3', { class: 'bz-h3', text: item ? 'Modifier · ' + item.label : 'Nouvelle prestation' }),
+    kinds,
+    el('div', { class: 'bl-form-grid', style: { marginTop: '10px' } },
+      field('label', 'Libellé (français)', item && item.label),
+      field('label_en', 'Libellé (anglais, pour la grille)', item && item.label_en),
+      field('description', 'Ce qui est inclus (français)', item && item.description, { wide: true }),
+      field('description_en', 'Ce qui est inclus (anglais)', item && item.description_en, { wide: true }),
+      field('price', 'Prix (€' + (kind === 'annuel' ? ' par an' : '') + ')', item ? String(item.price_cents / 100).replace('.', ',') : '', { inputmode: 'decimal' }),
+      unit ? el('label', { class: 'bz-field' }, el('span', { class: 'bz-label', text: 'Unité' }), unit) : null,
+      !item && kind === 'formule' ? field('base_pages', 'Pages comprises', '5', { type: 'number' }) : null),
+    el('p', { class: 'bz-tiny bz-muted', style: { margin: '8px 0 0' }, text: 'Sans libellé anglais, la grille anglaise reprend le français. ' + (item ? 'Le type et l’unité d’une prestation existante ne changent pas : un devis s’appuie dessus.' : 'Une option « par page » ou « par langue » aura un compteur dans le devis.') }),
+    el('div', { class: 'bz-row', style: { justifyContent: 'flex-end', marginTop: '10px' } },
+      btn('Annuler', () => { sw.editingItem = null; ctx.rerender(); }),
+      btn(sw.busy.has(key) ? 'Enregistrement…' : 'Enregistrer', save, { tone: 'violet', disabled: sw.busy.has(key) })));
+}
+
 function catalogView(ctx, canWrite) {
-  const KIND = { formule: ['Formule', 'bz-pill is-violet'], option: ['Option', 'bz-pill is-grey'], annuel: ['Annuel', 'bz-pill is-green'] };
+  const editing = sw.editingItem && sw.editingItem !== 'new' ? sw.data.catalog.find((i) => i.key === sw.editingItem) : null;
   return el('div', { class: 'bl' },
+    el('div', { class: 'bl-toolbar' },
+      el('div', { class: 'bz-row', style: { gap: '8px', flexWrap: 'wrap' } },
+        btn(sw.busy.has('grid:fr') ? 'Préparation…' : 'Grille tarifaire · français', () => downloadGrid('fr', ctx), { tone: 'violet', disabled: sw.busy.has('grid:fr') }),
+        btn(sw.busy.has('grid:en') ? 'Préparation…' : 'Grille tarifaire · anglais', () => downloadGrid('en', ctx), { disabled: sw.busy.has('grid:en') })),
+      canWrite && !sw.editingItem ? btn('Nouvelle prestation', () => { sw.editingItem = 'new'; ctx.rerender(); }) : null),
+    sw.editingItem === 'new' ? itemForm(ctx, null) : editing ? itemForm(ctx, editing) : null,
     el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden' } },
       el('div', { class: 'bz-table-wrap' }, el('table', { class: 'bz-table' },
-        el('thead', {}, el('tr', {}, el('th', { text: 'Prestation' }), el('th', { text: 'Type' }), el('th', { text: 'Ce qui est inclus' }), el('th', { class: 'is-num', text: 'Prix' }), el('th', { text: 'Proposée' }))),
+        el('thead', {}, el('tr', {}, el('th', { text: 'Prestation' }), el('th', { text: 'Type' }), el('th', { text: 'Ce qui est inclus' }), el('th', { class: 'is-num', text: 'Prix' }), el('th', { text: 'Proposée' }), el('th'))),
         el('tbody', {}, sw.data.catalog.map((i) => {
           const [kl, kc] = KIND[i.kind] || [i.kind, 'bz-pill'];
-          const unit = (i.kind === 'annuel' ? '€ / an' : '€') + (i.unit ? ' par ' + i.unit : '');
+          const unitText = (i.kind === 'annuel' ? '€ / an' : '€') + (i.unit ? ' par ' + i.unit : '');
           const input = el('input', { class: 'st-price', type: 'number', min: '0', step: '1', value: String(i.price_cents / 100), disabled: !canWrite, 'aria-label': 'Prix de ' + i.label,
             onchange: (e) => act('cat:' + i.key, () => call('/admin/studio/catalog/' + encodeURIComponent(i.key), { method: 'PATCH', body: { price: e.target.value } }), ctx, i.label + ' : prix enregistré.') });
           return el('tr', { class: i.active ? '' : 'st-off' },
-            el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: i.label })),
-            el('td', {}, el('span', { class: kc, text: kl })),
+            el('td', {}, el('b', { style: { fontFamily: 'var(--font-ui)' }, text: i.label }), el('div', { class: 'bz-tiny ' + (i.label_en ? 'bz-muted' : 'bl-warn'), text: i.label_en ? 'EN · ' + i.label_en : 'Pas de libellé anglais' })),
+            el('td', {}, el('span', { class: kc, text: kl }), i.base_pages ? el('div', { class: 'bz-tiny bz-muted', text: plural(i.base_pages, 'page') }) : null),
             el('td', { class: 'bz-muted', text: i.description || '' }),
-            el('td', { class: 'is-num' }, el('span', { class: 'st-price-cell' }, input, el('span', { class: 'bz-tiny bz-muted', text: unit }))),
+            el('td', { class: 'is-num' }, el('span', { class: 'st-price-cell' }, input, el('span', { class: 'bz-tiny bz-muted', text: unitText }))),
             el('td', {}, el('input', { type: 'checkbox', checked: i.active, disabled: !canWrite, 'aria-label': 'Proposer ' + i.label,
-              onchange: (e) => act('cat:' + i.key, () => call('/admin/studio/catalog/' + encodeURIComponent(i.key), { method: 'PATCH', body: { active: e.target.checked } }), ctx, e.target.checked ? i.label + ' : de nouveau proposée.' : i.label + ' : retirée des nouveaux devis.') })));
+              onchange: (e) => act('cat:' + i.key, () => call('/admin/studio/catalog/' + encodeURIComponent(i.key), { method: 'PATCH', body: { active: e.target.checked } }), ctx, e.target.checked ? i.label + ' : de nouveau proposée.' : i.label + ' : retirée des nouveaux devis et de la grille.') })),
+            el('td', { class: 'is-num' }, canWrite ? btn('Modifier', () => { sw.editingItem = i.key; ctx.rerender(); window.scrollTo({ top: 0, behavior: 'smooth' }); }) : null));
         }))))),
-    el('p', { class: 'bz-tiny bz-muted', text: 'Prix de lancement, volontairement sous le marché (un site vitrine se facture couramment 2 000 à 4 000 € en freelance). Un prix changé vaut pour les nouveaux devis : un devis déjà créé garde les siens.' }));
+    el('p', { class: 'bz-tiny bz-muted', text: 'La grille tarifaire reprend les prestations proposées, à leur prix du jour. Un prix changé vaut pour les nouveaux devis : un devis déjà créé garde les siens.' }));
 }
 
 // ---------- La vue ----------

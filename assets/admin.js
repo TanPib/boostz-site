@@ -6,16 +6,16 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
-import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-19e';
-import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19e';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-19f';
+import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19f';
 import { renderBeta } from './beta.js';
-import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19e';
+import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19f';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount } from './venues.js';
-import { renderAudience } from './audience.js?v=2026-10-19e';
-import { renderHome } from './home.js?v=2026-10-19e';
-import { renderBilling } from './billing.js?v=2026-10-19e';
-import { renderStudio } from './studio.js?v=2026-10-19e';
+import { renderAudience } from './audience.js?v=2026-10-19f';
+import { renderHome } from './home.js?v=2026-10-19f';
+import { renderBilling } from './billing.js?v=2026-10-19f';
+import { renderStudio } from './studio.js?v=2026-10-19f';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
