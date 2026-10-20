@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0B0812">
-<title>Teste Boostz avant sa sortie : la bêta Android</title>
-<meta name="description" content="Inscris-toi à la bêta Android de Boostz : ouverture le 14 novembre sur Google Play, avant la sortie du 14 janvier 2027.">
+<title>Teste BoostZ avant sa sortie : la bêta Android et iPhone</title>
+<meta name="description" content="La bêta BoostZ ouvre le 14 novembre sur Android et sur iPhone, avant la sortie du 14 janvier 2027.">
 <!-- La bêta s'arrête à la sortie : pas de résultat de recherche qui y mène
      encore après. On y arrive par les liens qu'on partage. -->
 <meta name="robots" content="noindex">
@@ -15,7 +15,7 @@
 <link rel="preload" href="/assets/fonts/outfit-800.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/exo-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/site.css">
-<link rel="stylesheet" href="/assets/vitrine.css?v=2026-10-14c">
+<link rel="stylesheet" href="/assets/vitrine.css?v=2026-10-20">
 <style>
   /* LA BÊTA DE GOOGLE PLAY (13/10/2026), dans le style « stickers » de
      l'accueil (vitrine.css). Le test fermé de la Play Console a pour liste de
@@ -54,6 +54,12 @@
   .bt-step.is-later .bt-num{background:#2A2140;border-color:#7F7891;color:#BFB9CB}
   .bt-soon{display:flex;align-items:center;justify-content:center;margin-top:18px;height:56px;border-radius:18px;border:3px dashed #4A4460;color:#7F7891;font-family:"DM Sans",sans-serif;font-weight:700;font-size:16px}
 
+  /* Deux parcours (20/10/2026) : Android par le groupe et Google Play,
+     iPhone par TestFlight. Un intertitre par plateforme. */
+  .bt-plat{display:flex;align-items:center;gap:12px;margin:64px 0 0;font-family:"DM Sans",sans-serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#C4B5FD}
+  .bt-plat::after{content:"";flex:1;border-top:2px dashed rgba(196,181,253,.35)}
+  .bt-plat + .bt-steps{margin-top:40px}
+  .bt-req{margin-top:18px;font-size:13px;color:#A8A2B8;text-align:center}
   .bt-more{margin-top:64px}
   .bt-more .pts b{color:#F5F2FB}
   .bt-foot{margin-top:72px}
@@ -76,11 +82,12 @@
 <section class="bt-hero" aria-labelledby="titre">
   <div class="bt-icon"><img src="/assets/vitrine/icone-app.png" alt="Icône de l'application Boostz"><span class="bt-tag">BÊTA</span></div>
   <h1 id="titre" class="h bt-title">Teste Boostz<br><span class="acc">avant sa sortie.</span></h1>
-  <p class="p bt-lead">Boostz sort le 14&nbsp;janvier 2027. Avant ça, la bêta Android ouvre sur Google Play&nbsp;: inscris-toi dès maintenant, on t'écrit le jour de l'ouverture.</p>
+  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. Avant ça, la bêta ouvre le 14&nbsp;novembre, sur Android et sur iPhone. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
   <span class="bt-date">Ouverture le 14&nbsp;novembre</span>
 </section>
 
-<ol class="bt-steps">
+<h2 class="bt-plat" id="android">Sur Android</h2>
+<ol class="bt-steps" aria-labelledby="android">
   <!-- PRÉ-INSCRIPTION jusqu'au 14/11/2026 : seule l'étape 1 est active. Le
        groupe sert déjà de liste de testeurs au test fermé ; le 14/11, TanPib
        écrit aux membres du groupe (lien d'invitation et fiche), et les étapes
@@ -106,14 +113,41 @@
   </li>
 </ol>
 
+<!-- LA BÊTA SUR IPHONE (20/10/2026), par TestFlight. Pas de groupe ni de
+     pré-inscription : le lien public suffit. IL N'EXISTE PAS ENCORE : Apple
+     doit d'abord valider la bêta (vers le 5/11). Ne jamais mettre de lien
+     deviné : le 14/11, l'étape 2 reçoit le vrai lien (bouton), donné par
+     TanPib. Pas de logo Apple ni de badge App Store avant la sortie. -->
+<h2 class="bt-plat" id="iphone">Sur iPhone</h2>
+<ol class="bt-steps" aria-labelledby="iphone">
+  <li class="st bt-step">
+    <span class="bt-num" aria-hidden="true">1</span>
+    <h2 class="h">Installe TestFlight</h2>
+    <p class="p">C'est l'appli gratuite d'Apple pour essayer les applis avant leur sortie. Tu peux l'installer dès maintenant depuis l'App Store.</p>
+    <a class="btn" href="https://apps.apple.com/fr/app/testflight/id899247664"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer TestFlight</a>
+  </li>
+  <li class="st bt-step is-later">
+    <span class="bt-num" aria-hidden="true">2</span>
+    <h2 class="h">Le 14&nbsp;novembre, ouvre le lien de la bêta</h2>
+    <p class="p">Le lien sera ici, sur cette page, le jour de l'ouverture. Ouvre-le sur ton iPhone&nbsp;: pas d'inscription à faire avant.</p>
+    <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+  </li>
+  <li class="st bt-step is-later">
+    <span class="bt-num" aria-hidden="true">3</span>
+    <h2 class="h">Touche «&nbsp;Accepter&nbsp;», puis «&nbsp;Installer&nbsp;»</h2>
+    <p class="p">BoostZ s'installe depuis TestFlight. Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
+    <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+  </li>
+</ol>
+<p class="bt-req">Il faut un iPhone XS ou XR, ou plus récent (iOS&nbsp;16.4 minimum).</p>
+
 <section class="bt-more" aria-labelledby="savoir">
   <p class="kick" style="color:#C4B5FD">Bon à savoir</p>
   <h2 id="savoir" class="h t4">Ce que la bêta<br><span class="acc">attend de toi</span></h2>
   <ul class="pts">
-    <li><b>Reste au moins deux semaines</b><span>Google compte les testeurs jour après jour avant d'ouvrir Boostz à tous&nbsp;: garde l'appli et reste dans le groupe.</span></li>
-    <li><b>Un souci, une idée&nbsp;?</b><span>Dans l'appli, Profil › Contacter le support, ou sur <a href="https://discord.gg/adGa9qgbER">notre Discord</a>.</span></li>
+    <li><b>Reste au moins deux semaines</b><span>Sur Android, Google compte les testeurs jour après jour avant d'ouvrir BoostZ à tous&nbsp;: garde l'appli et reste dans le groupe.</span></li>
+    <li><b>Un souci, une idée&nbsp;?</b><span>Dans l'appli, Profil › Contacter le support, ou sur <a href="https://discord.gg/adGa9qgbER">notre Discord</a>, dans le salon de ta plateforme, Android ou iPhone. Sur iPhone, tu peux aussi le dire dans TestFlight&nbsp;: une capture d'écran, puis «&nbsp;Envoyer un retour&nbsp;».</span></li>
     <li><b>Dès 15 ans, comme l'appli</b><span>Le Boostz Pass et les packs payants sont réservés aux 18&nbsp;ans et plus, et pendant la bêta ce sont de vrais achats.</span></li>
-    <li><b>Sur iPhone, pas encore</b><span>La bêta n'existe que sur Android pour l'instant. Boostz arrivera sur l'App Store à sa sortie.</span></li>
   </ul>
 </section>
 

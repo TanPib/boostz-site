@@ -70,7 +70,7 @@
       "mainEntity": [
         { "@type": "Question", "name": "Boostz, c'est quoi ?", "acceptedAnswer": { "@type": "Answer", "text": "Une application mobile pour les collectionneurs de cartes à collectionner. Tu ranges ta collection, tu suis sa cote, tu échanges avec d'autres collectionneurs et tu trouves les boutiques et les tournois près de chez toi." } },
         { "@type": "Question", "name": "Quand sort l'application ?", "acceptedAnswer": { "@type": "Answer", "text": "Le 14 janvier 2027, sur l'App Store et Google Play." } },
-        { "@type": "Question", "name": "Peut-on tester l'appli avant sa sortie ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui, sur Android : la bêta ouvre le 14 novembre sur Google Play. Inscris-toi dès maintenant sur la page de la bêta, boostz.fr/beta : on t'écrit le jour de l'ouverture. Sur iPhone, il faudra attendre la sortie." } },
+        { "@type": "Question", "name": "Peut-on tester l'appli avant sa sortie ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui : la bêta ouvre le 14 novembre, sur Android et sur iPhone. Toutes les infos sur boostz.fr/beta." } },
         { "@type": "Question", "name": "Boostz est-il gratuit ?", "acceptedAnswer": { "@type": "Answer", "text": "Oui, le compte est gratuit. Le Boostz Pass, mensuel ou annuel et réservé aux majeurs, lève certaines limites : jeux suivis, alertes de prix et pré-estimations d'état." } },
         { "@type": "Question", "name": "Quels jeux de cartes sont couverts ?", "acceptedAnswer": { "@type": "Answer", "text": "Pokémon, One Piece, Lorcana, Yu-Gi-Oh!, Magic, Star Wars Unlimited, Dragon Ball Super et Warcraft, cartes et produits scellés." } },
         { "@type": "Question", "name": "D'où viennent les cotes ?", "acceptedAnswer": { "@type": "Answer", "text": "De sources tierces : les catalogues de chaque jeu et les prix du marché. Elles restent indicatives et ne sont jamais inventées : une carte sans cote l'affiche." } },
@@ -84,7 +84,7 @@
 </script>
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="assets/parrainage.css">
-<link rel="stylesheet" href="assets/vitrine.css?v=2026-10-14c">
+<link rel="stylesheet" href="assets/vitrine.css?v=2026-10-20">
 </head>
 <body>
 <!-- Sommaire : une colonne de points à gauche sur ordinateur, un bouton en bas à gauche sur téléphone -->
@@ -152,12 +152,12 @@
 <div class="htext">
 <h1 id="titre" class="htitle"><span class="wm hero-wm" aria-hidden="true"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.59em;color:#3AA9FF;opacity:.12">Z</span><span class="word g" style="left:-0.39em;color:#8B3DFF;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#FF4FA0;opacity:.3">Z</span><span class="word grad" style="position:relative">Z</span></span></span><span class="sr">Boostz&nbsp;: </span><span class="base">Ton compagnon TCG,<br>bientôt sur ton téléphone</span></h1>
 <p class="lead">L'appli française pour ranger, coter et échanger tes cartes Pokémon, One Piece, Lorcana, Magic et bien d'autres.</p>
-<!-- La bêta Android dès le haut de page (14/10/2026), avec la fiole de la
+<!-- La bêta (Android et iPhone depuis le 20/10/2026) dès le haut de page (14/10/2026), avec la fiole de la
      section de sortie. Le 14/11, passer à « est ouverte », comme la page
      /beta et la section de sortie. -->
 <a class="hbeta" href="beta/">
 <span class="hbeta-fiole" aria-hidden="true"><svg width="50" height="70"><use href="#bt-fiole"/></svg></span>
-<span class="hbeta-txt"><b>La bêta Android</b><span class="acc">ouvre le 14&nbsp;novembre</span></span>
+<span class="hbeta-txt"><b>La bêta · Android et iPhone</b><span class="acc">ouvre le 14&nbsp;novembre</span></span>
 <span class="hbeta-go"><span class="hbeta-go-t">Inscris-toi</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1730" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
 </a>
 <!-- Les réseaux de Boostz dès le haut de page (14/10/2026) : les quatre du
@@ -416,13 +416,14 @@
 <h2 id="z8" class="h zt" data-a><span class="wm" style="font-size:1.25em" aria-label="Boostz Pass"><span class="word" style="color:#fff">boost</span><span class="word goldtxt">Z</span><span class="word goldtxt" style="margin-left:.12em">pass</span></span><br><span style="color:#D7CCEC">pour aller plus loin.</span></h2>
 <p class="p" data-a style="color:#D7CCEC">Le compte est gratuit. Le Boostz Pass, mensuel ou annuel, lève ses limites. Il est réservé aux majeurs et se résilie à tout moment depuis ton profil.</p>
 <ul class="pts" data-a>
-<li><b style="color:#F5C542">Prix de lancement</b><span style="color:#D7CCEC">Pour les nouveaux abonnés, une seule fois par compte.</span></li>
+<li><b style="color:#F5C542">Prix de lancement</b><span style="color:#D7CCEC">2,99&nbsp;€ par mois pour tous jusqu'au 31&nbsp;décembre 2027, ou 34,99&nbsp;€ la première année en annuel.</span></li>
 <li><b style="color:#F5C542">Rien ne disparaît</b><span style="color:#D7CCEC">À la fin du Pass, tes jeux et tes alertes restent en place.</span></li>
 </ul>
 </div>
 <div class="zvis">
 <div class="comp" style="height:420px">
-<div class="st ph big gold" data-a="land" style="left:168px;top:0;transform:rotate(4deg)"><img loading="lazy" decoding="async" src="assets/vitrine/app-pass.jpg?v=2026-10-19" alt="Capture de Boostz : la présentation du Boostz Pass, mensuel ou annuel"></div>
+<!-- La capture du Pass (app-pass.jpg) est retirée le 20/10/2026 : elle
+     annonçait « pendant 12 mois ». À remettre avec une capture à jour. -->
 <div class="st gold" data-a="land" style="transition-delay:.2s;position:absolute;left:0;top:110px;width:176px;padding:12px 14px;transform:rotate(-3deg)"><div class="ui" style="font-size:11px;letter-spacing:.14em;color:#F5C542">MENSUEL OU ANNUEL</div><div class="ui" style="font-size:16px;color:#fff;margin-top:6px;line-height:1.3">Résiliable à tout moment</div></div>
 <div class="st gold" data-a="land" style="transition-delay:.35s;position:absolute;left:8px;top:270px;width:170px;padding:12px 14px;transform:rotate(2deg)"><div class="ui" style="font-size:11px;letter-spacing:.14em;color:#F5C542">TOUS LES JEUX</div><div class="ui" style="font-size:16px;color:#fff;margin-top:6px;line-height:1.3">Jusqu’à 100 alertes, analyses illimitées</div></div>
 </div>
@@ -437,14 +438,14 @@
 <div data-a="pop" style="display:inline-block;width:110px;height:110px;border-radius:28px;border:4px solid #F5F2FB;box-shadow:8px 8px 0 #05040A;overflow:hidden;transform:rotate(-4deg)"><img loading="lazy" decoding="async" src="assets/vitrine/icone-app.png" alt="Icône de l'application Boostz" style="display:block;width:100%;height:100%"></div>
 <h2 id="sortie" data-a class="h t3" style="margin-top:26px">Boostz sort le<br><span class="acc">14&nbsp;janvier 2027</span></h2>
 <div data-a style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:26px">
-<button type="button" class="store" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="#7F7891" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg><span><small>BIENTÔT SUR</small><b>App Store</b></span></button>
-<button type="button" class="store" disabled><svg width="20" height="22" viewBox="0 0 24 24" fill="#7F7891" aria-hidden="true"><path d="M4 3.5v17l9-8.5-9-8.5Zm10.2 7.4 2.6-2.4 3.2 1.8c.9.5.9 1.9 0 2.4l-3.2 1.8-2.6-2.4v-1.2Zm-1 2.3 2.3 2.2-9.7 5.4 7.4-7.6Zm0-3.4L5.8 4.2l9.7 5.4-2.3 2.2Z"/></svg><span><small>BIENTÔT SUR</small><b>Google Play</b></span></button>
+<!-- Ni logo ni badge des stores avant la sortie (20/10/2026). -->
+<p class="store-txt">Sur l'App Store et Google Play</p>
 </div>
 <!-- La bêta de Google Play (13/10/2026) : boostz.fr/beta, inscription par le
      groupe Google des testeurs. À retirer à la sortie. -->
 <div data-a class="bt-cta">
 <a class="bt-flask" href="beta/" tabindex="-1" aria-hidden="true"><svg width="132" height="166"><use href="#bt-fiole"/></svg><span class="bt-flask-tag">BÊTA</span></a>
-<p class="h t4 bt-cta-title">La bêta Android<br><span class="acc">ouvre le 14&nbsp;novembre</span></p>
+<p class="h t4 bt-cta-title">La bêta ouvre le 14&nbsp;novembre<br><span class="acc">sur Android et sur iPhone</span></p>
 <div class="cta"><a class="btn" href="beta/">Inscris-toi dès maintenant</a></div>
 </div>
 <p data-a class="h t4" style="margin-top:46px">Abonne-toi pour<br><span class="acc">ne rien manquer</span></p>
@@ -464,7 +465,7 @@
 <div class="faq" data-a>
 <details open><summary>Boostz, c'est quoi&nbsp;?</summary><p>Une application mobile pour les collectionneurs de cartes à collectionner. Tu ranges ta collection, tu suis sa cote, tu échanges avec d'autres collectionneurs et tu trouves les boutiques et les tournois près de chez toi.</p></details>
 <details><summary>Quand sort l'application&nbsp;?</summary><p>Le 14&nbsp;janvier 2027, sur l'App Store et Google Play. Abonne-toi à @boostz.app sur Instagram, ou à Boostz sur TikTok et sur Facebook, pour ne rien manquer.</p></details>
-<details><summary>Peut-on tester l'appli avant sa sortie&nbsp;?</summary><p>Oui, sur Android&nbsp;: la bêta ouvre le 14&nbsp;novembre sur Google Play. Inscris-toi dès maintenant sur <a href="beta/">la page de la bêta</a>, on t'écrit le jour de l'ouverture. Sur iPhone, il faudra attendre la sortie.</p></details>
+<details><summary>Peut-on tester l'appli avant sa sortie&nbsp;?</summary><p>Oui&nbsp;: la bêta ouvre le 14&nbsp;novembre, sur Android et sur iPhone. Toutes les infos sur <a href="beta/">boostz.fr/beta</a>.</p></details>
 <details><summary>Boostz est-il gratuit&nbsp;?</summary><p>Oui, le compte est gratuit. Le Boostz Pass, mensuel ou annuel et réservé aux majeurs, lève certaines limites&nbsp;: jeux suivis, alertes de prix et pré-estimations d'état.</p></details>
 <details><summary>Quels jeux de cartes sont couverts&nbsp;?</summary><p>Pokémon, One Piece, Lorcana, Yu-Gi-Oh!, Magic, Star Wars Unlimited, Dragon Ball Super et Warcraft, cartes et produits scellés.</p></details>
 <details><summary>D'où viennent les cotes&nbsp;?</summary><p>De sources tierces&nbsp;: les catalogues de chaque jeu et les prix du marché. Elles restent indicatives et ne sont jamais inventées&nbsp;: une carte sans cote l'affiche.</p></details>
