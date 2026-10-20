@@ -60,7 +60,7 @@ button{font:inherit}
 .hbeta:focus-visible{outline:3px solid #C4B5FD;outline-offset:3px}
 .hbeta-fiole{flex:none;display:block;transform:rotate(-8deg);filter:drop-shadow(3px 3px 0 #05040A)}
 .hbeta-fiole svg{display:block}
-.hbeta-txt{flex:1;min-width:0;display:flex;flex-direction:column;font-family:Outfit,sans-serif;font-weight:800;font-size:16px;line-height:1.2;white-space:nowrap}
+.hbeta-txt{flex:1;min-width:0;display:flex;flex-direction:column;font-family:Outfit,sans-serif;font-weight:800;font-size:16px;line-height:1.2}
 .hbeta-txt b{font-weight:800}
 /* Sur téléphone, la flèche seule : avec le mot, le texte passait sur quatre
    lignes. « Inscris-toi » reste lu par les lecteurs d'écran. */
@@ -200,7 +200,7 @@ div.grow{overflow:hidden}
 .lead{margin:20px 0 0;max-width:470px;font-size:18px}
 .hbeta{max-width:470px;margin:28px 0 0;gap:18px;padding:12px 18px 12px 14px}
 .hbeta-fiole svg{width:58px;height:82px}
-.hbeta-txt{font-size:22px}
+.hbeta-txt{font-size:min(21px,5.4cqi)}
 .hbeta-go{width:auto;height:auto;font-size:14px;padding:9px 13px}
 .hbeta-go-t{position:static;width:auto;height:auto;overflow:visible;clip:auto}
 .socials{justify-content:flex-start;gap:16px;margin:30px 0 0}
@@ -363,3 +363,13 @@ html{scroll-padding-top:16px}
 }
 @keyframes bt-bulle{0%{transform:translateY(0) scale(.5);opacity:0}25%{opacity:1}100%{transform:translateY(-22px) scale(1);opacity:0}}
 @keyframes bt-remous{0%,100%{transform:translateX(0)}50%{transform:translateX(-3px)}}
+/* Le bandeau de la bêta (20/10/2026) : chaque ligne reste entière. Quand le
+   bandeau est étroit (colonne du héros entre la tablette et l'écran large),
+   le bouton se réduit à sa flèche plutôt que d'écraser le texte. */
+.hbeta{container-type:inline-size}
+.hbeta-txt>*{white-space:nowrap}
+@media (max-width:899px){.hbeta-txt{font-size:min(16px,4.9cqi)}}
+@container (max-width:420px){
+.hbeta-go{width:36px;height:36px;padding:0}
+.hbeta-go-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+}
