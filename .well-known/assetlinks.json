@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.boostz.mobile",
+      "sha256_cert_fingerprints": [
+        "00:56:AD:8D:56:56:C9:D6:DE:AE:58:D0:22:01:3A:9C:0D:83:0F:E8:C9:FA:D1:F4:A6:0B:D5:B3:8E:2C:A2:E5"
+      ]
+    }
+  }
+]

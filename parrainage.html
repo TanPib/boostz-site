@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0B0812">
+<title>Ton code de parrainage BoostZ</title>
+<meta name="description" content="Un ami t'invite sur BoostZ, l'appli pour gérer ta collection de cartes : son code te rapporte 150 Boosties.">
+<!-- Une page par code : rien à indexer. -->
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/vitrine/icone-app-180.png">
+<link rel="preload" href="/assets/fonts/outfit-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/exo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/vitrine.css?v=2026-10-20b">
+<style>
+  /* LA PAGE DU LIEN DE PARRAINAGE (26/10/2026) : boostz.fr/parrainage?code=CODE,
+     le lien que l'application partage et que porte son QR code (serveur,
+     config/economy.js referral.shareUrl).
+
+     CHEZ QUI A L'APPLICATION, CETTE PAGE NE S'AFFICHE PAS : l'application
+     déclare /parrainage comme App Link sur Android et comme lien universel
+     sur iPhone (fichiers de /.well-known, voir _config.yml), et le téléphone
+     l'ouvre directement sur sa page Parrainage, le code déjà dans le champ.
+     On arrive donc ici sans l'application, ou avec une version qui ne déclare
+     pas encore le lien, ou depuis un navigateur intégré (Instagram, TikTok)
+     qui ne les suit pas : d'où « J'ai déjà BoostZ », qui ouvre l'application
+     par son schéma (assets/page-parrainage.js).
+
+     Le code n'est ni stocké ni envoyé : il est lu dans l'adresse et affiché. */
+  .pr{max-width:640px;margin:0 auto}
+  .pr-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:44px}
+  .pr-icon{width:96px;height:96px;transform:rotate(-4deg)}
+  .pr-icon img{display:block;width:100%;height:100%;border-radius:26px;border:4px solid #F5F2FB;box-shadow:8px 8px 0 #05040A;box-sizing:border-box}
+  .pr-title{font-size:40px;margin-top:30px}
+  .pr-lead{max-width:440px;margin-left:auto;margin-right:auto}
+  .pr-lead b{color:#F5F2FB}
+
+  /* Le code : un autocollant lilas, comme la date de la page bêta. */
+  .pr-code{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:30px}
+  .pr-code-val{padding:12px 24px 12px 30px;border-radius:16px;border:4px solid #F5F2FB;background:#C4B5FD;box-shadow:6px 6px 0 #05040A;color:#1D1730;font-family:Outfit,sans-serif;font-weight:800;font-size:40px;letter-spacing:.2em;transform:rotate(-2deg)}
+  .pr-copy{border:0;background:none;color:#C4B5FD;font-family:"DM Sans",sans-serif;font-weight:700;font-size:15px;cursor:pointer;padding:6px 10px;border-radius:10px}
+  .pr-copy:hover{background:rgba(196,181,253,.12)}
+
+  .pr-actions{display:flex;flex-direction:column;gap:14px;margin-top:36px;align-self:stretch}
+  .pr-actions .btn{width:100%}
+  .btn.is-dark{background:#2A2140}
+
+  .pr-steps{position:relative;list-style:none;margin:64px 0 0;padding:0;display:flex;flex-direction:column;gap:46px}
+  .pr-steps::before{content:"";position:absolute;left:40px;top:10px;bottom:10px;border-left:3px dashed rgba(196,181,253,.45)}
+  .pr-step{position:relative;padding:38px 20px 22px;overflow:visible}
+  .pr-num{position:absolute;left:18px;top:-24px;width:46px;height:46px;border-radius:50%;border:4px solid #F5F2FB;background:#7C3AED;box-shadow:4px 4px 0 #05040A;display:flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:Outfit,sans-serif;font-weight:800;font-size:20px;color:#fff}
+  .pr-step .h{font-size:24px}
+  .pr-step .p b{color:#F5F2FB}
+  .pr-foot{margin-top:72px}
+  [hidden]{display:none !important}
+  @media (min-width:900px){
+    .pr-title{font-size:56px}
+    .pr-hero{padding-top:64px}
+  }
+</style>
+<script type="module" src="/assets/page-parrainage.js"></script>
+</head>
+<body>
+<div class="pg">
+
+<header class="in" style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;z-index:3">
+<a href="/" aria-label="BoostZ, accueil" class="wm" style="font-size:26px"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.59em;color:#3AA9FF;opacity:.12">Z</span><span class="word g" style="left:-0.39em;color:#8B3DFF;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#FF4FA0;opacity:.3">Z</span><span class="word grad" style="position:relative">Z</span></span></a>
+</header>
+
+<main class="in">
+<div class="pr">
+
+<!-- Avec un code valide dans l'adresse. Caché tant que le script ne l'a pas
+     lu : sans script, c'est le bloc suivant qui reste. -->
+<section class="pr-hero" id="avec-code" aria-labelledby="titre" hidden>
+  <div class="pr-icon"><img src="/assets/vitrine/icone-app.png" alt="Icône de l'application BoostZ"></div>
+  <h1 id="titre" class="h pr-title">Un ami t'invite<br><span class="acc">sur BoostZ.</span></h1>
+  <p class="p pr-lead">L'appli pour gérer ta collection de cartes. Son code te rapporte <b>150&nbsp;Boosties</b> à saisir dans les 7&nbsp;jours qui suivent ton inscription.</p>
+  <div class="pr-code">
+    <span class="pr-code-val" id="code"></span>
+    <button type="button" class="pr-copy" id="copier">Copier le code</button>
+  </div>
+  <div class="pr-actions">
+    <a class="btn" id="ouvrir" href="#" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>J'ai déjà BoostZ&nbsp;: l'ouvrir</a>
+    <a class="btn is-dark" href="/beta/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer BoostZ</a>
+  </div>
+</section>
+
+<section class="pr-hero" id="sans-code" aria-labelledby="titre-sans">
+  <div class="pr-icon"><img src="/assets/vitrine/icone-app.png" alt="Icône de l'application BoostZ"></div>
+  <h1 id="titre-sans" class="h pr-title">Ce lien de parrainage<br><span class="acc">est incomplet.</span></h1>
+  <p class="p pr-lead">Demande à ton ami de te renvoyer son code&nbsp;: tu le saisiras dans l'appli, <b>Profil › Parrainage</b>.</p>
+  <div class="pr-actions">
+    <a class="btn is-dark" href="/beta/">Installer BoostZ</a>
+  </div>
+</section>
+
+<ol class="pr-steps" id="etapes" aria-label="Utiliser le code" hidden>
+  <li class="st pr-step">
+    <span class="pr-num" aria-hidden="true">1</span>
+    <h2 class="h">Installe BoostZ</h2>
+    <p class="p">L'appli est en bêta sur Android et sur iPhone&nbsp;: la page d'installation te guide pas à pas.</p>
+  </li>
+  <li class="st pr-step">
+    <span class="pr-num" aria-hidden="true">2</span>
+    <h2 class="h">Crée ton compte</h2>
+    <p class="p">Le code se saisit dans les 7&nbsp;jours qui suivent ton inscription&nbsp;: ne tarde pas.</p>
+  </li>
+  <li class="st pr-step">
+    <span class="pr-num" aria-hidden="true">3</span>
+    <h2 class="h">Rouvre ce lien</h2>
+    <p class="p">BoostZ s'ouvre sur ta page Parrainage, le code déjà saisi&nbsp;: touche <b>Valider</b>. Tu peux aussi le taper toi-même dans <b>Profil › Parrainage</b>.</p>
+  </li>
+</ol>
+
+</div>
+</main>
+
+<footer class="legal pr-foot" style="border-top:1px solid rgba(255,255,255,.08)">
+<div class="in" style="padding-top:28px;padding-bottom:36px;font-size:13px;color:#A8A2B8">
+<nav aria-label="Liens du site" style="display:flex;flex-wrap:wrap;gap:12px 24px;font-family:'DM Sans',sans-serif;font-weight:700">
+<a href="/">Accueil</a><a href="/mentions-legales.html">Mentions légales</a><a href="/cgu.html">CGU</a><a href="/confidentialite.html">Politique de confidentialité</a><a href="/support.html">Contacter le support</a>
+</nav>
+<p style="margin:20px 0 0;font-size:12px;line-height:1.6">Éditeur&nbsp;: Tanguy Pibarot, entrepreneur individuel (EI), nom commercial BoostZ, 47 rue Vivienne, 75002 Paris.</p>
+<p style="margin:12px 0 0;font-size:12px">© 2026 BoostZ</p>
+</div>
+</footer>
+
+</div>
+</body>
+</html>

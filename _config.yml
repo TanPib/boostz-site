@@ -1,0 +1,20 @@
+# GitHub Pages construit ce dépôt avec Jekyll, qui ne publie aucun dossier
+# commençant par un point. Ce fichier n'existe que pour publier .well-known
+# (26/10/2026) : le reste du site est servi tel quel, comme avant.
+#
+# .well-known/assetlinks.json : déclare l'application Android app.boostz.mobile
+# comme gestionnaire des liens de boostz.fr qu'elle annonce (App Links, le
+# chemin /parrainage, boostz-mobile app.json android.intentFilters). Android
+# le lit à l'installation de chaque version : il doit être en ligne AVANT
+# qu'une version qui déclare le lien arrive sur les téléphones. L'empreinte
+# est celle du certificat qui signe l'application sur Google Play (la clé
+# d'Expo, SHA-1 96:A6:F2:21…56:EA) : publique par nature.
+#
+# .well-known/apple-app-site-association : la même chose pour l'iPhone (liens
+# universels, équipe 644C7C7TY9, ios.associatedDomains). Apple le lit par son
+# propre CDN : https://app-site-association.cdn-apple.com/a/v1/boostz.fr
+# montre la version qu'il en a.
+#
+# Ces deux fichiers ne doivent jamais passer derrière une redirection.
+include:
+  - .well-known
