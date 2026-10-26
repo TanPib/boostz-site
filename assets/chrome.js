@@ -28,7 +28,7 @@ export function el(tag, attrs = {}, ...children) {
     else if (value === true) node.setAttribute(key, '');
     else node.setAttribute(key, String(value));
   }
-  for (const child of children.flat()) {
+  for (const child of children.flat(Infinity)) {
     if (child === null || child === undefined || child === false) continue;
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
@@ -38,7 +38,7 @@ export function el(tag, attrs = {}, ...children) {
 // append() natif écrit « null » en toutes lettres pour un enfant absent : put()
 // ignore null, undefined et false, comme el(), pour les blocs conditionnels.
 export function put(node, ...children) {
-  for (const child of children.flat()) {
+  for (const child of children.flat(Infinity)) {
     if (child === null || child === undefined || child === false) continue;
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
