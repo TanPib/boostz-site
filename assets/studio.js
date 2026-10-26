@@ -10,7 +10,7 @@
 // engage. Tout admin lit, seul un super admin agit.
 import { call, API, session } from './api.js';
 import { el, dateShort } from './chrome.js';
-import { money, int } from './revenue.js?v=2026-10-19g';
+import { money, int } from './revenue.js?v=2026-10-26a';
 
 const sw = {
   status: 'idle', data: null, error: null, seq: 0, view: 'quote', busy: new Set(),

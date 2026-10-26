@@ -6,7 +6,7 @@
 // texte venu de l'API (pseudos, messages, signalements) passe par textContent.
 import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
-import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-19g';
+import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-26a';
 import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
@@ -100,6 +100,7 @@ const ACTIONS = {
   moderation_revoke: 'Décision annulée',
   role: 'Changement de rôle',
   super_admin: 'Rang de super admin',
+  super_user: 'Super User',
   warn: 'Avertissement',
   delete_account: 'Suppression du compte',
   report_status: 'Décision sur un signalement',
@@ -492,6 +493,21 @@ const userActs = {
     await call(`/admin/users/${u.id}/unban`, { method: 'POST', body: { reason: values.reason } });
     await after(nameOf(u) + ' est réactivé.', loadUsers, loadReports);
   }),
+  // SUPER USER (26/10/2026) : le Pass annuel sans échéance et les Boosties
+  // sans solde, jusqu'au retrait. Réservé aux super admins, jamais à un
+  // mineur : le serveur le refuse aussi (lib/adminGuards.js, canSetSuperUser).
+  superUserOn: (u) => run(async () => {
+    const ok = await ask({ title: 'Passer ' + nameOf(u) + ' Super User', text: 'Le compte reçoit le Boostz Pass en formule annuelle, sans échéance, et dépense ses Boosties sans solde, jusqu’à ce que tu le retires. Un abonnement payé n’est pas touché.', confirmLabel: 'Passer Super User', tone: 'green' });
+    if (!ok) return;
+    await call(`/admin/users/${u.id}/super-user`, { method: 'PATCH', body: { super_user: true } });
+    await after(nameOf(u) + ' est maintenant Super User.', loadUsers);
+  }),
+  superUserOff: (u) => run(async () => {
+    const ok = await ask({ title: 'Retirer Super User à ' + nameOf(u), text: 'Le Pass offert et les Boosties sans solde s’arrêtent tout de suite. Un abonnement payé reprend là où il en est ; son solde réel de Boosties n’a pas bougé.', confirmLabel: 'Retirer', tone: 'red' });
+    if (!ok) return;
+    await call(`/admin/users/${u.id}/super-user`, { method: 'PATCH', body: { super_user: false } });
+    await after('Super User retiré à ' + nameOf(u) + '.', loadUsers);
+  }),
   remove: (u) => run(async () => {
     const values = await ask({
       title: 'Supprimer le compte de ' + nameOf(u),
@@ -517,8 +533,12 @@ function userMenuItems(u) {
   const item = (label, tone, run, why) => ({ label, tone, run, why: why || null });
   const items = [];
   if (u.deleted) return items;
+  // Retirer reste possible sur un compte banni : retirer un avantage ne se
+  // bloque jamais.
+  const superUserOff = () => item('Retirer Super User', 'amber', () => userActs.superUserOff(u), superWhy);
   if (u.banned_at) {
     items.push(item('Réactiver le compte', 'green', () => userActs.unban(u), superWhy));
+    if (u.super_user_since) items.push(superUserOff());
     items.push(item('Supprimer le compte', 'red', () => userActs.remove(u), superWhy));
     return items;
   }
@@ -531,6 +551,10 @@ function userMenuItems(u) {
     items.push(item('Nommer super admin', 'amber', () => userActs.superOn(u), superWhy));
   } else {
     items.push(item('Passer admin', 'violet', () => userActs.promote(u)));
+    // Un admin a déjà le Pass et les Boosties sans limite : le statut ne se
+    // propose qu'aux membres.
+    if (u.super_user_since) items.push(superUserOff());
+    else items.push(item('Passer Super User', 'green', () => userActs.superUserOn(u), superWhy || (!u.is_adult ? 'Compte mineur : le Pass est réservé aux majeurs.' : null)));
   }
   if (!u.is_super_admin) {
     items.push(item('Avertir', 'violet', () => userActs.warn(u), self ? 'C’est ton compte.' : null));
@@ -569,6 +593,7 @@ function statusPills(u) {
   if (u.deleted) pills.push(el('span', { class: 'bz-pill is-grey', text: 'Supprimé' }));
   else if (u.banned_at) pills.push(el('span', { class: 'bz-pill is-red', text: u.banned_until ? 'Suspendu' : 'Banni' }));
   else pills.push(el('span', { class: rolePillClass(u), text: roleLabel(u) }));
+  if (!u.deleted && u.super_user_since) pills.push(el('span', { class: 'bz-pill is-green', title: 'Pass annuel offert et Boosties sans solde', text: 'Super User' }));
   if (!u.deleted && !u.is_adult) pills.push(el('span', { class: 'bz-pill is-amber', text: 'Mineur' }));
   return pills;
 }
@@ -666,7 +691,8 @@ function passInfo(u) {
       el('b', { text: p.planLabel }),
       p.statusLabel !== 'Actif' ? el('span', { class: p.statusCls, text: p.statusLabel }) : null,
       // Un Pass posé par la bascule d'administration n'a rien payé.
-      p.qa ? el('span', { class: 'bz-pill is-grey', title: 'État posé par la bascule d’administration', text: 'Test' }) : null),
+      p.qa ? el('span', { class: 'bz-pill is-grey', title: 'État posé par la bascule d’administration', text: 'Test' }) : null,
+      p.offered ? el('span', { class: 'bz-pill is-green', title: 'Pass offert à un Super User, sans paiement', text: 'Offert' }) : null),
     (p.sinceSpan ? 'depuis ' + p.sinceSpan + ' · ' : '') + (p.hasEnd ? fin + p.expires : 'sans échéance')
   ];
 }
@@ -1787,6 +1813,7 @@ function detailText(a) {
   switch (a.action) {
     case 'role': return role(d.from) + ' → ' + role(d.to) + (d.cleared_super_admin ? ', rang de super admin retiré' : '');
     case 'super_admin': return d.super_admin ? 'nommé super admin' : 'rang retiré';
+    case 'super_user': return d.super_user ? 'passé Super User' : 'Super User retiré';
     case 'report_status': return (REPORT_STATUS[d.from] || [d.from])[0] + ' → ' + (REPORT_STATUS[d.to] || [d.to])[0];
     case 'delete_account': return (d.cards_deleted ?? 0) + ' cartes, ' + (d.photos_deleted ?? 0) + ' photos, ' + (d.exchanges_cancelled ?? 0) + ' échanges annulés';
     case 'unban': return d.previous_reason ? 'motif initial : ' + d.previous_reason : '';

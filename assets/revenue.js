@@ -35,6 +35,8 @@
 //      store,                // app_store | google_play | web | null
 //      price_cents, currency // prix de la formule, ex. 499 / "EUR"
 //      source                // subscription (une échéance en base)
+//                            // | super_user (Pass offert à un Super User,
+//                            //   annuel et sans échéance, 26/10/2026)
 //                            // | admin_override (la bascule de QA des admins,
 //                            //   qui n'a rien payé et doit se voir comme telle)
 //    }
@@ -132,7 +134,7 @@ export function passSummary(p, now = new Date()) {
   // d'échéance (passOverride 'active' sans passActiveUntil) : il est actif
   // tant que la bascule l'est. L'exiger daté l'affichait « Expiré le — »
   // (vu le 05/10/2026 sur le compte démo).
-  const running = p.status !== 'expired' && (end ? end > now : p.source === 'admin_override');
+  const running = p.status !== 'expired' && (end ? end > now : p.source === 'admin_override' || p.source === 'super_user');
   const [statusLabel, statusCls] = running ? (PASS_STATUS[p.status] || PASS_STATUS.active) : PASS_STATUS.expired;
   const left = end ? Math.ceil((end - now) / DAY) : null;
   return {
@@ -153,6 +155,9 @@ export function passSummary(p, now = new Date()) {
     // Un état posé par la bascule d'administration : il ne vient d'aucun
     // paiement, et la liste des abonnés doit le montrer.
     qa: p.source === 'admin_override',
+    // Un Pass offert à un Super User : actif, mais aucun paiement derrière, il
+    // ne compte pas parmi les abonnés.
+    offered: p.source === 'super_user',
     price: p.price_cents ? money(p.price_cents, p.currency || 'EUR') : null
   };
 }
@@ -640,7 +645,7 @@ function subscribersCard(list, phone) {
     .map((x) => ({ user: x.user, s: passSummary(x.boostz_pass, now), end: new Date(x.boostz_pass.current_period_end).getTime() || 0 }))
     // Une bascule d'administration n'est pas un abonné : le serveur la compte
     // à part (« hors abonnés »), la liste aussi.
-    .filter((x) => x.s && x.s.active && !x.s.qa && (rv.plan === 'all' || x.s.plan === rv.plan))
+    .filter((x) => x.s && x.s.active && !x.s.qa && !x.s.offered && (rv.plan === 'all' || x.s.plan === rv.plan))
     .sort((a, b) => a.end - b.end);
 
   const head = el('div', { class: 'rv-card-head' }, el('div', {},

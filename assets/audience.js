@@ -12,7 +12,7 @@
 // Tout texte venu de l'API passe par textContent (el()).
 import { call } from './api.js';
 import { el } from './chrome.js';
-import { svg, svgText, showTick, niceMax, columnPath, tooltip, responsiveChart, int } from './revenue.js?v=2026-10-19g';
+import { svg, svgText, showTick, niceMax, columnPath, tooltip, responsiveChart, int } from './revenue.js?v=2026-10-26a';
 
 // La couleur des visites : celle du Pass mensuel, déjà validée sur le fond des
 // cartes (#171221) par le script du skill dataviz.
