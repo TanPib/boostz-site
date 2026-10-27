@@ -30,8 +30,13 @@
      Le deuxième ne marche qu'une fois la version du test fermé validée par
      Google, et pour un compte déjà membre du groupe.
 
-     Aucun script : la page ne fait que des liens, rien ne s'y cache sans
-     JavaScript. Chemins absolus : elle vit dans un sous-dossier. */
+     Deux volets, Android et iPhone (27/10/2026, maquette validée par TanPib) :
+     sur ordinateur, deux colonnes côte à côte, pour ne plus avoir à descendre
+     jusqu'à l'iPhone ; sur téléphone, deux encarts repliés qui portent le
+     statut de la plateforme et s'ouvrent au toucher. Ce sont des <details> :
+     ils s'ouvrent sans JavaScript, et le seul script de la page (en bas) ne
+     fait que les garder ouverts sur ordinateur. Chemins absolus : la page vit
+     dans un sous-dossier. */
   .bt{max-width:640px;margin:0 auto}
   .bt-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:44px}
   .bt-icon{position:relative;width:104px;height:104px;transform:rotate(-4deg)}
@@ -40,38 +45,97 @@
   .bt-title{font-size:40px;margin-top:34px}
   .bt-lead{max-width:420px;margin-left:auto;margin-right:auto}
 
-  /* Les étapes : trois autocollants reliés par le fil pointillé de l'accueil. */
-  .bt-steps{position:relative;list-style:none;margin:56px 0 0;padding:0;display:flex;flex-direction:column;gap:46px}
-  .bt-steps::before{content:"";position:absolute;left:40px;top:10px;bottom:10px;border-left:3px dashed rgba(196,181,253,.45)}
-  .bt-step{position:relative;padding:38px 20px 22px;overflow:visible}
-  .bt-num{position:absolute;left:18px;top:-24px;width:46px;height:46px;border-radius:50%;border:4px solid #F5F2FB;background:#7C3AED;box-shadow:4px 4px 0 #05040A;display:flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:Outfit,sans-serif;font-weight:800;font-size:20px;color:#fff}
-  .bt-step .h{font-size:24px}
-  .bt-step .btn{margin-top:18px;width:100%}
+  /* Les volets. L'en-tête porte le nom, la voie d'installation et le statut :
+     vert quand la bêta est ouverte, lavande avec sa date tant qu'elle attend. */
+  .bt-grid{display:flex;flex-direction:column;gap:22px;margin-top:36px}
+  .bt-sum{display:flex;align-items:center;gap:12px;padding:16px 14px 16px 16px;list-style:none;cursor:pointer}
+  .bt-sum::-webkit-details-marker{display:none}
+  .bt-sum:focus-visible{outline:3px solid #C4B5FD;outline-offset:-7px;border-radius:16px}
+  .bt-ico{flex:none;display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;border:3px solid #F5F2FB;background:#2A2140;box-shadow:3px 3px 0 #05040A;box-sizing:border-box}
+  .bt-ico.is-on{background:#7C3AED}
+  .bt-name{flex:1;min-width:0;font-size:23px}
+  .bt-via{display:block;margin-top:3px;font-family:"DM Sans",sans-serif;font-weight:500;font-size:13px;line-height:1.3;letter-spacing:0;color:#A8A2B8}
+  .bt-pill{flex:none;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;border:2px solid #F5F2FB;box-shadow:2px 2px 0 #05040A;font-family:"DM Sans",sans-serif;font-weight:700;font-size:13px;white-space:nowrap;box-sizing:border-box}
+  .bt-pill.is-on{background:#34D399;color:#062A1C}
+  .bt-pill.is-later{background:#1D1730;border-color:#C4B5FD;color:#C4B5FD}
+  .bt-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .bt-long{display:none}
+  .bt-chev{flex:none;transition:transform .2s ease}
+  .bt-vol[open] .bt-chev{transform:rotate(180deg)}
+  .bt-body{padding:20px 16px 22px;border-top:3px dashed rgba(196,181,253,.35)}
+
+  /* Les étapes d'un volet, reliées par le fil pointillé de l'accueil. */
+  .bt-steps{position:relative;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:24px}
+  .bt-steps::before{content:"";position:absolute;left:16px;top:18px;bottom:18px;border-left:3px dashed rgba(196,181,253,.45)}
+  .bt-step{position:relative;display:flex;gap:12px}
+  .bt-num{flex:none;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:35px;height:35px;border-radius:50%;border:3px solid #F5F2FB;background:#7C3AED;box-shadow:2px 2px 0 #05040A;box-sizing:border-box;font-family:Outfit,sans-serif;font-weight:800;font-size:15px;color:#fff}
+  .bt-step-in{flex:1;min-width:0;padding-top:5px}
+  .bt-step .h{font-size:19px;letter-spacing:-0.01em}
+  .bt-step .p{margin-top:8px}
+  .bt-step .btn{width:100%;height:54px;margin-top:14px;padding:0 14px;font-size:16px}
   .btn.is-dark{background:#2A2140}
   /* L'étape d'avant, rappelée juste au-dessus du bouton (27/10/2026) : sans
      elle, le lien de Google « ne marche pas » et rien ne dit pourquoi. */
-  .bt-warn{display:flex;align-items:flex-start;gap:10px;margin:16px 0 0;padding:10px 12px;border-radius:14px;border:2px solid #FCD34D;background:rgba(252,211,77,.08);color:#F5F2FB;font-family:"DM Sans",sans-serif;font-size:14px;line-height:1.45}
+  .bt-warn{display:flex;align-items:flex-start;gap:9px;margin:12px 0 0;padding:9px 11px;border-radius:13px;border:2px solid #FCD34D;background:rgba(252,211,77,.08);color:#F5F2FB;font-family:"DM Sans",sans-serif;font-size:13.5px;line-height:1.45}
   .bt-warn svg{flex:none;margin-top:1px}
   .bt-warn b{color:#FCD34D}
   .bt-step .bt-warn + .btn{margin-top:12px}
-  /* La pastille d'état, et les étapes qui attendent (l'iPhone, jusqu'au 14/11). */
-  .bt-date{display:inline-block;margin-top:20px;padding:8px 16px;border-radius:12px;border:3px solid #F5F2FB;background:#C4B5FD;box-shadow:4px 4px 0 #05040A;color:#1D1730;font-family:"DM Sans",sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;transform:rotate(-2deg)}
-  .bt-step.is-later{border-color:#4A4460;box-shadow:8px 8px 0 #05040A}
-  .bt-step.is-later .bt-num{background:#2A2140;border-color:#7F7891;color:#BFB9CB}
-  .bt-soon{display:flex;align-items:center;justify-content:center;margin-top:18px;height:56px;border-radius:18px;border:3px dashed #4A4460;color:#7F7891;font-family:"DM Sans",sans-serif;font-weight:700;font-size:16px}
+  /* Les étapes qui attendent (l'iPhone, jusqu'au 14/11). */
+  .bt-step.is-later .bt-num{background:#2A2140;border-color:#7F7891;color:#BFB9CB;box-shadow:none}
+  .bt-step.is-later .h{color:#BFB9CB}
+  .bt-soon{display:flex;align-items:center;justify-content:center;margin-top:14px;height:50px;border-radius:16px;border:3px dashed #4A4460;color:#7F7891;font-family:"DM Sans",sans-serif;font-weight:700;font-size:15px}
+  .bt-req{margin:20px 0 0;font-size:13px;color:#A8A2B8;text-align:center}
 
-  /* Deux parcours (20/10/2026) : Android par le groupe et Google Play,
-     iPhone par TestFlight. Un intertitre par plateforme. */
-  .bt-plat{display:flex;align-items:center;gap:12px;margin:64px 0 0;font-family:"DM Sans",sans-serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#C4B5FD}
-  .bt-plat::after{content:"";flex:1;border-top:2px dashed rgba(196,181,253,.35)}
-  .bt-plat + .bt-steps{margin-top:40px}
-  .bt-req{margin-top:18px;font-size:13px;color:#A8A2B8;text-align:center}
   .bt-more{margin-top:64px}
   .bt-more .pts b{color:#F5F2FB}
   .bt-foot{margin-top:72px}
+
+  /* Petits écrans (360 px, courant sur Android) : la pastille et les boutons
+     se serrent ; en dessous, l'icône cède aussi sa place au nom. */
+  @media (max-width:374px){
+    .bt-sum{gap:10px}
+    .bt-pill{gap:5px;padding:0 8px;font-size:12px}
+    .bt-body{padding:18px 12px 20px}
+    .bt-step{gap:10px}
+    .bt-step .btn{gap:8px;padding:0 10px;font-size:15px}
+  }
+  @media (max-width:359px){
+    .bt-ico{display:none}
+  }
   @media (min-width:900px){
+    .bt-hero{padding-top:40px}
     .bt-title{font-size:56px}
-    .bt-hero{padding-top:64px}
+    .bt-title br{display:none}
+    .bt-lead{max-width:640px}
+  }
+  /* Côte à côte dès 1 024 px : en dessous, deux colonnes n'ont plus la place
+     pour l'en-tête (nom et pastille), et les volets restent ceux du téléphone,
+     centrés. Le script du bas suit la même largeur. */
+  @media (min-width:1024px){
+    .bt{max-width:none}
+    .bt-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:40px;margin-top:48px}
+    .bt-sum{gap:16px;padding:26px 26px 0}
+    .bt-grid.is-fixed .bt-sum{cursor:default;pointer-events:none}
+    .bt-grid.is-fixed .bt-chev{display:none}
+    .bt-ico{width:58px;height:58px;border-radius:17px;border-width:4px;box-shadow:4px 4px 0 #05040A}
+    .bt-name{font-size:34px}
+    .bt-via{margin-top:4px;font-size:14px}
+    .bt-pill{gap:8px;height:36px;padding:0 15px;border-width:3px;box-shadow:3px 3px 0 #05040A;font-size:15px}
+    .bt-dot{width:9px;height:9px}
+    .bt-long{display:inline}
+    .bt-short{display:none}
+    .bt-body{padding:30px 26px 30px;border-top:0}
+    .bt-steps{gap:28px}
+    .bt-steps::before{left:19px;top:20px;bottom:20px}
+    .bt-step{gap:16px}
+    .bt-num{width:40px;height:40px;border-width:4px;box-shadow:3px 3px 0 #05040A;font-size:17px}
+    .bt-step .h{font-size:22px}
+    .bt-step .p{font-size:16px}
+    .bt-step .btn{height:58px;padding:0 24px;font-size:17px}
+    .bt-warn{font-size:14px}
+    .bt-more{margin-top:72px}
+    .bt-more .pts{flex-direction:row;flex-wrap:wrap;gap:28px 40px}
+    .bt-more .pts li{flex:1 1 280px;min-width:0}
   }
 </style>
 </head>
@@ -86,70 +150,105 @@
 <div class="bt">
 
 <section class="bt-hero" aria-labelledby="titre">
-  <div class="bt-icon"><img src="/assets/vitrine/icone-app.png" alt="Icône de l'application Boostz"><span class="bt-tag">BÊTA</span></div>
-  <h1 id="titre" class="h bt-title">Teste Boostz<br><span class="acc">avant sa sortie.</span></h1>
-  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. D'ici là, la bêta est ouverte sur Android, et elle arrive sur iPhone le 14&nbsp;novembre. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
-  <span class="bt-date">Ouverte sur Android</span>
+  <div class="bt-icon"><img src="/assets/vitrine/icone-app.png" alt="Icône de l'application BoostZ"><span class="bt-tag">BÊTA</span></div>
+  <h1 id="titre" class="h bt-title">Teste BoostZ <br><span class="acc">avant sa sortie.</span></h1>
+  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. D'ici là, choisis ton téléphone&nbsp;: la bêta est ouverte sur Android, et elle arrive sur iPhone le 14&nbsp;novembre. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
 </section>
 
-<h2 class="bt-plat" id="android">Sur Android</h2>
-<ol class="bt-steps" aria-labelledby="android">
-  <!-- OUVERTE LE 27/10/2026, avant le 14/11 prévu : des membres du groupe ne
-       trouvaient pas l'appli. Être dans le groupe ne suffit pas, il faut aussi
-       toucher « Devenir testeur » sur la page de l'étape 2, qui ne s'affiche
-       que par son lien ; et sans version en production, l'appli n'apparaît
-       pas dans la recherche du Play Store, même pour un testeur : d'où le
-       bouton de l'étape 3. Le décompte de Google (12 testeurs, 14 jours) ne
-       compte que ceux qui ont fait l'étape 2. -->
-  <li class="st bt-step">
-    <span class="bt-num" aria-hidden="true">1</span>
-    <h2 class="h">Rejoins les testeurs</h2>
-    <p class="p">Rejoins le groupe des testeurs avec le compte Google de ton téléphone&nbsp;: c'est lui que Google Play reconnaîtra. Laisse les e&#8209;mails du groupe activés, c'est par là qu'on te prévient.</p>
-    <a class="btn" href="https://groups.google.com/g/boostz-beta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M19 8v6M16 11h6"/></svg>Rejoindre les testeurs</a>
-  </li>
-  <li class="st bt-step">
-    <span class="bt-num" aria-hidden="true">2</span>
-    <h2 class="h">Accepte l'invitation</h2>
-    <p class="p">Sur la page de Google, touche «&nbsp;Devenir testeur&nbsp;»&nbsp;: sans ce geste, l'appli reste invisible. Pas d'accès alors que tu es dans le groupe&nbsp;? Vérifie que tu es sur le même compte Google, attends quelques minutes et recharge la page.</p>
-    <p class="bt-warn" role="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;1 d'abord.</b> Sans le groupe, Google te répond que tu n'as pas accès.</span></p>
-    <a class="btn is-dark" href="https://play.google.com/apps/testing/app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Devenir testeur</a>
-  </li>
-  <li class="st bt-step">
-    <span class="bt-num" aria-hidden="true">3</span>
-    <h2 class="h">Installe Boostz</h2>
-    <p class="p">Pendant la bêta, BoostZ n'apparaît pas dans la recherche du Play Store&nbsp;: passe par ce bouton, puis touche «&nbsp;Installer&nbsp;». Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
-    <p class="bt-warn" role="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;2 d'abord.</b> Tant que tu n'as pas touché «&nbsp;Devenir testeur&nbsp;», la fiche affiche «&nbsp;Élément introuvable&nbsp;».</span></p>
-    <a class="btn is-dark" href="https://play.google.com/store/apps/details?id=app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer BoostZ</a>
-  </li>
-</ol>
+<div class="bt-grid">
 
-<!-- LA BÊTA SUR IPHONE (20/10/2026), par TestFlight. Pas de groupe ni de
+<!-- ANDROID, OUVERTE LE 27/10/2026, avant le 14/11 prévu : des membres du
+     groupe ne trouvaient pas l'appli. Être dans le groupe ne suffit pas, il
+     faut aussi toucher « Devenir testeur » sur la page de l'étape 2, qui ne
+     s'affiche que par son lien ; et sans version en production, l'appli
+     n'apparaît pas dans la recherche du Play Store, même pour un testeur :
+     d'où le bouton de l'étape 3. Le décompte de Google (12 testeurs, 14 jours)
+     ne compte que ceux qui ont fait l'étape 2. -->
+<details class="st bt-vol" id="android">
+  <summary class="bt-sum">
+    <span class="bt-ico is-on" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span>
+    <h2 class="h bt-name">Android<span class="bt-via">Par Google Play</span></h2>
+    <span class="bt-pill is-on"><span class="bt-dot" aria-hidden="true"></span>Ouverte</span>
+    <svg class="bt-chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F2FB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </summary>
+  <div class="bt-body">
+    <ol class="bt-steps">
+      <li class="bt-step">
+        <span class="bt-num" aria-hidden="true">1</span>
+        <div class="bt-step-in">
+          <h3 class="h">Rejoins les testeurs</h3>
+          <p class="p">Avec le compte Google de ton téléphone&nbsp;: c'est lui que Google Play reconnaîtra. Laisse les e&#8209;mails du groupe activés, c'est par là qu'on te prévient.</p>
+          <a class="btn" href="https://groups.google.com/g/boostz-beta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M19 8v6M16 11h6"/></svg>Rejoindre le groupe</a>
+        </div>
+      </li>
+      <li class="bt-step">
+        <span class="bt-num" aria-hidden="true">2</span>
+        <div class="bt-step-in">
+          <h3 class="h">Accepte l'invitation</h3>
+          <p class="p">Touche «&nbsp;Devenir testeur&nbsp;»&nbsp;: sans ce geste, l'appli reste invisible. Pas d'accès alors que tu es dans le groupe&nbsp;? Vérifie le compte Google, attends quelques minutes et recharge la page.</p>
+          <p class="bt-warn" role="note"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;1 d'abord.</b> Sans le groupe, Google te répond que tu n'as pas accès.</span></p>
+          <a class="btn is-dark" href="https://play.google.com/apps/testing/app.boostz.mobile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Devenir testeur</a>
+        </div>
+      </li>
+      <li class="bt-step">
+        <span class="bt-num" aria-hidden="true">3</span>
+        <div class="bt-step-in">
+          <h3 class="h">Installe BoostZ</h3>
+          <p class="p">Pendant la bêta, BoostZ n'apparaît pas dans la recherche du Play Store&nbsp;: passe par ce bouton. Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
+          <p class="bt-warn" role="note"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;2 d'abord.</b> Sinon la fiche affiche «&nbsp;Élément introuvable&nbsp;».</span></p>
+          <a class="btn is-dark" href="https://play.google.com/store/apps/details?id=app.boostz.mobile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer BoostZ</a>
+        </div>
+      </li>
+    </ol>
+    <p class="bt-req">Android&nbsp;7 ou plus récent.</p>
+  </div>
+</details>
+
+<!-- IPHONE (20/10/2026), par TestFlight. Pas de groupe ni de
      pré-inscription : le lien public suffit. IL N'EXISTE PAS ENCORE : Apple
      doit d'abord valider la bêta (vers le 5/11). Ne jamais mettre de lien
      deviné : le 14/11, l'étape 2 reçoit le vrai lien (bouton), donné par
-     TanPib. Pas de logo Apple ni de badge App Store avant la sortie. -->
-<h2 class="bt-plat" id="iphone">Sur iPhone</h2>
-<ol class="bt-steps" aria-labelledby="iphone">
-  <li class="st bt-step">
-    <span class="bt-num" aria-hidden="true">1</span>
-    <h2 class="h">Installe TestFlight</h2>
-    <p class="p">C'est l'appli gratuite d'Apple pour essayer les applis avant leur sortie. Tu peux l'installer dès maintenant depuis l'App Store.</p>
-    <a class="btn" href="https://apps.apple.com/fr/app/testflight/id899247664"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer TestFlight</a>
-  </li>
-  <li class="st bt-step is-later">
-    <span class="bt-num" aria-hidden="true">2</span>
-    <h2 class="h">Le 14&nbsp;novembre, ouvre le lien de la bêta</h2>
-    <p class="p">Le lien sera ici, sur cette page, le jour de l'ouverture. Ouvre-le sur ton iPhone&nbsp;: pas d'inscription à faire avant.</p>
-    <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
-  </li>
-  <li class="st bt-step is-later">
-    <span class="bt-num" aria-hidden="true">3</span>
-    <h2 class="h">Touche «&nbsp;Accepter&nbsp;», puis «&nbsp;Installer&nbsp;»</h2>
-    <p class="p">BoostZ s'installe depuis TestFlight. Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
-    <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
-  </li>
-</ol>
-<p class="bt-req">Il faut un iPhone XS ou XR, ou plus récent (iOS&nbsp;16.4 minimum).</p>
+     TanPib, et la pastille passe à « Ouverte » (bt-pill is-on, bt-ico is-on).
+     Pas de logo Apple ni de badge App Store avant la sortie. -->
+<details class="st bt-vol" id="iphone">
+  <summary class="bt-sum">
+    <span class="bt-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span>
+    <h2 class="h bt-name">iPhone<span class="bt-via">Par TestFlight</span></h2>
+    <span class="bt-pill is-later"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Le 14<span class="bt-long">&nbsp;novembre</span><span class="bt-short">&nbsp;nov.</span></span></span>
+    <svg class="bt-chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F2FB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </summary>
+  <div class="bt-body">
+    <ol class="bt-steps">
+      <li class="bt-step">
+        <span class="bt-num" aria-hidden="true">1</span>
+        <div class="bt-step-in">
+          <h3 class="h">Installe TestFlight</h3>
+          <p class="p">L'appli gratuite d'Apple pour essayer les applis avant leur sortie. Tu peux l'installer dès maintenant.</p>
+          <a class="btn" href="https://apps.apple.com/fr/app/testflight/id899247664"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer TestFlight</a>
+        </div>
+      </li>
+      <li class="bt-step is-later">
+        <span class="bt-num" aria-hidden="true">2</span>
+        <div class="bt-step-in">
+          <h3 class="h">Ouvre le lien de la bêta</h3>
+          <p class="p">Il sera ici le jour de l'ouverture. Pas d'inscription à faire avant.</p>
+          <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+        </div>
+      </li>
+      <li class="bt-step is-later">
+        <span class="bt-num" aria-hidden="true">3</span>
+        <div class="bt-step-in">
+          <h3 class="h">Accepte, puis installe</h3>
+          <p class="p">Touche «&nbsp;Accepter&nbsp;», puis «&nbsp;Installer&nbsp;»&nbsp;: BoostZ s'installe depuis TestFlight. Tu as déjà un compte&nbsp;? Connecte-toi avec.</p>
+          <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+        </div>
+      </li>
+    </ol>
+    <p class="bt-req">iPhone XS, XR ou plus récent (iOS&nbsp;16.4 minimum).</p>
+  </div>
+</details>
+
+</div>
 
 <section class="bt-more" aria-labelledby="savoir">
   <p class="kick" style="color:#C4B5FD">Bon à savoir</p>
@@ -175,5 +274,33 @@
 </footer>
 
 </div>
+<script>
+  /* Sur ordinateur (1 024 px et plus), les deux volets restent ouverts côte à côte : ce script
+     les ouvre, retire leur en-tête du parcours au clavier et rouvre celui
+     qu'on fermerait. Sur téléphone, il ne fait rien : les volets s'ouvrent au
+     toucher, en natif. Une adresse en #android ou #iphone ouvre ce volet.
+     Placé après les volets pour agir avant le premier affichage. */
+  (function () {
+    var grid = document.querySelector('.bt-grid');
+    var vols = document.querySelectorAll('.bt-vol');
+    var wide = window.matchMedia('(min-width:1024px)');
+    function apply() {
+      grid.classList.toggle('is-fixed', wide.matches);
+      for (var i = 0; i < vols.length; i++) {
+        if (wide.matches) vols[i].open = true;
+        vols[i].querySelector('summary').tabIndex = wide.matches ? -1 : 0;
+      }
+    }
+    for (var i = 0; i < vols.length; i++) {
+      vols[i].addEventListener('toggle', function (e) {
+        if (wide.matches && !e.target.open) e.target.open = true;
+      });
+    }
+    var target = location.hash && document.getElementById(location.hash.slice(1));
+    if (target && target.classList.contains('bt-vol')) target.open = true;
+    apply();
+    if (wide.addEventListener) wide.addEventListener('change', apply);
+  })();
+</script>
 </body>
 </html>
