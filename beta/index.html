@@ -48,6 +48,12 @@
   .bt-step .h{font-size:24px}
   .bt-step .btn{margin-top:18px;width:100%}
   .btn.is-dark{background:#2A2140}
+  /* L'étape d'avant, rappelée juste au-dessus du bouton (27/10/2026) : sans
+     elle, le lien de Google « ne marche pas » et rien ne dit pourquoi. */
+  .bt-warn{display:flex;align-items:flex-start;gap:10px;margin:16px 0 0;padding:10px 12px;border-radius:14px;border:2px solid #FCD34D;background:rgba(252,211,77,.08);color:#F5F2FB;font-family:"DM Sans",sans-serif;font-size:14px;line-height:1.45}
+  .bt-warn svg{flex:none;margin-top:1px}
+  .bt-warn b{color:#FCD34D}
+  .bt-step .bt-warn + .btn{margin-top:12px}
   /* La pastille d'état, et les étapes qui attendent (l'iPhone, jusqu'au 14/11). */
   .bt-date{display:inline-block;margin-top:20px;padding:8px 16px;border-radius:12px;border:3px solid #F5F2FB;background:#C4B5FD;box-shadow:4px 4px 0 #05040A;color:#1D1730;font-family:"DM Sans",sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;transform:rotate(-2deg)}
   .bt-step.is-later{border-color:#4A4460;box-shadow:8px 8px 0 #05040A}
@@ -104,14 +110,16 @@
   <li class="st bt-step">
     <span class="bt-num" aria-hidden="true">2</span>
     <h2 class="h">Accepte l'invitation</h2>
-    <p class="p">Sur la page de Google, touche «&nbsp;Devenir testeur&nbsp;»&nbsp;: sans ce geste, l'appli reste invisible. La page dit que tu n'as pas accès&nbsp;? Vérifie que tu es sur le compte Google de l'étape&nbsp;1, attends quelques minutes et recharge-la.</p>
+    <p class="p">Sur la page de Google, touche «&nbsp;Devenir testeur&nbsp;»&nbsp;: sans ce geste, l'appli reste invisible. Pas d'accès alors que tu es dans le groupe&nbsp;? Vérifie que tu es sur le même compte Google, attends quelques minutes et recharge la page.</p>
+    <p class="bt-warn" role="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;1 d'abord.</b> Sans le groupe, Google te répond que tu n'as pas accès.</span></p>
     <a class="btn is-dark" href="https://play.google.com/apps/testing/app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Devenir testeur</a>
   </li>
   <li class="st bt-step">
     <span class="bt-num" aria-hidden="true">3</span>
     <h2 class="h">Installe Boostz</h2>
     <p class="p">Pendant la bêta, BoostZ n'apparaît pas dans la recherche du Play Store&nbsp;: passe par ce bouton, puis touche «&nbsp;Installer&nbsp;». Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
-    <a class="btn is-dark" href="https://play.google.com/store/apps/details?id=app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Ouvrir la fiche de BoostZ</a>
+    <p class="bt-warn" role="note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;2 d'abord.</b> Tant que tu n'as pas touché «&nbsp;Devenir testeur&nbsp;», la fiche affiche «&nbsp;Élément introuvable&nbsp;».</span></p>
+    <a class="btn is-dark" href="https://play.google.com/store/apps/details?id=app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer BoostZ</a>
   </li>
 </ol>
 
