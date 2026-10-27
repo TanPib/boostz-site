@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0B0812">
 <title>Teste BoostZ avant sa sortie : la bêta Android et iPhone</title>
-<meta name="description" content="La bêta BoostZ ouvre le 14 novembre sur Android et sur iPhone, avant la sortie du 14 janvier 2027.">
+<meta name="description" content="La bêta BoostZ est ouverte sur Android, et elle arrive sur iPhone le 14 novembre, avant la sortie du 14 janvier 2027.">
 <!-- La bêta s'arrête à la sortie : pas de résultat de recherche qui y mène
      encore après. On y arrive par les liens qu'on partage. -->
 <meta name="robots" content="noindex">
@@ -48,7 +48,7 @@
   .bt-step .h{font-size:24px}
   .bt-step .btn{margin-top:18px;width:100%}
   .btn.is-dark{background:#2A2140}
-  /* Pré-inscription : la date d'ouverture, et les étapes qui attendent. */
+  /* La pastille d'état, et les étapes qui attendent (l'iPhone, jusqu'au 14/11). */
   .bt-date{display:inline-block;margin-top:20px;padding:8px 16px;border-radius:12px;border:3px solid #F5F2FB;background:#C4B5FD;box-shadow:4px 4px 0 #05040A;color:#1D1730;font-family:"DM Sans",sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;transform:rotate(-2deg)}
   .bt-step.is-later{border-color:#4A4460;box-shadow:8px 8px 0 #05040A}
   .bt-step.is-later .bt-num{background:#2A2140;border-color:#7F7891;color:#BFB9CB}
@@ -82,34 +82,36 @@
 <section class="bt-hero" aria-labelledby="titre">
   <div class="bt-icon"><img src="/assets/vitrine/icone-app.png" alt="Icône de l'application Boostz"><span class="bt-tag">BÊTA</span></div>
   <h1 id="titre" class="h bt-title">Teste Boostz<br><span class="acc">avant sa sortie.</span></h1>
-  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. Avant ça, la bêta ouvre le 14&nbsp;novembre, sur Android et sur iPhone. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
-  <span class="bt-date">Ouverture le 14&nbsp;novembre</span>
+  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. D'ici là, la bêta est ouverte sur Android, et elle arrive sur iPhone le 14&nbsp;novembre. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
+  <span class="bt-date">Ouverte sur Android</span>
 </section>
 
 <h2 class="bt-plat" id="android">Sur Android</h2>
 <ol class="bt-steps" aria-labelledby="android">
-  <!-- PRÉ-INSCRIPTION jusqu'au 14/11/2026 : seule l'étape 1 est active. Le
-       groupe sert déjà de liste de testeurs au test fermé ; le 14/11, TanPib
-       écrit aux membres du groupe (lien d'invitation et fiche), et les étapes
-       2 et 3 reprennent leurs boutons (commit cb719bd pour leur version
-       active). -->
+  <!-- OUVERTE LE 27/10/2026, avant le 14/11 prévu : des membres du groupe ne
+       trouvaient pas l'appli. Être dans le groupe ne suffit pas, il faut aussi
+       toucher « Devenir testeur » sur la page de l'étape 2, qui ne s'affiche
+       que par son lien ; et sans version en production, l'appli n'apparaît
+       pas dans la recherche du Play Store, même pour un testeur : d'où le
+       bouton de l'étape 3. Le décompte de Google (12 testeurs, 14 jours) ne
+       compte que ceux qui ont fait l'étape 2. -->
   <li class="st bt-step">
     <span class="bt-num" aria-hidden="true">1</span>
-    <h2 class="h">Inscris-toi maintenant</h2>
+    <h2 class="h">Rejoins les testeurs</h2>
     <p class="p">Rejoins le groupe des testeurs avec le compte Google de ton téléphone&nbsp;: c'est lui que Google Play reconnaîtra. Laisse les e&#8209;mails du groupe activés, c'est par là qu'on te prévient.</p>
     <a class="btn" href="https://groups.google.com/g/boostz-beta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M19 8v6M16 11h6"/></svg>Rejoindre les testeurs</a>
   </li>
-  <li class="st bt-step is-later">
+  <li class="st bt-step">
     <span class="bt-num" aria-hidden="true">2</span>
-    <h2 class="h">Le 14&nbsp;novembre, accepte l'invitation</h2>
-    <p class="p">On t'envoie le lien par e&#8209;mail le jour de l'ouverture. Ouvre-le sur ton téléphone et touche «&nbsp;Devenir testeur&nbsp;». Rien reçu&nbsp;? Regarde dans tes spams.</p>
-    <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+    <h2 class="h">Accepte l'invitation</h2>
+    <p class="p">Sur la page de Google, touche «&nbsp;Devenir testeur&nbsp;»&nbsp;: sans ce geste, l'appli reste invisible. La page dit que tu n'as pas accès&nbsp;? Vérifie que tu es sur le compte Google de l'étape&nbsp;1, attends quelques minutes et recharge-la.</p>
+    <a class="btn is-dark" href="https://play.google.com/apps/testing/app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Devenir testeur</a>
   </li>
-  <li class="st bt-step is-later">
+  <li class="st bt-step">
     <span class="bt-num" aria-hidden="true">3</span>
     <h2 class="h">Installe Boostz</h2>
-    <p class="p">Touche «&nbsp;Installer&nbsp;» sur la fiche de Boostz. Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
-    <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+    <p class="p">Pendant la bêta, BoostZ n'apparaît pas dans la recherche du Play Store&nbsp;: passe par ce bouton, puis touche «&nbsp;Installer&nbsp;». Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
+    <a class="btn is-dark" href="https://play.google.com/store/apps/details?id=app.boostz.mobile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Ouvrir la fiche de BoostZ</a>
   </li>
 </ol>
 
