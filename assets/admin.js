@@ -2102,7 +2102,9 @@ function render() {
 // #reports/<id>, #venues/<CREATE|CLAIM>/<id> ou #ideas/<id>. Sans session,
 // l'ancre est gardée le temps de la connexion, qui revient ici sans elle.
 const DEEP_LINK_KEY = 'boostz.adminDeepLink';
-const DEEP_TABS = { support: 'support', reports: 'reports', venues: 'venues', ideas: 'ideas' };
+// Les alertes sans fiche (pannes, remboursements, factures, plantages) mènent
+// à leur onglet : #data, #revenue, #billing, #studio, #crashes.
+const DEEP_TABS = { support: 'support', reports: 'reports', venues: 'venues', ideas: 'ideas', data: 'data', revenue: 'revenue', billing: 'billing', studio: 'studio', crashes: 'crashes' };
 
 function rememberDeepLink() {
   try { if (location.hash.length > 1) sessionStorage.setItem(DEEP_LINK_KEY, location.hash); } catch {}
