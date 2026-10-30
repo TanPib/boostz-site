@@ -74,7 +74,7 @@ function stepConfirm(user) {
   // administrateur n'est facturé par personne.
   const pass = user.has_pass && user.pass_override !== 'active'
     ? el('div', { class: 'bz-msg is-err', style: { marginTop: '12px' },
-      text: 'Ton Boostz Pass est actif. Si c’est un abonnement, supprimer ton compte ne l’arrête pas : Google Play ou l’App Store continuerait de le facturer. Résilie-le d’abord depuis ton magasin d’applications.' })
+      text: 'Ton BoostZ Pass est actif. Si c’est un abonnement, supprimer ton compte ne l’arrête pas : Google Play ou l’App Store continuerait de le facturer. Résilie-le d’abord depuis ton magasin d’applications.' })
     : null;
 
   word.addEventListener('input', () => { confirm.disabled = word.value.trim().toUpperCase() !== WORD; });
