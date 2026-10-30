@@ -265,6 +265,17 @@ function openDirectory(ctx, venueId) {
   ctx.paneTop();
 }
 
+// Un lien direct de la console (#venues/CLAIM/<id>, l'e-mail qui prévient
+// l'équipe) : le bon sous-onglet de « À valider », la demande sélectionnée.
+// La liste est relue au rendu suivant, puisqu'elle n'est pas de ce type.
+export async function selectVenueRequest(type, id) {
+  vn.level = 'pending';
+  vn.type = type === 'CLAIM' ? 'CLAIM' : 'CREATE';
+  vn.selId = id;
+  vn.error = null;
+  await loadVenues();
+}
+
 function openRequest(ctx, id) {
   vn.selId = id;
   ctx.openPane(PANE);

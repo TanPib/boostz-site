@@ -11,7 +11,7 @@ import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
-import { loadVenues, renderVenues, venuesPendingCount } from './venues.js?v=2026-10-19i';
+import { loadVenues, renderVenues, venuesPendingCount, selectVenueRequest } from './venues.js?v=2026-10-30a';
 import { renderAudience } from './audience.js?v=2026-10-19g';
 import { renderCrashes } from './plantages.js?v=2026-10-19j';
 import { renderHome } from './home.js?v=2026-10-19g';
@@ -2097,12 +2097,55 @@ function render() {
   window.scrollTo({ top: scrollY, behavior: 'instant' });
 }
 
+// LES LIENS DIRECTS (30/10/2026) : les e-mails qui préviennent l'équipe d'une
+// demande (serveur, lib/staffAlertMail.js) mènent à admin.html#support/<id>,
+// #reports/<id>, #venues/<CREATE|CLAIM>/<id> ou #ideas/<id>. Sans session,
+// l'ancre est gardée le temps de la connexion, qui revient ici sans elle.
+const DEEP_LINK_KEY = 'boostz.adminDeepLink';
+const DEEP_TABS = { support: 'support', reports: 'reports', venues: 'venues', ideas: 'ideas' };
+
+function rememberDeepLink() {
+  try { if (location.hash.length > 1) sessionStorage.setItem(DEEP_LINK_KEY, location.hash); } catch {}
+}
+
+function takeDeepLink() {
+  let hash = location.hash;
+  try {
+    if (hash.length <= 1) hash = sessionStorage.getItem(DEEP_LINK_KEY) || '';
+    sessionStorage.removeItem(DEEP_LINK_KEY);
+  } catch {}
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  const [tab, ...rest] = hash.replace(/^#/, '').split('/').map((x) => decodeURIComponent(x));
+  return DEEP_TABS[tab] ? { tab: DEEP_TABS[tab], rest } : null;
+}
+
+async function openDeepLink(link) {
+  if (!link) return;
+  const [a, b] = link.rest;
+  if (link.tab === 'support' && a) { state.tab = 'support'; state.pane = null; return openTicket(a); }
+  if (link.tab === 'ideas' && a) { state.tab = 'ideas'; state.pane = null; return openIdea(a); }
+  if (link.tab === 'reports' && a) {
+    state.reportId = a;
+    goTo('reports');
+    openPane('report');
+    return render();
+  }
+  if (link.tab === 'venues' && b) {
+    await selectVenueRequest(a, b);
+    goTo('venues');
+    openPane('venue-request');
+    return render();
+  }
+  goTo(link.tab);
+}
+
 export async function start() {
   host = document.getElementById('main');
   topHost = document.getElementById('top');
   toastHost = document.getElementById('toast');
 
   if (!session()) {
+    rememberDeepLink();
     renderTop(topHost, { label: 'ADMINISTRATION', next: 'admin', adminLabel: true });
     return gate(host, { title: 'Accès réservé aux admins', text: 'Cette console est réservée aux comptes administrateurs. Connecte-toi avec ton compte pour continuer.', next: 'admin', red: true, cta: 'Ouvrir une session admin' });
   }
@@ -2124,9 +2167,11 @@ export async function start() {
     if (link) link.setAttribute('href', 'compte.html');
     return;
   }
+  const link = takeDeepLink();
   await loadAll();
   clearTimeout(wake);
   clear(toastHost);
+  await openDeepLink(link);
   // Tourner le téléphone ou redimensionner la fenêtre change la mise en page.
   PHONE.addEventListener('change', () => render());
   document.addEventListener('keydown', shortcuts);
