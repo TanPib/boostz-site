@@ -17,6 +17,7 @@ import { renderCrashes } from './plantages.js?v=2026-10-19j';
 import { renderHome } from './home.js?v=2026-10-19g';
 import { renderBilling } from './billing.js?v=2026-10-19g';
 import { renderStudio } from './studio.js?v=2026-10-19g';
+import { renderProspection } from './prospection.js?v=2026-10-31a';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -124,7 +125,9 @@ const ACTIONS = {
   studio_client: 'Client sites web',
   studio_quote: 'Devis sites web',
   studio_invoice: 'Facture sites web',
-  studio_contract: 'Contrat sites web'
+  studio_contract: 'Contrat sites web',
+  // L'onglet Prospection (31/10/2026).
+  prospection: 'Prospection'
 };
 // Les champs d'une fiche boutique corrigés dans la console, nommés en français
 // dans le journal : le serveur y écrit les clés de l'API.
@@ -164,7 +167,7 @@ const pill = (map, key) => {
 const shortId = (id) => '#' + String(id).slice(-6).toUpperCase();
 
 // Le nom de chaque section, dans l'en-tête et la barre d'onglets du téléphone.
-const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', studio: 'Sites web', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', crashes: 'Plantages', more: 'Plus' };
+const SECTIONS = { home: 'Accueil', users: 'Utilisateurs', revenue: 'Revenus', billing: 'Facturation', studio: 'Sites web', prospection: 'Prospection', reports: 'Signalements', support: 'Support', venues: 'Boutiques', ideas: 'Idées', agent: 'Agent', journal: 'Journal', data: 'Data', sources: 'Sources', beta: 'Bêta', todo: 'Todo', audience: 'Audience', crashes: 'Plantages', more: 'Plus' };
 
 // Icônes en trait, même famille que celles de l'app (épaisseur 2, bouts ronds).
 const ICONS = {
@@ -190,6 +193,8 @@ const ICONS = {
   chevron: 'M9 6l6 6-6 6',
   back: 'M15 6l-6 6 6 6',
   revenue: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  // Un porte-voix, pour la prospection des boutiques.
+  prospection: 'M3 10v4a1 1 0 0 0 1 1h3l6 4V5L7 9H4a1 1 0 0 0-1 1ZM17 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11',
   // Un globe, pour l'activité sites web de l'EI.
   studio: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z',
   // Un reçu, pour la facturation des partenaires.
@@ -1843,6 +1848,10 @@ function detailText(a) {
     case 'studio_quote': return ({ create: 'Créé', send: 'Envoyé', accept: 'Accepté', refuse: 'Refusé', deliver: 'Livré' }[d.step] || d.step) + ' · ' + (d.client || '') + (d.number ? ' · ' + d.number : '');
     case 'studio_invoice': return ({ deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels', modification: 'Modifications' }[d.purpose] || 'Facture') + ' en brouillon · ' + (d.client || '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
     case 'studio_contract': return d.step === 'modifications' ? 'Modifications · ' + (d.client || '') + ' · ' + d.pages + ' page' + (d.pages > 1 ? 's' : '') + (d.covered ? ' (' + d.covered + ' incluse' + (d.covered > 1 ? 's' : '') + ')' : '') : ({ renew: 'Renouvelé', stop: 'Arrêté', restart: 'Repris' }[d.step] || d.step) + ' · ' + (d.client || '');
+    // L'onglet Prospection : le geste et ce qu'il concerne.
+    case 'prospection': return ({ send: 'E-mail envoyé à la main', template: 'Texte modifié', template_reset: 'Texte d’origine rétabli', settings: 'Réglages de l’envoi', import: 'Import', opt_out_removed: 'Adresse retirée de « Ne pas contacter »' }[d.step] || d.step) +
+      (d.key ? ' · ' + d.key : '') + (d.value ? ' · ' + d.value : '') + (d.step === 'import' ? ' · ' + (d.created || 0) + ' créée(s), ' + (d.updated || 0) + ' mise(s) à jour' : '') +
+      (d.step === 'settings' && typeof d.sending_enabled === 'boolean' ? ' · envoi ' + (d.sending_enabled ? 'allumé' : 'éteint') : '');
     default: return '';
   }
 }
@@ -1904,7 +1913,7 @@ const NAV = [
   ['', [['home', 'h']]],
   ['Pilotage', [['todo', 't'], ['audience', 'a'], ['revenue', 'r'], ['billing', 'f']]],
   ['Membres', [['users', 'u'], ['reports', 's'], ['support', 'p']]],
-  ['Contenus', [['venues', 'b'], ['ideas', 'i'], ['sources', 'c'], ['data', 'd']]],
+  ['Contenus', [['venues', 'b'], ['prospection', 'o'], ['ideas', 'i'], ['sources', 'c'], ['data', 'd']]],
   ['Outils', [['crashes', 'l'], ['agent', 'e'], ['journal', 'j'], ['beta', 'k']]],
   // L'activité de création de sites de l'EI, sans lien avec l'appli.
   ['Hors appli', [['studio', 'w']]]
@@ -1995,7 +2004,7 @@ function goTo(tab) {
 // ces pages est affichée. Les badges des demandes de boutiques en attente, des idées jamais
 // ouvertes et des points rouges de Data remontent sur « Plus », faute de place
 // à eux.
-const MORE_TABS = ['todo', 'revenue', 'billing', 'studio', 'audience', 'venues', 'ideas', 'agent', 'journal', 'data', 'sources', 'crashes', 'beta'];
+const MORE_TABS = ['todo', 'revenue', 'billing', 'studio', 'audience', 'venues', 'prospection', 'ideas', 'agent', 'journal', 'data', 'sources', 'crashes', 'beta'];
 function bottomNav(openReports, pending) {
   const item = (id, badge, onclick) => el('button', {
     class: 'adm-nav-item', type: 'button', onclick: onclick || (() => goTo(id)),
@@ -2053,6 +2062,7 @@ function render() {
         })
         : state.tab === 'agent' ? renderAgent()
           : state.tab === 'studio' ? renderStudio({ me: state.me, rerender: () => { if (state.tab === 'studio') render(); }, toast, ask })
+          : state.tab === 'prospection' ? renderProspection({ me: state.me, rerender: () => { if (state.tab === 'prospection') render(); }, toast, ask, phone })
           : state.tab === 'billing' ? renderBilling({ me: state.me, rerender: () => { if (state.tab === 'billing') render(); }, toast, ask })
           : state.tab === 'revenue' ? renderRevenue({ users: state.users, phone, rerender: () => { if (state.tab === 'revenue') render(); }, toast, ask })
           : state.tab === 'data' ? renderData({ rerender: () => { if (state.tab === 'data') render(); }, toast, icon })
@@ -2073,7 +2083,7 @@ function render() {
   const title = wide && state.tab !== 'home' ? el('h1', { class: 'bz-h2 adm-section-title', text: SECTIONS[state.tab] }) : null;
   const tabs = phone || wide ? null : el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Sections de la console', style: { marginBottom: '20px' } },
     tab('home'), tab('todo', c.todo), tab('users'), tab('revenue'), tab('billing'), tab('studio'), tab('audience'),
-    tab('reports', c.reports), tab('support', c.tickets), tab('venues', c.venues), tab('ideas', c.ideas),
+    tab('reports', c.reports), tab('support', c.tickets), tab('venues', c.venues), tab('prospection'), tab('ideas', c.ideas),
     tab('agent'), tab('journal'),
     tab('data', c.data, 'is-red'),
     // Le compteur dit combien de coupures sont en cours : en rouge, parce
@@ -2104,7 +2114,7 @@ function render() {
 const DEEP_LINK_KEY = 'boostz.adminDeepLink';
 // Les alertes sans fiche (pannes, remboursements, factures, plantages) mènent
 // à leur onglet : #data, #revenue, #billing, #studio, #crashes.
-const DEEP_TABS = { support: 'support', reports: 'reports', venues: 'venues', ideas: 'ideas', data: 'data', revenue: 'revenue', billing: 'billing', studio: 'studio', crashes: 'crashes' };
+const DEEP_TABS = { support: 'support', reports: 'reports', venues: 'venues', ideas: 'ideas', data: 'data', revenue: 'revenue', billing: 'billing', studio: 'studio', crashes: 'crashes', prospection: 'prospection' };
 
 function rememberDeepLink() {
   try { if (location.hash.length > 1) sessionStorage.setItem(DEEP_LINK_KEY, location.hash); } catch {}

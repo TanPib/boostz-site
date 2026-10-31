@@ -715,6 +715,48 @@
   .st-quote-title b { font-family: var(--font-ui); font-size: 15px; }
   .st-detail { margin-top: 8px; padding: 6px 12px; border-radius: 10px; background: rgba(255,255,255,.03); }
   tr.st-off td { opacity: .5; }
+
+  /* L'onglet Prospection (31/10/2026, assets/prospection.js). */
+  .pr-bar { height: 8px; min-width: 80px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .pr-bar span { display: block; height: 100%; border-radius: 99px; }
+  .pr-table { min-width: 640px; }
+  .pr-click { cursor: pointer; }
+  .pr-click:hover td { background: rgba(255,255,255,.03); }
+  .pr-link { background: none; border: 0; padding: 0; font: inherit; color: var(--soft-violet-text); text-decoration: underline; cursor: pointer; }
+  .pr-send-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .pr-send-head .bz-btn { margin-left: auto; }
+  .pr-send-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 8px; }
+  .pr-queue { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 0; padding-left: 20px; font-size: 13px; }
+  .pr-timeline { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 8px 0 0; padding: 0; font-size: 13px; }
+  .pr-clip { overflow-wrap: anywhere; }
+  .pr-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pr-search { flex: 1 1 260px; }
+  .pr-filter { flex: 0 1 190px; width: auto; }
+  .pr-fiche-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .pr-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .pr-dl { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 6px 14px; margin: 8px 0 0; font-size: 13px; }
+  .pr-dl dt { color: var(--text-muted); font-weight: 600; }
+  .pr-dl dd { margin: 0; overflow-wrap: anywhere; }
+  .pr-links { display: flex; flex-wrap: wrap; gap: 12px; }
+  .pr-details { border-top: 1px solid var(--line); padding: 10px 0; }
+  .pr-details summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+  .pr-pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); font: 13px/1.55 system-ui, sans-serif; }
+  .pr-mail { margin-top: 10px; padding: 18px 20px; border-radius: 12px; background: #FFFFFF; color: #222222; font: 14px/1.5 Arial, Helvetica, sans-serif; }
+  .pr-mail p { margin: 0 0 12px; }
+  .pr-mail ul { margin: 0 0 12px; padding-left: 22px; }
+  .pr-mail li { margin-bottom: 4px; }
+  .pr-mail-schema { display: block; width: 100%; max-width: 600px; height: auto; margin: 4px 0 14px; border-radius: 12px; }
+  .pr-mail-footer { margin-top: 8px; font-size: 12px; color: #595959; }
+  .pr-warn { margin-top: 8px; background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.6); color: #F8C46A; }
+  .pr-tpl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .pr-tpl .bz-card { display: flex; flex-direction: column; gap: 10px; }
+  .pr-editor { min-height: 420px; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .pr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pr-chips .bz-tab { padding: 5px 9px; font-size: 11px; }
+  .pr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 10px 0; }
+  .pr-day { display: inline-flex; align-items: center; gap: 4px; }
+  @media (max-width: 1100px) { .pr-tpl { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .pr-dl { grid-template-columns: 1fr; } .pr-dl dt { margin-top: 6px; } .pr-filter { flex: 1 1 45%; } }
 </style>
 </head>
 <body>
@@ -728,6 +770,6 @@
     </div>
   </div>
 </main>
-<script type="module" src="assets/page-admin.js?v=2026-10-30b"></script>
+<script type="module" src="assets/page-admin.js?v=2026-10-31a"></script>
 </body>
 </html>
