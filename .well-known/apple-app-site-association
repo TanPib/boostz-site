@@ -5,7 +5,8 @@
         "appIDs": ["644C7C7TY9.app.boostz.mobile"],
         "components": [
           { "/": "/parrainage", "comment": "Le lien de parrainage : la page Parrainage de l'application, le code dans le champ" },
-          { "/": "/parrainage/", "comment": "La même adresse, avec la barre finale" }
+          { "/": "/parrainage/", "comment": "La même adresse, avec la barre finale" },
+          { "/": "/boutique/*", "comment": "Le QR code du comptoir d'une boutique partenaire : la feuille Code bonus de l'application, le code de la boutique dans le champ" }
         ]
       }
     ]

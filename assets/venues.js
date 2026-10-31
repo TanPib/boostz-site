@@ -16,6 +16,9 @@
 // dans l'appli. Depuis le lot D, elle montre aussi le message épinglé et les
 // réponses de la boutique aux avis, qu'on peut masquer ou réafficher. Depuis le
 // lot E, elle montre aussi ses événements et ses séries, masquables de même.
+// Depuis le passage récompensé (31/10/2026), elle porte aussi le QR code du
+// comptoir d'une boutique partenaire : sa référence, son aperçu, le sticker à
+// télécharger, et le nombre de passages validés, jamais qui.
 //
 // BRANCHÉ COMME data.js : l'état vit ici. admin.js n'importe que le chargement
 // (pour le badge de l'onglet), le rendu et le compteur, et passe au rendu ses
@@ -23,6 +26,7 @@
 // texte venu de l'API passe par el() et textContent, jamais par du HTML.
 import { call } from './api.js';
 import { el, put, clear, dateFr, dateTime } from './chrome.js';
+import { stickerFiles, stickerPreviewSrc } from './counter-sticker.js?v=2026-10-31p';
 
 // Le nom des volets ouverts sur écran étroit (state.pane dans admin.js) : une
 // demande, ou la fiche d'une boutique de l'Annuaire.
@@ -60,11 +64,13 @@ const vn = {
 // lui sur téléphone. `search` : ce champ, un seul nœud pour tous les rendus.
 // `listScroll` : le défilement de la liste, rendu à la nouvelle liste après un
 // rendu complet. `stale` : une décision dans « À valider » a pu changer la
-// liste, qui sera relue au prochain rendu de l'Annuaire.
+// liste, qui sera relue au prochain rendu de l'Annuaire. `alerts` : les QR
+// codes de comptoir validés anormalement souvent, toutes boutiques, quelle que
+// soit la recherche.
 const PAGE = 50;
 const dir = {
   q: '', partnerOnly: false, page: 1,
-  venues: null, total: 0, loading: false, error: null, seq: 0, timer: null,
+  venues: null, total: 0, alerts: [], loading: false, error: null, seq: 0, timer: null,
   venue: null, venueLoading: false, venueError: null, venueSeq: 0,
   drafts: new Map(), busy: false, view: null, search: null,
   listScroll: 0, stale: false
@@ -602,6 +608,7 @@ async function loadDirectory({ page = dir.page, quiet = false } = {}) {
     }
     dir.venues = venues;
     dir.total = total;
+    dir.alerts = Array.isArray(data.counter_alerts) ? data.counter_alerts : [];
     dir.page = got;
     dir.error = null;
     return null;
@@ -921,15 +928,29 @@ function openPendingRequest(ctx, r) {
 }
 
 // Les pastilles d'une ligne de la liste. La fiche n'a pas les mêmes champs :
-// ficheFlags les en déduit.
+// ficheFlags les en déduit. La référence du QR du comptoir reste à la
+// boutique quand son code est désactivé : la pastille le dit, pour qu'un
+// sticker retrouvé ne passe pas pour un sticker qui marche.
 function venuePills(v) {
   return [
     v.is_partner ? el('span', { class: 'bz-pill is-violet', text: 'Partenaire' }) : null,
     v.is_managed ? el('span', { class: 'bz-pill is-green', text: 'Gérée' }) : null,
-    v.source === 'manual' ? el('span', { class: 'bz-pill is-amber', text: 'Hors OSM' }) : null
+    v.source === 'manual' ? el('span', { class: 'bz-pill is-amber', text: 'Hors OSM' }) : null,
+    v.counter_ref ? el('span', { class: 'bz-pill is-grey', title: 'Référence du QR code du comptoir', text: v.counter_ref + (v.counter_live ? '' : ' · désactivé') }) : null,
+    v.counter_alert ? el('span', { class: 'bz-pill is-red', title: 'QR code du comptoir validé anormalement souvent', text: 'Alerte QR' }) : null
   ].filter(Boolean);
 }
-const ficheFlags = (v) => ({ is_partner: !!(v.profile && v.profile.partner_since), is_managed: (v.managers || []).length > 0, source: v.source });
+const ficheFlags = (v) => ({
+  is_partner: !!(v.profile && v.profile.partner_since),
+  is_managed: (v.managers || []).length > 0,
+  source: v.source,
+  counter_ref: counterRefOf(v),
+  counter_live: !!v.counter_code,
+  counter_alert: !!(v.counter_code && v.counter_alert)
+});
+// La référence d'une boutique : la sienne, donnée au premier QR et gardée
+// ensuite ; celle du code vivant avec un serveur qui ne la rend pas encore.
+const counterRefOf = (v) => v.counter_ref || (v.counter_code && v.counter_code.ref) || null;
 
 function venueRow(ctx, v) {
   const place = [v.city, v.department].filter(Boolean).join(' · ');
@@ -944,9 +965,27 @@ function venueRow(ctx, v) {
   place ? el('div', { class: 'bz-small bz-muted', style: { marginTop: '4px' }, text: place }) : null);
 }
 
+// Le bandeau au-dessus de la liste : les QR codes de comptoir validés
+// anormalement souvent, toutes boutiques. Chacun mène à sa fiche, où l'on
+// régénère.
+function paintAlerts(view) {
+  const box = clear(view.alerts);
+  const list = dir.alerts || [];
+  if (!list.length) return;
+  box.append(el('div', { class: 'adm-agent-alert', role: 'alert', style: { marginTop: '12px' } },
+    el('b', { text: list.length > 1 ? list.length + ' QR codes de comptoir validés anormalement souvent' : 'Un QR code de comptoir validé anormalement souvent' }),
+    el('ul', {}, list.map((a) => el('li', {},
+      el('span', { class: 'adm-agent-alert-count', text: a.ref || '—' }),
+      el('span', { style: { flex: '1', minWidth: '0', overflowWrap: 'anywhere' } },
+        el('b', { text: a.venue_name || 'Boutique' }),
+        el('small', { text: a.message || '' })),
+      el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Ouvrir la fiche', onclick: () => selectVenue(view.ctx, a.venue_id) }))))));
+}
+
 function paintList(view) {
   const { ctx, head, rows, pager } = view;
   head.textContent = (dir.venues ? plural(dir.total, 'boutique', 'boutiques') : 'Boutiques') + (dir.loading ? ' · mise à jour…' : '');
+  paintAlerts(view);
   clear(rows);
   clear(pager);
   // Pas l'attribut hidden : un display en ligne l'emporterait sur lui.
@@ -1264,6 +1303,191 @@ function hostingSection(v, flags) {
     el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Le gérant règle l’accueil dans l’appli, depuis Ma fiche boutique. Ni lui ni la console ne voient qui vient.' }));
 }
 
+// ---------- Le QR code du comptoir (31/10/2026, le passage récompensé) ----------
+// Chaque boutique partenaire reçoit un sticker de comptoir ; son QR code
+// porte https://boostz.fr/boutique/<code>, que le membre scanne avec l'appli
+// pour valider son passage. La boutique garde sa référence (« B-042 ») du
+// premier code à toujours : régénérer ne change que le code caché dans le QR.
+// « Générer », « Régénérer » et « Désactiver » sont inscrits au journal par le
+// serveur ; le sticker est dessiné ici (counter-sticker.js), et seul son
+// téléchargement est signalé au serveur, pour le journal. Le code lui-même ne
+// s'affiche qu'à travers son QR et son adresse : il vaut des Boosties.
+const counterPath = (v, verb = '') => venuePath(v) + '/counter-code' + (verb ? '/' + verb : '');
+
+function generateCounter(ctx, v) {
+  return venueGesture(ctx, v, () => call(counterPath(v), { method: 'POST', body: {} }), {
+    message: (f) => 'QR code ' + (counterRefOf(f) || '') + ' créé pour ' + v.name + ' : télécharge le sticker.'
+  });
+}
+
+async function regenerateCounter(ctx, v) {
+  if (dir.busy) return;
+  const ref = counterRefOf(v);
+  const ok = await ctx.ask({
+    title: 'Régénérer le QR code ' + ref,
+    text: 'Le sticker collé chez ' + v.name + ' cessera de marcher tout de suite : le scanner ne rapportera plus rien. La référence ' + ref + ' ne change pas, seul le code du QR change. Il faudra imprimer le nouveau sticker et l’envoyer à la boutique.',
+    confirmLabel: 'Régénérer', tone: 'red'
+  });
+  if (!ok) return;
+  return venueGesture(ctx, v, () => call(counterPath(v, 'regenerate'), { method: 'POST', body: {} }), {
+    message: 'Nouveau QR code pour ' + ref + ' : l’ancien sticker ne marche plus. Télécharge le nouveau et envoie-le à ' + v.name + '.'
+  });
+}
+
+async function disableCounter(ctx, v) {
+  if (dir.busy) return;
+  const ref = counterRefOf(v);
+  const ok = await ctx.ask({
+    title: 'Désactiver le QR code ' + ref,
+    text: 'Le sticker collé chez ' + v.name + ' cessera de marcher tout de suite. C’est le geste pour une boutique qui n’est plus partenaire ; pour un sticker perdu ou qui circule en photo, « Régénérer » plutôt.',
+    confirmLabel: 'Désactiver', tone: 'red'
+  });
+  if (!ok) return;
+  return venueGesture(ctx, v, () => call(counterPath(v, 'disable'), { method: 'POST', body: {} }), {
+    message: 'Le QR code ' + ref + ' est désactivé.'
+  });
+}
+
+function saveFile({ name, blob }) {
+  const href = URL.createObjectURL(blob);
+  const link = el('a', { href, download: name, style: { display: 'none' } });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 60000);
+}
+
+// Les deux fichiers d'un clic, puis le journal. Si le serveur dit que le code
+// n'est plus actif (un autre admin l'a régénéré ou désactivé entre-temps), la
+// fiche est relue et l'admin prévenu : les fichiers partis ne marcheront pas.
+async function downloadSticker(ctx, v) {
+  if (dir.busy) return;
+  const c = v.counter_code;
+  dir.busy = true;
+  ctx.rerender();
+  let out;
+  try {
+    out = await stickerFiles(c.url, c.ref);
+  } catch (e) {
+    dir.busy = false;
+    ctx.rerender();
+    ctx.toast('Le sticker n’a pas pu être dessiné : ' + e.message, 'err');
+    return;
+  }
+  for (const file of out.files) saveFile(file);
+  try {
+    await call(counterPath(v, 'downloaded'), { method: 'POST', body: { formats: ['svg', 'png'] } });
+  } catch (e) {
+    dir.busy = false;
+    if (e.status === 404 || e.status === 409) {
+      await ctx.after(null, loadDirectory, () => loadDirVenue(v.id));
+      ctx.toast('Ce QR code n’est plus actif : les fichiers téléchargés ne marcheront pas. ' + e.message, 'err');
+    } else {
+      ctx.rerender();
+      ctx.toast('Sticker téléchargé, mais le journal n’a pas pu l’inscrire : ' + e.message, 'err');
+    }
+    return;
+  }
+  dir.busy = false;
+  await ctx.after(null);
+  if (out.full) ctx.toast('Sticker ' + c.ref + ' téléchargé, en SVG et en PNG : prêt pour l’imprimeur.');
+  else ctx.toast('Sticker ' + c.ref + ' téléchargé, mais le QR seul : ' + out.fallback + '.', 'note');
+}
+
+// Ce qu'on imprime. Le sticker complet (assets/sticker/comptoir.svg) donne
+// sa taille ; le QR seul, le repli, se pose dans la zone QR du design.
+const PRINT_FULL = (print) => 'Imprimer à 100 % (' + (print || '88 × 122 mm, fond perdu de 3 mm compris') + ').';
+const PRINT_QR_ONLY = 'À l’impression, le QR doit mesurer au moins 3 cm : imprime la carte du sticker à au moins 57 mm de large. Les fichiers sont à placer dans la zone QR du design, la référence sous le QR.';
+
+// L'aperçu : le fichier SVG lui-même, dessiné par la console - le sticker
+// complet, ou le QR seul si le design ne se charge pas, ce que la note
+// d'impression dit alors. Une case blanche de la forme du sticker en
+// attendant.
+function counterPreview(c, note) {
+  const img = el('img', { style: { display: 'block', width: '132px', height: 'auto', aspectRatio: '88 / 122', background: '#fff', borderRadius: '8px' } });
+  const box = el('div', { style: { flex: 'none' } }, img);
+  stickerPreviewSrc(c.url, c.ref)
+    .then((p) => {
+      img.alt = (p.full ? 'Sticker ' : 'QR code ') + c.ref;
+      img.src = p.src;
+      img.style.aspectRatio = 'auto';
+      if (!p.full) Object.assign(img.style, { padding: '8px', borderRadius: '12px', boxSizing: 'content-box' });
+      note.textContent = p.full ? PRINT_FULL(p.print) : 'Le design du sticker ne s’est pas chargé (' + p.fallback + ') : le téléchargement ne contiendra que le QR. ' + PRINT_QR_ONLY;
+    })
+    .catch((e) => { clear(box).append(el('span', { class: 'bz-tiny', style: { display: 'block', maxWidth: '148px' }, text: 'Aperçu indisponible : ' + e.message })); });
+  return box;
+}
+
+const counterCount = (n) => (Number(n) || 0).toLocaleString('fr-FR');
+
+function counterSection(ctx, v, flags, busy) {
+  const c = v.counter_code;
+  const ref = flags.counter_ref;
+  const codes = Number(v.counter_codes_count) || 0;
+  const tiny = (text) => el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '6px' }, text });
+  // Le code n'entre dans le QR que s'il est bien au bout de l'adresse rendue :
+  // un sticker imprimé ne se corrige plus.
+  const urlOk = !!c && typeof c.url === 'string' && /^https:\/\//.test(c.url) && c.url.endsWith('/' + c.code);
+  const visits = v.counter_visits || {};
+  const counts = codes > 0 ? [
+    el('div', { style: { marginTop: '12px' } },
+      line('Passages', 'aujourd’hui ' + counterCount(visits.today) + ' · 7 jours ' + counterCount(visits.days7) + ' · 30 jours ' + counterCount(visits.days30))),
+    tiny('Passages validés, tous codes de la boutique, jour de Paris : des nombres, jamais qui.')
+  ] : [];
+  const generate = (why) => el('div', { class: 'bz-row', style: { marginTop: '10px' } },
+    el('button', { class: 'bz-btn is-violet is-sm', type: 'button', text: 'Générer', disabled: busy || !!why, title: why, onclick: () => generateCounter(ctx, v) }));
+  // Sans code vivant, la référence gardée par la boutique, marquée.
+  const refLine = ref ? el('div', { class: 'bz-row', style: { gap: '8px', marginTop: '8px' } },
+    el('span', { class: 'adm-kpi-value', style: { marginTop: '0' }, text: ref }),
+    el('span', { class: 'bz-pill is-grey', text: 'désactivé' })) : null;
+
+  // Un code vivant d'abord, quel que soit le statut : une boutique qui ne
+  // serait plus partenaire avec un code encore vivant doit pouvoir le perdre.
+  let body;
+  if (!c && !flags.is_partner) {
+    body = [refLine, generate('Réservé aux boutiques partenaires.'), tiny('Réservé aux boutiques partenaires.')];
+  } else if (!c && !v.department) {
+    const why = 'Il faut une adresse avec un code postal lisible : le passage vérifie le département de la boutique.';
+    body = [refLine, generate(why), tiny(why + (v.source === 'manual' ? ' Corrige l’adresse plus bas.' : ' L’adresse vient d’OpenStreetMap et s’y corrige.'))];
+  } else if (!c) {
+    body = [
+      refLine,
+      el('p', { class: 'bz-small', style: { margin: '8px 0 0' }, text: codes > 0
+        ? 'Le QR code ' + (ref ? ref + ' ' : '') + 'est désactivé : son sticker ne rapporte plus rien. « Générer » en crée un nouveau, sous la même référence.'
+        : 'Pas encore de QR code. « Générer » donne à la boutique sa référence, qu’elle garde ensuite.' }),
+      generate(null)
+    ];
+  } else {
+    const endsAt = v.profile && v.profile.partner_ends_at;
+    const note = el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '6px' }, text: PRINT_FULL(null) });
+    body = [
+      v.counter_alert ? el('div', { class: 'adm-agent-alert', role: 'alert', style: { marginTop: '10px' } },
+        el('b', { text: v.counter_alert.level === 'day' ? 'Alerte du jour' : 'Alerte de la semaine' }),
+        el('p', { class: 'bz-small', style: { margin: '6px 0 0', overflowWrap: 'anywhere' }, text: v.counter_alert.message }),
+        el('div', { class: 'bz-row', style: { marginTop: '8px' } },
+          el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Régénérer', disabled: busy, onclick: () => regenerateCounter(ctx, v) }))) : null,
+      el('div', { class: 'bz-row', style: { gap: '14px', alignItems: 'flex-start', marginTop: '10px' } },
+        urlOk ? counterPreview(c, note) : null,
+        el('div', { class: 'bz-stack', style: { gap: '6px', flex: '1 1 180px', minWidth: '0' } },
+          el('span', { class: 'adm-kpi-value', style: { marginTop: '0' }, text: c.ref || ref || '—' }),
+          el('span', { class: 'bz-tiny', text: 'Créé le ' + dateFr(c.created_date) }),
+          el('span', { class: 'bz-tiny', text: 'Adresse encodée' }),
+          el('span', { class: 'bz-small', style: { overflowWrap: 'anywhere' }, text: c.url || '—' }))),
+      urlOk ? null : el('div', { class: 'bz-msg is-err', role: 'alert', style: { marginTop: '10px' }, text: 'L’adresse rendue par le serveur ne se termine pas par le code : le sticker n’est pas dessiné.' }),
+      el('div', { class: 'bz-row', style: { gap: '8px', marginTop: '12px' } },
+        el('button', { class: 'bz-btn is-violet is-sm', type: 'button', text: 'Télécharger le sticker', disabled: busy || !urlOk, onclick: () => downloadSticker(ctx, v) }),
+        el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Régénérer', disabled: busy, onclick: () => regenerateCounter(ctx, v) }),
+        el('button', { class: 'bz-btn is-sm is-red', type: 'button', text: 'Désactiver', disabled: busy, onclick: () => disableCounter(ctx, v) })),
+      tiny('Retirer le statut partenaire rend aussi le code caduc, à la fin du préavis ; « Désactiver » le coupe tout de suite.' + (endsAt ? ' Fin annoncée : le code tombera le ' + dateFr(endsAt) + '.' : '')),
+      note
+    ];
+  }
+  return el('div', { class: 'adm-quote' },
+    el('span', { class: 'bz-eyebrow', text: 'QR code du comptoir' }),
+    body,
+    counts);
+}
+
 // La fiche admin d'une boutique.
 function venueFiche(ctx, v) {
   const d = dirDraftOf(v);
@@ -1386,6 +1610,7 @@ function venueFiche(ctx, v) {
         el('div', { class: 'bz-row' },
           el('button', { class: 'bz-btn is-sm', type: 'button', text: 'Annuler la fin annoncée', disabled: busy, onclick: () => setPartner(ctx, v, true) }))) : null,
       el('span', { class: 'bz-tiny', style: { display: 'block', marginTop: '4px' }, text: 'Un partenaire porte le badge PARTENAIRE, passe en tête de liste dans son département, et les membres peuvent le choisir comme lieu de RDV. L’appli dit aux membres que les partenaires sont liés à BoostZ par une convention de partenariat et apparaissent en premier.' })),
+    counterSection(ctx, v, flags, busy),
     hostingSection(v, flags),
     el('div', { class: 'bz-field', style: { marginTop: '14px' } },
       el('label', { class: 'bz-label', for: 'vd-note' }, 'Note interne · ', el('small', { text: 'lue par les seuls admins' })),
@@ -1422,7 +1647,8 @@ function venueFiche(ctx, v) {
 // perd le focus. renderDirectory le lui rend alors, curseur compris.
 function searchInput() {
   if (dir.search) return dir.search;
-  const search = el('input', { class: 'bz-input', type: 'search', placeholder: 'Nom, ville ou département', 'aria-label': 'Rechercher une boutique', autocomplete: 'off', style: { flex: '1 1 220px', minWidth: '0', width: 'auto' } });
+  // La référence d'un sticker (« B-042 », « b42 ») retrouve aussi sa boutique.
+  const search = el('input', { class: 'bz-input', type: 'search', placeholder: 'Nom, ville, département ou référence (B-042)', 'aria-label': 'Rechercher une boutique par nom, ville, département ou référence du QR code', autocomplete: 'off', style: { flex: '1 1 220px', minWidth: '0', width: 'auto' } });
   search.value = dir.q;
   search.addEventListener('input', () => {
     dir.q = search.value;
@@ -1486,8 +1712,9 @@ function renderDirectory(ctx, levels) {
   }
   const pager = el('div', { style: { display: 'none', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '10px 16px', borderTop: '1px solid var(--line)' } });
   const card = el('section', { class: 'bz-card adm-list-card' }, head, rows, pager);
+  const alerts = el('div');
   const detail = showDetail ? el('div', { class: 'bz-card adm-detail' }) : null;
-  const view = { ctx, head, rows, pager, card, detail };
+  const view = { ctx, head, rows, pager, card, alerts, detail };
   dir.view = view;
   paintList(view);
   if (detail) paintDetail(view);
@@ -1496,6 +1723,7 @@ function renderDirectory(ctx, levels) {
   return el('div', {},
     showList ? levels : null,
     showList ? el('div', { class: 'bz-row', style: { gap: '8px', marginTop: '12px' } }, search, partnerFilter) : null,
+    showList ? alerts : null,
     el('div', { class: 'adm-split', style: { marginTop: '12px' } },
       showList ? card : null,
       showDetail && narrow ? (ctx.phone && v
