@@ -184,6 +184,14 @@ function signaturePreview() {
     img('banniere-boostz.png', 'BoostZ, ton compagnon TCG : collection, cote, échange. boostz.fr', 480, 0));
 }
 
+// La réponse après un « oui » part de Gmail, à la main : c'est Gmail qui y
+// ajoute la signature. L'aperçu la montre quand même, pour voir le vrai mail.
+function replyPreview(body) {
+  const box = renderMarked(body, null);
+  box.append(signaturePreview(), el('p', { class: 'pr-sig-note', text: 'Signature ajoutée par Gmail quand tu envoies ce message depuis Gmail (Paramètres › Signature › « Pour les réponses/transferts »).' }));
+  return box;
+}
+
 export function renderMarked(body, footer) {
   const box = el('div', { class: 'pr-mail' });
   for (const block of String(body || '').trim().split(/\n{2,}/)) {
@@ -525,7 +533,8 @@ function templatesView(ctx, canWrite) {
   const rendered = pr.preview && !pr.preview.error
     ? (pr.preview.subject !== undefined || pr.preview.footer !== undefined
       ? el('div', {}, pr.preview.subject ? el('p', { class: 'bz-small' }, el('b', { text: 'Objet : ' }), document.createTextNode(pr.preview.subject)) : null, renderMarked(pr.preview.body, pr.preview.footer))
-      : el('pre', { class: 'pr-pre', text: pr.preview.body || '' }))
+      : pr.tplKey === 'reply_positive' ? replyPreview(pr.preview.body)
+        : el('pre', { class: 'pr-pre', text: pr.preview.body || '' }))
     : null;
   return el('div', { class: 'bl' },
     el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Textes' }, list.map((x) => el('button', {
