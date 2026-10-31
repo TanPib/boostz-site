@@ -17,7 +17,7 @@ import { renderCrashes } from './plantages.js?v=2026-10-19j';
 import { renderHome } from './home.js?v=2026-10-19g';
 import { renderBilling } from './billing.js?v=2026-10-19g';
 import { renderStudio } from './studio.js?v=2026-10-19g';
-import { renderProspection } from './prospection.js?v=2026-10-31c';
+import { renderProspection } from './prospection.js?v=2026-11-01a';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
