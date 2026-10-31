@@ -406,9 +406,9 @@ function ficheView(ctx, canWrite) {
   };
   const actions = el('div', { class: 'pr-actions' },
     sendBtn(1), sendBtn(2),
-    btn('Appel', () => note(ctx, 'call', 'Noter un appel', 'Ce qui a été dit.')),
-    btn('Message privé envoyé', () => note(ctx, 'dm', 'Noter un message privé', 'Facebook ou Instagram, et ce qui a été écrit.')),
-    btn('Passage en boutique', () => note(ctx, 'visit', 'Noter un passage', '')),
+    btn('Appel', () => note(ctx, 'call', 'Noter un appel', 'Ce qui a été dit.'), { disabled: f.opted_out, title: f.opted_out ? 'La boutique a refusé : plus aucun contact.' : null }),
+    btn('Message privé envoyé', () => note(ctx, 'dm', 'Noter un message privé', 'Facebook ou Instagram, et ce qui a été écrit.'), { disabled: f.opted_out, title: f.opted_out ? 'La boutique a refusé : plus aucun contact.' : null }),
+    btn('Passage en boutique', () => note(ctx, 'visit', 'Noter un passage', ''), { disabled: f.opted_out }),
     btn('Réponse positive', () => note(ctx, 'reply_positive', 'Noter une réponse positive', 'Ce qu’elle a répondu.'), { tone: 'green' }),
     btn('Rendez-vous', () => note(ctx, 'meeting', 'Noter un rendez-vous', 'Date, heure, appel ou visite.'), { tone: 'green' }),
     btn('Partenaire', () => note(ctx, 'partner', 'Devenue partenaire', 'Convention signée le…'), { tone: 'green' }),
@@ -425,7 +425,7 @@ function ficheView(ctx, canWrite) {
       if (m.error) return el('p', { class: 'bz-small', style: { color: 'var(--soft-red-text)' }, text: label + ' : ' + m.error });
       return fold('mail-' + k, label + ' · « ' + m.subject + ' »', renderMarked(m.body, m.footer));
     }));
-  const texts = el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'À copier pour les autres canaux' }),
+  const texts = f.opted_out ? null : el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'À copier pour les autres canaux' }),
     ...[['dm_facebook', 'Message privé Facebook'], ['dm_instagram', 'Message privé Instagram'], ['call_script', 'Trame d’appel'], ['reply_positive', 'Réponse après un « oui »']].map(([k, label]) => fold('text-' + k, label,
       el('pre', { class: 'pr-pre', text: f.texts[k] }),
       btn('Copier', () => copy(f.texts[k], ctx)))));
@@ -444,6 +444,7 @@ function ficheView(ctx, canWrite) {
         pill('Priorité ' + p.priority, p.priority === 'A' ? 'is-green' : 'is-grey'),
         f.opted_out ? pill('Ne pas contacter', 'is-red') : null),
       el('p', { class: 'bz-small bz-muted', text: [p.city, p.department_name && (p.department_name + ' (' + p.department_code + ')'), p.region, p.shop_type].filter(Boolean).join(' · ') }),
+      f.opted_out ? el('div', { class: 'bz-msg is-err', role: 'alert', text: 'Ne pas contacter : cette boutique a refusé (ou une de ses adresses est dans la liste). Plus aucun message, appel ni passage, par aucun canal. Sa fiche est effacée 30 jours après son refus ; seule la liste d’opposition la garde, trois ans.' }) : null,
       p.review ? el('div', { class: 'bz-msg pr-warn', text: '⚠ ' + p.review_label + ' Les envois automatiques l’ignorent tant que la réserve n’est pas levée.' }) : null,
       f.can_send.followup_due && !f.can_send.email_2 ? el('div', { class: 'bz-msg is-ok', text: 'La relance est due.' }) : null,
       actions,
@@ -561,11 +562,11 @@ function settingsView(ctx, canWrite) {
     try {
       for (let i = 0; i < rows.length; i += 100) {
         const r = await call('/admin/prospection/import', { method: 'POST', body: { prospects: rows.slice(i, i + 100) } });
-        total.created += r.created; total.updated += r.updated; total.skipped += r.skipped; total.errors += r.errors.length;
+        total.created += r.created; total.updated += r.updated; total.skipped += r.skipped; total.refused = (total.refused || 0) + (r.refused || 0); total.errors += r.errors.length;
         pr.importing = Math.min(i + 100, rows.length) + ' / ' + rows.length;
         ctx.rerender();
       }
-      ctx.toast(`Import terminé : ${total.created} créée(s), ${total.updated} mise(s) à jour, ${total.skipped} déjà contactée(s), ${total.errors} erreur(s).`);
+      ctx.toast(`Import terminé : ${total.created} créée(s), ${total.updated} mise(s) à jour, ${total.skipped} déjà contactée(s), ${total.refused || 0} écartée(s) (« Ne pas contacter »), ${total.errors} erreur(s).`);
     } catch (e) {
       ctx.toast('Import interrompu : ' + e.message, 'err');
     }
@@ -623,7 +624,7 @@ function optOutsView(ctx, canWrite) {
     if (v) { await act('optdel', () => call('/admin/prospection/opt-outs/' + o.id, { method: 'DELETE', body: { reason: v.reason } }), ctx, 'Retirée.'); loadOptOuts(ctx); }
   };
   return el('div', { class: 'bl' },
-    el('p', { class: 'bz-small bz-muted', style: { margin: 0 }, text: 'Ceux qui ont dit STOP ou non, sur n’importe quel canal. Gardés trois ans (politique de confidentialité, section 3), réduits à l’adresse et à la date. Rien ne leur est envoyé, ni seul ni à la main.' }),
+    el('p', { class: 'bz-small bz-muted', style: { margin: 0 }, text: 'Ceux qui ont dit STOP ou non, sur n’importe quel canal. Gardés trois ans (politique de confidentialité, section 3), réduits à l’adresse et à la date ; la fiche de la boutique, elle, est effacée 30 jours après son refus. Rien ne leur est envoyé, ni seul ni à la main.' }),
     el('div', { class: 'bz-row' }, search, add),
     pr.optouts.length ? el('div', { class: 'bz-table-wrap' }, el('table', { class: 'bz-table pr-table' },
       el('thead', {}, el('tr', {}, ['Adresse', 'Canal', 'Depuis', ''].map((h) => el('th', { text: h })))),
