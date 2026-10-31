@@ -1,2 +1,2 @@
-import { start } from './admin.js?v=2026-10-30b';
+import { start } from './admin.js?v=2026-10-31a';
 start();
