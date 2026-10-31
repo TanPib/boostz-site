@@ -166,11 +166,33 @@ function inline(text) {
   return out;
 }
 
+// La signature Gmail de BoostZ, telle que le serveur l'ajoute aux e-mails
+// (boostz-mobile server/src/lib/prospectionSignature.js), avec les images du
+// site.
+function signaturePreview() {
+  const img = (file, alt, w, h) => el('img', { src: 'assets/signature/' + file, alt, width: String(w), height: String(h), style: { display: 'block', width: w + 'px', height: h ? h + 'px' : 'auto', maxWidth: '100%' } });
+  return el('div', { class: 'pr-sig' },
+    el('p', { class: 'pr-sig-hello', text: 'Boostément,' }),
+    el('div', { class: 'pr-sig-card' },
+      img('carte-tp-feutre.png', 'TP', 52, 70),
+      el('div', {},
+        el('div', { class: 'pr-sig-name', text: 'Tanguy Pibarot' }),
+        el('div', { class: 'pr-sig-role' }, 'Fondateur de ', el('b', { text: 'BoostZ' })),
+        el('div', { class: 'pr-sig-role', text: 'boostz.info@gmail.com · 06.14.43.68.86' }),
+        el('div', { class: 'pr-sig-links' }, el('b', { text: 'boostz.fr' }),
+          ...[['icone-instagram.png', 'Instagram'], ['icone-tiktok.png', 'TikTok'], ['icone-facebook.png', 'Facebook'], ['icone-discord.png', 'Discord']].map(([f, a]) => img(f, a, 22, 22))))),
+    img('banniere-boostz.png', 'BoostZ, ton compagnon TCG : collection, cote, échange. boostz.fr', 480, 0));
+}
+
 export function renderMarked(body, footer) {
   const box = el('div', { class: 'pr-mail' });
   for (const block of String(body || '').trim().split(/\n{2,}/)) {
     if (block.trim() === '{schema}') {
       box.append(el('img', { src: 'assets/prospection/schema-echange.png', alt: 'Schéma : un échange, de l’appli à votre comptoir', class: 'pr-mail-schema' }));
+      continue;
+    }
+    if (block.trim() === '{signature}') {
+      box.append(signaturePreview());
       continue;
     }
     let list = null;
@@ -511,7 +533,7 @@ function templatesView(ctx, canWrite) {
     }, x.label, x.custom ? el('span', { class: 'bz-count', text: 'modifié' }) : null))),
     el('div', { class: 'pr-tpl' },
       el('section', { class: 'bz-card' },
-        el('p', { class: 'bz-small bz-muted', style: { marginTop: 0 }, text: 'Syntaxe : **gras**, une ligne qui commence par « - » pour une liste, {schema} seul sur sa ligne pour le schéma (e-mails seulement). Le pied de page légal s’ajoute à chaque e-mail ; ses mentions (STOP, source de l’adresse, lien vers la politique, SIREN) sont obligatoires.' }),
+        el('p', { class: 'bz-small bz-muted', style: { marginTop: 0 }, text: 'Syntaxe : **gras**, une ligne qui commence par « - » pour une liste, {schema} et {signature} seuls sur leur ligne pour le schéma et la signature Gmail (e-mails seulement). Le pied de page légal s’ajoute à chaque e-mail ; ses mentions (STOP, source de l’adresse, lien vers la politique, SIREN) sont obligatoires.' }),
         t.key === 'email_1' ? el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', text: 'Objet' }), el('input', { class: 'bz-input', value: pr.draft.subject, oninput: onEdit('subject'), disabled: !canWrite })) : null,
         t.key === 'email_2' ? el('p', { class: 'bz-small bz-muted', text: 'Objet : « Re: » suivi de celui du premier e-mail (la relance part dans son fil).' }) : null,
         chips, body,
