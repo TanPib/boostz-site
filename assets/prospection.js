@@ -4,10 +4,12 @@
 //
 // Ce qu'on y fait : suivre l'avancement par région et par département, ouvrir
 // la fiche d'une boutique (son historique, ses e-mails, ses messages privés à
-// copier), noter un appel ou un « STOP », envoyer un e-mail, modifier les
-// textes, régler l'envoi automatique et tenir la liste « Ne pas contacter ».
-// Tout admin lit et note ; seul un super admin envoie, règle, modifie les
-// textes, importe, ou retire une adresse de la liste.
+// copier), noter un appel ou un « STOP », envoyer un e-mail, répondre à une
+// boutique qui a dit oui (la présentation, puis la convention, avec leur PDF),
+// modifier les textes, déposer ces PDF, régler l'envoi automatique et tenir la
+// liste « Ne pas contacter ». Tout admin lit et note ; seul un super admin
+// envoie, règle, modifie les textes et les PDF, importe, ou retire une adresse
+// de la liste.
 //
 // Aucun texte venu de l'API n'entre en HTML : les aperçus d'e-mails sont
 // construits ici, élément par élément (renderMarked), depuis le texte balisé
@@ -20,7 +22,7 @@ const pr = {
   list: { q: '', status: '', priority: '', region: '', department: '', channel: '', review: '', page: 0, data: null, loading: false, seq: 0 },
   fiche: null, ficheId: null, back: 'list',
   templates: null, tplKey: 'email_1', draft: null, preview: null,
-  optouts: null, optQ: '', importing: null,
+  optouts: null, optQ: '', importing: null, attachments: null,
   // Les blocs dépliés : la page est redessinée à chaque réponse de l'API, et un
   // aperçu ouvert ne doit pas se refermer sous les yeux.
   open: new Set()
@@ -65,6 +67,16 @@ async function copy(text, ctx) {
     ctx.toast('Copie impossible dans ce navigateur : sélectionne le texte à la main.', 'err');
   }
 }
+
+const mo = (n) => (Number(n || 0) / 1024 / 1024).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' Mo';
+
+// Un fichier choisi dans le navigateur, en base64 (sans le préfixe data:).
+const fileBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ''));
+  reader.onerror = () => reject(new Error('Lecture du fichier impossible.'));
+  reader.readAsDataURL(file);
+});
 
 // ---------- chargements ----------
 
@@ -130,6 +142,16 @@ async function loadTemplates(ctx) {
   ctx.rerender();
 }
 
+async function loadAttachments(ctx) {
+  try {
+    pr.attachments = (await call('/admin/prospection/attachments')).attachments;
+  } catch (e) {
+    pr.attachments = [];
+    if (e.status !== 404) ctx.toast(e.message, 'err');
+  }
+  ctx.rerender();
+}
+
 async function loadOptOuts(ctx) {
   try {
     pr.optouts = (await call('/admin/prospection/opt-outs' + (pr.optQ ? '?q=' + encodeURIComponent(pr.optQ) : ''))).opt_outs;
@@ -182,14 +204,6 @@ function signaturePreview() {
         el('div', { class: 'pr-sig-links' }, el('b', { text: 'boostz.fr' }),
           ...[['icone-instagram.png', 'Instagram'], ['icone-tiktok.png', 'TikTok'], ['icone-facebook.png', 'Facebook'], ['icone-discord.png', 'Discord']].map(([f, a]) => img(f, a, 22, 22))))),
     img('banniere-boostz.png', 'BoostZ, ton compagnon TCG : collection, cote, échange. boostz.fr', 480, 0));
-}
-
-// La réponse après un « oui » part de Gmail, à la main : c'est Gmail qui y
-// ajoute la signature. L'aperçu la montre quand même, pour voir le vrai mail.
-function replyPreview(body) {
-  const box = renderMarked(body, null);
-  box.append(signaturePreview(), el('p', { class: 'pr-sig-note', text: 'Signature ajoutée par Gmail quand tu envoies ce message depuis Gmail (Paramètres › Signature › « Pour les réponses/transferts »).' }));
-  return box;
 }
 
 export function renderMarked(body, footer) {
@@ -398,6 +412,22 @@ async function send(ctx, step) {
   if (r) { pr.fiche = r; ctx.rerender(); }
 }
 
+// Répondre à une boutique qui a dit oui : la présentation, ou la convention,
+// avec son PDF, dans son fil.
+async function reply(ctx, kind) {
+  const p = pr.fiche.prospect;
+  const r0 = pr.fiche.replies[kind];
+  const what = kind === 'convention' ? 'la convention' : 'la présentation';
+  const ok = await ctx.ask({
+    title: 'Envoyer ' + what,
+    text: 'À ' + p.email + ', depuis la boîte Gmail de BoostZ, ' + (p.first_subject ? 'dans le fil « ' + p.first_subject + ' »' : 'dans un nouvel e-mail') + ', avec ' + r0.attachment.filename + ' (' + mo(r0.attachment.size) + '). Signée, avec la ligne STOP.' + (r0.last_sent_at ? ' Déjà envoyée le ' + dateTimeShort(r0.last_sent_at) + '.' : ''),
+    confirmLabel: 'Envoyer'
+  });
+  if (!ok) return;
+  const r = await act('reply-' + kind, () => call('/admin/prospection/prospects/' + pr.ficheId + '/reply', { method: 'POST', body: { kind } }), ctx, kind === 'convention' ? 'Convention envoyée.' : 'Présentation envoyée.');
+  if (r) { pr.fiche = r; ctx.rerender(); }
+}
+
 async function stop(ctx) {
   const v = await ctx.ask({
     title: 'STOP : ne plus contacter cette boutique',
@@ -455,10 +485,29 @@ function ficheView(ctx, canWrite) {
       if (m.error) return el('p', { class: 'bz-small', style: { color: 'var(--soft-red-text)' }, text: label + ' : ' + m.error });
       return fold('mail-' + k, label + ' · « ' + m.subject + ' »', renderMarked(m.body, m.footer));
     }));
+  // Les deux réponses, envoyées d'ici avec leur PDF (un serveur plus ancien ne
+  // les connaît pas : la section n'apparaît pas).
+  const replyCard = (kind, title, help) => {
+    const r = f.replies[kind];
+    const label = kind === 'convention' ? ['Envoyer la convention', 'Renvoyer la convention'] : ['Envoyer la présentation', 'Renvoyer la présentation'];
+    return el('div', { class: 'pr-reply' },
+      el('div', { class: 'pr-reply-head' }, el('b', { text: title }), r.last_sent_at ? pill('Envoyée le ' + dateShort(r.last_sent_at), 'is-green') : null),
+      el('p', { class: 'bz-small bz-muted', text: help }),
+      el('p', { class: 'bz-small' }, document.createTextNode('Pièce jointe : '), r.attachment
+        ? el('b', { text: r.attachment.filename + ' (' + mo(r.attachment.size) + ')' })
+        : el('span', { class: 'bz-muted', text: 'aucun PDF déposé (Réglages › Pièces jointes)' })),
+      r.blocker ? el('div', { class: 'bz-msg pr-warn', text: r.blocker }) : null,
+      el('div', { class: 'bz-row' }, btn(r.last_sent_at ? label[1] : label[0], () => reply(ctx, kind), { tone: 'primary', disabled: !canWrite || !!r.blocker || busy('reply-' + kind), title: !canWrite ? 'Réservé aux super admins.' : r.blocker || null })),
+      fold('reply-' + kind, 'Aperçu · « ' + r.subject + ' »', renderMarked(r.body, r.footer)));
+  };
+  const replies = f.replies && !f.opted_out ? el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'Répondre après un « oui »' }),
+    replyCard('presentation', '1. La présentation', 'La réponse après un « oui », avec le deck en PDF, dans le fil de la boutique.'),
+    replyCard('convention', '2. La convention', 'Quand la boutique confirme que le partenariat l’intéresse.')) : null;
   const texts = f.opted_out ? null : el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'À copier pour les autres canaux' }),
-    ...[['dm_facebook', 'Message privé Facebook'], ['dm_instagram', 'Message privé Instagram'], ['call_script', 'Trame d’appel'], ['reply_positive', 'Réponse après un « oui »']].map(([k, label]) => fold('text-' + k, label,
-      el('pre', { class: 'pr-pre', text: f.texts[k] }),
-      btn('Copier', () => copy(f.texts[k], ctx)))));
+    ...[['dm_facebook', 'Message privé Facebook'], ['dm_instagram', 'Message privé Instagram'], ['call_script', 'Trame d’appel'], ['reply_positive', 'Réponse après un « oui » (à coller dans Gmail)'], ['reply_convention', 'Envoi de la convention (à coller dans Gmail)']]
+      .filter(([k]) => f.texts[k] !== undefined).map(([k, label]) => fold('text-' + k, label,
+        el('pre', { class: 'pr-pre', text: f.texts[k] }),
+        btn('Copier', () => copy(f.texts[k], ctx)))));
   const timeline = el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'Historique' }),
     f.events.length ? el('ul', { class: 'pr-timeline' }, f.events.map((e) => el('li', {},
       el('span', { class: 'bz-tiny bz-muted', text: dateTimeShort(e.created_date) + (e.automatic ? ' · automatique' : '') }),
@@ -479,7 +528,7 @@ function ficheView(ctx, canWrite) {
       f.can_send.followup_due && !f.can_send.email_2 ? el('div', { class: 'bz-msg is-ok', text: 'La relance est due.' }) : null,
       actions,
       contacts),
-    mails, texts, timeline);
+    replies, mails, texts, timeline);
 }
 
 // ---------- les textes ----------
@@ -533,8 +582,7 @@ function templatesView(ctx, canWrite) {
   const rendered = pr.preview && !pr.preview.error
     ? (pr.preview.subject !== undefined || pr.preview.footer !== undefined
       ? el('div', {}, pr.preview.subject ? el('p', { class: 'bz-small' }, el('b', { text: 'Objet : ' }), document.createTextNode(pr.preview.subject)) : null, renderMarked(pr.preview.body, pr.preview.footer))
-      : pr.tplKey === 'reply_positive' ? replyPreview(pr.preview.body)
-        : el('pre', { class: 'pr-pre', text: pr.preview.body || '' }))
+      : el('pre', { class: 'pr-pre', text: pr.preview.body || '' }))
     : null;
   return el('div', { class: 'bl' },
     el('div', { class: 'bz-tabs', role: 'tablist', 'aria-label': 'Textes' }, list.map((x) => el('button', {
@@ -542,9 +590,10 @@ function templatesView(ctx, canWrite) {
     }, x.label, x.custom ? el('span', { class: 'bz-count', text: 'modifié' }) : null))),
     el('div', { class: 'pr-tpl' },
       el('section', { class: 'bz-card' },
-        el('p', { class: 'bz-small bz-muted', style: { marginTop: 0 }, text: 'Syntaxe : **gras**, une ligne qui commence par « - » pour une liste, {schema} et {signature} seuls sur leur ligne pour le schéma et la signature Gmail (e-mails seulement). Le pied de page légal s’ajoute à chaque e-mail ; ses mentions (STOP, source de l’adresse, lien vers la politique, SIREN) sont obligatoires.' }),
+        el('p', { class: 'bz-small bz-muted', style: { marginTop: 0 }, text: 'Syntaxe : **gras**, une ligne qui commence par « - » pour une liste, {schema} et {signature} seuls sur leur ligne pour le schéma (les deux e-mails) et la signature Gmail (e-mails et réponses). Le pied de page légal s’ajoute à chaque e-mail ; ses mentions (STOP, source de l’adresse, lien vers la politique, SIREN) sont obligatoires.' }),
         t.key === 'email_1' ? el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', text: 'Objet' }), el('input', { class: 'bz-input', value: pr.draft.subject, oninput: onEdit('subject'), disabled: !canWrite })) : null,
         t.key === 'email_2' ? el('p', { class: 'bz-small bz-muted', text: 'Objet : « Re: » suivi de celui du premier e-mail (la relance part dans son fil).' }) : null,
+        t.key === 'reply_positive' || t.key === 'reply_convention' ? el('p', { class: 'bz-small bz-muted', text: 'Envoyée depuis la fiche, avec son PDF (Réglages › Pièces jointes) : objet « Re: » suivi de celui du premier e-mail, dans le fil de la boutique. La signature et la ligne STOP s’ajoutent seules si le texte ne les a pas.' }) : null,
         chips, body,
         el('div', { class: 'bz-row' }, save, reset, test),
         !canWrite ? el('p', { class: 'bz-tiny bz-muted', text: 'Lecture seule : réservé aux super admins.' }) : null),
@@ -554,6 +603,52 @@ function templatesView(ctx, canWrite) {
 }
 
 // ---------- réglages et import ----------
+
+// Les PDF joints aux réponses : déposés, remplacés, revus, retirés ici.
+function attachmentsCard(ctx, canWrite) {
+  const head = el('h3', { class: 'bz-h3', text: 'Pièces jointes des réponses' });
+  if (!pr.attachments) {
+    loadAttachments(ctx);
+    return el('section', { class: 'bz-card' }, head, el('div', { class: 'bz-skeleton', style: { height: '80px' } }));
+  }
+  if (!pr.attachments.length) return el('section', { class: 'bz-card' }, head, el('p', { class: 'bz-small bz-muted', text: 'Pas encore en ligne sur le serveur : réessaie après le prochain déploiement.' }));
+  const row = (a) => {
+    const key = 'att-' + a.key;
+    const input = el('input', { type: 'file', accept: 'application/pdf,.pdf', class: 'bz-input', disabled: !canWrite });
+    const upload = () => act(key, async () => {
+      const file = input.files && input.files[0];
+      if (!file) throw new Error('Choisis d’abord un PDF.');
+      if (file.size > 10 * 1024 * 1024) throw new Error('Le PDF dépasse 10 Mo.');
+      const data = await fileBase64(file);
+      pr.attachments = (await call('/admin/prospection/attachments/' + a.key, { method: 'PUT', body: { filename: file.name, data_base64: data } })).attachments;
+    }, ctx, 'PDF déposé : il part avec les prochaines réponses.');
+    const download = () => act(key + '-dl', async () => {
+      const d = await call('/admin/prospection/attachments/' + a.key);
+      const bytes = Uint8Array.from(atob(d.data_base64), (c) => c.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      const link = el('a', { href: url, download: d.filename });
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }, ctx);
+    const remove = async () => {
+      const ok = await ctx.ask({ title: 'Retirer ce PDF ?', text: 'Plus aucune réponse de ce type ne pourra partir tant qu’un autre PDF n’est pas déposé.', confirmLabel: 'Retirer', tone: 'red' });
+      if (ok) act(key, async () => { pr.attachments = (await call('/admin/prospection/attachments/' + a.key, { method: 'DELETE' })).attachments; }, ctx, 'PDF retiré.');
+    };
+    return el('div', { class: 'pr-attachment' },
+      el('div', {}, el('b', { text: a.label }),
+        el('div', { class: 'bz-small' + (a.filename ? '' : ' bz-muted'), text: a.filename ? a.filename + ' · ' + mo(a.size) + ' · déposé le ' + dateTimeShort(a.updated_at) : 'Aucun fichier : la réponse ne peut pas partir.' })),
+      el('div', { class: 'bz-row' },
+        canWrite ? input : null,
+        canWrite ? btn(a.filename ? 'Remplacer' : 'Déposer', upload, { tone: 'primary', disabled: pr.busy.has(key) }) : null,
+        a.filename ? btn('Télécharger', download, { disabled: pr.busy.has(key + '-dl') }) : null,
+        a.filename && canWrite ? btn('Retirer', remove, { tone: 'red', disabled: pr.busy.has(key) }) : null));
+  };
+  return el('section', { class: 'bz-card' }, head,
+    el('p', { class: 'bz-small bz-muted', text: 'Les PDF joints aux réponses envoyées depuis la fiche d’une boutique : la présentation part avec la réponse après un « oui », la convention ensuite. Remplace-les ici quand le deck ou la convention changent, sans rien redéployer. PDF seulement, 10 Mo au plus.' }),
+    ...pr.attachments.map(row));
+}
 
 function settingsView(ctx, canWrite) {
   const s = pr.data.settings;
@@ -627,6 +722,7 @@ function settingsView(ctx, canWrite) {
         el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', text: 'Nom d’expéditeur' }), form.sender = el('input', { class: 'bz-input', value: s.sender_name, disabled: !canWrite }))),
       el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', text: 'Jours d’envoi' }), days),
       save),
+    attachmentsCard(ctx, canWrite),
     el('section', { class: 'bz-card' },
       el('h3', { class: 'bz-h3', text: 'La boîte Gmail' }),
       el('p', { class: 'bz-small', text: s.mail_configured ? 'Branchée : ' + s.sender_address + '. Les e-mails partent de là et y restent visibles (« Envoyés») ; les réponses y sont lues tous les quarts d’heure, sans rien y marquer.' : 'Pas branchée. Sur Render, ajoute PROSPECTION_GMAIL_USER (boostz.info@gmail.com) et PROSPECTION_GMAIL_APP_PASSWORD : un mot de passe d’application Google (compte Google, Sécurité, validation en deux étapes, Mots de passe des applications).' })),
