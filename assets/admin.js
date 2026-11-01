@@ -11,7 +11,7 @@ import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta } from './beta.js';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
-import { loadVenues, renderVenues, venuesPendingCount, selectVenueRequest } from './venues.js?v=2026-10-30a';
+import { loadVenues, renderVenues, venuesPendingCount, selectVenueRequest } from './venues.js?v=2026-10-31p';
 import { renderAudience } from './audience.js?v=2026-10-19g';
 import { renderCrashes } from './plantages.js?v=2026-10-19j';
 import { renderHome } from './home.js?v=2026-10-19g';
@@ -107,6 +107,7 @@ const ACTIONS = {
   report_status: 'Décision sur un signalement',
   venue_request: 'Demande de boutique',
   venue_partner: 'Partenaire',
+  venue_counter_code: 'QR du comptoir',
   venue_manager: 'Gérant',
   venue_edit: 'Fiche boutique',
   venue_reply: 'Réponse de boutique',
@@ -1827,6 +1828,8 @@ function detailText(a) {
     // d'affiliation est refusée après la suppression de sa boutique. « Affiliation »,
     // comme le sous-onglet de la console, et non « gérance ».
     case 'venue_request': return (d.decision === 'APPROVED' ? 'Validée' : 'Refusée') + (d.type === 'CLAIM' ? ' · affiliation' : ' · création') + ' · ' + (d.venueName || 'boutique supprimée');
+    // Le QR du comptoir : le geste et la référence, jamais le code (il vaut des Boosties).
+    case 'venue_counter_code': return ({ generated: 'Généré', regenerated: 'Régénéré', disabled: 'Désactivé', downloaded: 'Sticker téléchargé' }[d.change] || d.change || '') + (d.ref ? ' · ' + d.ref : '') + (Array.isArray(d.formats) && d.formats.length ? ' · ' + d.formats.join(', ').toUpperCase() : '') + ' · ' + (d.venueName || 'boutique supprimée');
     case 'venue_partner': return (d.partner ? 'Devient partenaire · ' : 'N’est plus partenaire · ') + (d.venueName || 'boutique supprimée');
     case 'venue_manager': return (d.change === 'removed' ? 'Gérant retiré · ' : 'Gérant ajouté · ') + (d.venueName || 'boutique supprimée');
     case 'venue_reply': return (d.hidden ? 'Masquée · ' : 'Réaffichée · ') + (d.venueName || 'boutique supprimée');

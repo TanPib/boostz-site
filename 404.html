@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0B0812">
+<title>Page introuvable · BoostZ</title>
+<meta name="description" content="BoostZ, l'appli pour gérer ta collection de cartes.">
+<meta name="robots" content="noindex">
+<!-- LA PAGE 404 DU SITE, ET LA PAGE DU QR CODE D'UN COMPTOIR (31/10/2026).
+
+     Le sticker collé sur le comptoir d'une boutique partenaire porte un QR
+     code : https://boostz.fr/boutique/<code>. Le membre le scanne avec
+     l'appli et gagne des Boosties (le passage récompensé ; le serveur tient
+     les codes et les règles, boostz-mobile server/src/lib/venueVisits.js).
+
+     GitHub Pages ne sait pas servir un chemin variable : aucune page
+     n'existe à /boutique/<code>, et c'est donc CETTE page, la 404 du site,
+     qui répond. assets/page-boutique.js lit l'adresse avant le premier
+     affichage : en /boutique/, la section « boutique » se montre, sinon la
+     page introuvable. La même section est dans boutique/index.html (l'adresse
+     sans code) : les deux se modifient ensemble.
+
+     CHEZ QUI A L'APPLICATION, CETTE PAGE NE S'AFFICHE PAS : /boutique/* est
+     déclaré comme App Link sur Android et comme lien universel sur iPhone
+     (.well-known), et le téléphone ouvre l'appli sur le passage. On arrive
+     donc ici sans l'appli, avec une version qui ne déclare pas encore le
+     lien, ou depuis un navigateur intégré : d'où « J'ai déjà BoostZ ».
+
+     Aucun texte ne lie le passage à un achat, et aucun ne parle d'âge : les
+     15-17 ans peuvent scanner. Ni traceur ni mesure d'audience ici. -->
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/assets/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/assets/vitrine/icone-app-180.png">
+<link rel="preload" href="/assets/fonts/outfit-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/exo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/vitrine.css?v=2026-10-20b">
+<link rel="stylesheet" href="/assets/page-boutique.css?v=2026-10-31a">
+<script src="/assets/page-boutique.js?v=2026-10-31a"></script>
+</head>
+<body>
+<div class="pg">
+
+<header class="in" style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;z-index:3">
+<a href="/" aria-label="BoostZ, accueil" class="wm" style="font-size:26px"><span class="word" style="color:#fff">boost</span><span class="zz"><span class="word g" style="left:-0.59em;color:#3AA9FF;opacity:.12">Z</span><span class="word g" style="left:-0.39em;color:#8B3DFF;opacity:.2">Z</span><span class="word g" style="left:-0.185em;color:#FF4FA0;opacity:.3">Z</span><span class="word grad" style="position:relative">Z</span></span></a>
+</header>
+
+<main class="in">
+<div class="bq">
+
+<!-- Toute autre adresse inconnue du site. -->
+<section class="bq-hero" id="introuvable" aria-labelledby="titre-introuvable">
+  <div class="bq-icon"><img src="/assets/vitrine/icone-app.png" alt="BoostZ"></div>
+  <h1 id="titre-introuvable" class="h bq-title">Cette page<br><span class="acc">n'existe pas.</span></h1>
+  <p class="p bq-lead">Le lien est peut-être incomplet, ou la page a changé d'adresse.</p>
+  <div class="bq-actions">
+    <a class="btn is-dark" href="/">Revenir à l'accueil</a>
+  </div>
+</section>
+
+<!-- boostz.fr/boutique/<code> : la même section que boutique/index.html. -->
+<div id="boutique">
+<section class="bq-hero" aria-labelledby="titre">
+  <div class="bq-icon"><img src="/assets/vitrine/icone-app.png" alt="BoostZ"></div>
+  <h1 id="titre" class="h bq-title">Ton passage<br><span class="acc">récompensé.</span></h1>
+  <p class="p bq-lead">Tu es dans une boutique partenaire BoostZ&nbsp;: <b>scanne ce QR code avec l'appli</b> pour valider ton passage et gagner des Boosties.</p>
+  <p class="p bq-lead">BoostZ, c'est l'appli pour gérer ta collection de cartes.</p>
+  <div class="bq-actions">
+    <a class="btn" id="ouvrir" href="#" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>J'ai déjà BoostZ&nbsp;: ouvrir l'appli</a>
+    <a class="btn is-dark" href="/beta/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer BoostZ</a>
+  </div>
+</section>
+
+<ul class="bq-rules" aria-label="Les règles du passage récompensé">
+  <li class="st bq-rule"><span class="bq-num is-gold">50</span><p class="p">Boosties par passage</p></li>
+  <li class="st bq-rule"><span class="bq-num is-teal">1×</span><p class="p">par jour et par boutique</p></li>
+  <li class="st bq-rule"><span class="bq-num is-teal">5×</span><p class="p">par semaine au plus, toutes boutiques</p></li>
+</ul>
+<p class="p bq-note">Les passages sont récompensés <b>à partir du 14&nbsp;janvier 2027</b>. La semaine va du lundi au dimanche. Le passage compte dans les boutiques de tes départements&nbsp;: ceux que tu as mis en favoris sur la carte des Forums, ou tes lieux d’échange.</p>
+<p class="p bq-note">Les Boosties sont une unité de compte interne de l'appli, sans valeur monétaire, non transférables et non convertibles en euros.</p>
+
+<ol class="bq-steps" aria-label="Valider ton passage">
+  <li class="st bq-step">
+    <span class="bq-step-num" aria-hidden="true">1</span>
+    <h2 class="h">Installe BoostZ</h2>
+    <p class="p">L'appli est en bêta sur Android et sur iPhone&nbsp;: la page d'installation te guide pas à pas.</p>
+  </li>
+  <li class="st bq-step">
+    <span class="bq-step-num" aria-hidden="true">2</span>
+    <h2 class="h">Crée ton compte</h2>
+    <p class="p">Dans l'appli. Chaque passage validé ajoute ses Boosties à ton compte.</p>
+  </li>
+  <li class="st bq-step">
+    <span class="bq-step-num" aria-hidden="true">3</span>
+    <h2 class="h">Scanne le QR code</h2>
+    <p class="p">Vise le sticker du comptoir avec l'appareil photo de ton téléphone&nbsp;: BoostZ s'ouvre sur ton passage. Touche <b>Valider mon passage</b>. Si c'est cette page qui s'ouvre, touche <b>J'ai déjà BoostZ</b>.</p>
+  </li>
+</ol>
+</div>
+
+</div>
+</main>
+
+<footer class="legal bq-foot" style="border-top:1px solid rgba(255,255,255,.08)">
+<div class="in" style="padding-top:28px;padding-bottom:36px;font-size:13px;color:#A8A2B8">
+<nav aria-label="Liens du site" style="display:flex;flex-wrap:wrap;gap:12px 24px;font-family:'DM Sans',sans-serif;font-weight:700">
+<a href="/">Accueil</a><a href="/mentions-legales.html">Mentions légales</a><a href="/cgu.html">CGU</a><a href="/confidentialite.html">Politique de confidentialité</a><a href="/support.html">Contacter le support</a>
+</nav>
+<p style="margin:20px 0 0;font-size:12px;line-height:1.6">Éditeur&nbsp;: Tanguy Pibarot, entrepreneur individuel (EI), nom commercial BoostZ, 47 rue Vivienne, 75002 Paris.</p>
+<p style="margin:12px 0 0;font-size:12px">© 2026 BoostZ</p>
+</div>
+</footer>
+
+</div>
+</body>
+</html>

@@ -3,8 +3,10 @@
 # (26/10/2026) : le reste du site est servi tel quel, comme avant.
 #
 # .well-known/assetlinks.json : déclare l'application Android app.boostz.mobile
-# comme gestionnaire des liens de boostz.fr qu'elle annonce (App Links, le
-# chemin /parrainage, boostz-mobile app.json android.intentFilters). Android
+# comme gestionnaire des liens de boostz.fr qu'elle annonce (App Links, les
+# chemins /parrainage et /boutique/, boostz-mobile app.json
+# android.intentFilters). Il vaut pour tout l'hôte : un nouveau chemin ne le
+# change pas, seul app.json le déclare. Android
 # le lit à l'installation de chaque version : il doit être en ligne AVANT
 # qu'une version qui déclare le lien arrive sur les téléphones. L'empreinte
 # est celle du certificat qui signe l'application sur Google Play (la clé
