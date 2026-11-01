@@ -556,8 +556,8 @@ function userMenuItems(u) {
     items.push(item('Nommer super admin', 'amber', () => userActs.superOn(u), superWhy));
   } else {
     items.push(item('Passer admin', 'violet', () => userActs.promote(u)));
-    // Un admin a déjà le Pass et les Boosties sans limite : le statut ne se
-    // propose qu'aux membres.
+    // Un admin a déjà les avantages du Pass : le statut ne se propose
+    // qu'aux membres.
     if (u.super_user_since) items.push(superUserOff());
     else items.push(item('Passer Super User', 'green', () => userActs.superUserOn(u), superWhy || (!u.is_adult ? 'Compte mineur : le Pass est réservé aux majeurs.' : null)));
   }
