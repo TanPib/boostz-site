@@ -310,10 +310,23 @@ function overviewView(ctx, canWrite) {
       e.prospect ? el('button', { class: 'pr-link', type: 'button', text: e.prospect.name, onclick: () => openFiche(e.prospect.id, ctx) }) : null,
       e.summary ? el('div', { class: 'bz-small bz-muted pr-clip', text: e.summary }) : null)))
     : el('p', { class: 'bz-small bz-muted', text: 'Rien encore.' });
+  // Le taux de réponse de chaque objet du premier e-mail (ceux en alternance,
+  // et ceux d'avant). Seules les réponses comptent : aucun suivi d'ouverture.
+  const subjects = d.subjects && d.subjects.length ? el('section', { class: 'bz-card' },
+    el('h3', { class: 'bz-h3', text: 'Objets du premier e-mail' }),
+    el('p', { class: 'bz-small bz-muted', text: 'Les objets en alternance (onglet Textes, séparés par « | ») et ceux d’avant. Seules les réponses se mesurent : aucun suivi d’ouverture. Il faut une cinquantaine d’envois par objet avant de comparer.' }),
+    el('div', { class: 'bz-table-wrap' }, el('table', { class: 'bz-table pr-table' },
+      el('thead', {}, el('tr', {}, ['Objet', 'Envoyés', 'Réponses', 'Taux', 'Oui', 'Refus', 'Adresses en erreur'].map((h) => el('th', { text: h })))),
+      el('tbody', {}, d.subjects.map((s) => el('tr', {},
+        el('td', {}, el('span', { text: s.subject || 'Autres objets' }), s.current ? el('span', { text: ' ' }) : null, s.current ? pill('en cours', 'is-green') : null),
+        el('td', { text: String(s.sent) }), el('td', { text: String(s.replied) }),
+        el('td', { text: s.reply_rate === null ? '—' : String(s.reply_rate).replace('.', ',') + ' %' }),
+        el('td', { text: String(s.positive) }), el('td', { text: String(s.refused) }), el('td', { text: String(s.bounced) }))))))) : null;
   return el('div', { class: 'bl' },
     kpis,
     todo.length ? el('div', { class: 'bz-row' }, ...todo) : null,
     sendingCard(ctx, canWrite),
+    subjects,
     el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'Par région' }), regions),
     el('section', { class: 'bz-card' }, fold('departments', 'Par département (' + d.summary.departments.length + ')', departments)),
     el('section', { class: 'bz-card' }, el('h3', { class: 'bz-h3', text: 'Dernière activité' }), recent));
@@ -483,7 +496,8 @@ function ficheView(ctx, canWrite) {
       const m = f.emails[k];
       if (!m) return el('p', { class: 'bz-small bz-muted', text: label + ' : après le premier e-mail.' });
       if (m.error) return el('p', { class: 'bz-small', style: { color: 'var(--soft-red-text)' }, text: label + ' : ' + m.error });
-      return fold('mail-' + k, label + ' · « ' + m.subject + ' »', renderMarked(m.body, m.footer));
+      const title = m.subjects ? label + ' · objets en alternance : « ' + m.subjects.join(' » ou « ') + ' »' : label + ' · « ' + m.subject + ' »';
+      return fold('mail-' + k, title, renderMarked(m.body, m.footer));
     }));
   // Les deux réponses, envoyées d'ici avec leur PDF (un serveur plus ancien ne
   // les connaît pas : la section n'apparaît pas).
@@ -581,7 +595,10 @@ function templatesView(ctx, canWrite) {
     : null;
   const rendered = pr.preview && !pr.preview.error
     ? (pr.preview.subject !== undefined || pr.preview.footer !== undefined
-      ? el('div', {}, pr.preview.subject ? el('p', { class: 'bz-small' }, el('b', { text: 'Objet : ' }), document.createTextNode(pr.preview.subject)) : null, renderMarked(pr.preview.body, pr.preview.footer))
+      ? el('div', {},
+        pr.preview.subjects ? el('p', { class: 'bz-small' }, el('b', { text: 'Objets en alternance : ' }), document.createTextNode('« ' + pr.preview.subjects.join(' » puis « ') + ' »'))
+          : pr.preview.subject ? el('p', { class: 'bz-small' }, el('b', { text: 'Objet : ' }), document.createTextNode(pr.preview.subject)) : null,
+        renderMarked(pr.preview.body, pr.preview.footer))
       : el('pre', { class: 'pr-pre', text: pr.preview.body || '' }))
     : null;
   return el('div', { class: 'bl' },
@@ -591,7 +608,8 @@ function templatesView(ctx, canWrite) {
     el('div', { class: 'pr-tpl' },
       el('section', { class: 'bz-card' },
         el('p', { class: 'bz-small bz-muted', style: { marginTop: 0 }, text: 'Syntaxe : **gras**, une ligne qui commence par « - » pour une liste, {schema} et {signature} seuls sur leur ligne pour le schéma (les deux e-mails) et la signature Gmail (e-mails et réponses). Le pied de page légal s’ajoute à chaque e-mail ; ses mentions (STOP, source de l’adresse, lien vers la politique, SIREN) sont obligatoires.' }),
-        t.key === 'email_1' ? el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', text: 'Objet' }), el('input', { class: 'bz-input', value: pr.draft.subject, oninput: onEdit('subject'), disabled: !canWrite })) : null,
+        t.key === 'email_1' ? el('div', { class: 'bz-field' }, el('label', { class: 'bz-label', text: 'Objet' }), el('input', { class: 'bz-input', value: pr.draft.subject, oninput: onEdit('subject'), disabled: !canWrite }),
+          el('span', { class: 'bz-tiny bz-muted', text: 'Plusieurs objets ? Sépare-les par « | » (4 au plus) : ils alternent d’un envoi à l’autre, et la Vue d’ensemble compte les réponses de chacun.' })) : null,
         t.key === 'email_2' ? el('p', { class: 'bz-small bz-muted', text: 'Objet : « Re: » suivi de celui du premier e-mail (la relance part dans son fil).' }) : null,
         t.key === 'reply_positive' || t.key === 'reply_convention' ? el('p', { class: 'bz-small bz-muted', text: 'Envoyée depuis la fiche, avec son PDF (Réglages › Pièces jointes) : objet « Re: » suivi de celui du premier e-mail, dans le fil de la boutique. La signature et la ligne STOP s’ajoutent seules si le texte ne les a pas.' }) : null,
         chips, body,
