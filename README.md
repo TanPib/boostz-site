@@ -14,10 +14,13 @@ Les séparer coûte un dépôt et évite d'exposer le code de l'application.
 Un `git push` sur `main` publie. GitHub Pages sert la racine du dépôt, et le
 fichier `CNAME` lui indique le domaine.
 
-## À faire avant la première publication
+## Les pages juridiques
 
-Les deux pages légales contiennent des blocs `[À COMPLÉTER]` : identité de
-l'éditeur, adresse de contact, date de publication. Ils sont volontairement
-visibles — tant qu'ils y sont, les pages ne doivent pas être annoncées aux
-stores. Aucun n'est un détail : Apple refuse une application dont la politique
-de confidentialité ne désigne pas de responsable de traitement joignable.
+`cgu.html`, `cgv.html`, `confidentialite.html`, `mentions-legales.html`,
+`traceurs.html` et `conditions-boutiques.html` ne se modifient pas ici : elles
+sont générées à partir de `legal/*.md` du dépôt de l'application, les mêmes
+textes que l'application, par `npx vite-node scripts/export-legal-site.mjs
+<dossier du site>` lancé depuis `mobile/`. Les blocs `[À COMPLÉTER]` d'origine
+sont tous remplis depuis le 03/11/2026 (le médiateur de la consommation était
+le dernier) ; les textes restent des projets jusqu'à la validation de l'avocat,
+et le bandeau en tête de chaque page le dit.
