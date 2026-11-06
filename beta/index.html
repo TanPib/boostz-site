@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0B0812">
 <title>Teste BoostZ avant sa sortie : la bêta Android et iPhone</title>
-<meta name="description" content="La bêta BoostZ est ouverte sur Android, et elle arrive sur iPhone le 14 novembre, avant la sortie du 14 janvier 2027.">
+<meta name="description" content="La bêta BoostZ est ouverte sur Android et sur iPhone, avant la sortie du 14 janvier 2027.">
 <!-- La bêta s'arrête à la sortie : pas de résultat de recherche qui y mène
      encore après. On y arrive par les liens qu'on partage. -->
 <meta name="robots" content="noindex">
@@ -81,7 +81,8 @@
   .bt-warn svg{flex:none;margin-top:1px}
   .bt-warn b{color:#FCD34D}
   .bt-step .bt-warn + .btn{margin-top:12px}
-  /* Les étapes qui attendent (l'iPhone, jusqu'au 14/11). */
+  /* Les étapes qui attendent une date (l'iPhone jusqu'au 06/11/2026 ; plus
+     aucune depuis, gardé pour une étape à venir). */
   .bt-step.is-later .bt-num{background:#2A2140;border-color:#7F7891;color:#BFB9CB;box-shadow:none}
   .bt-step.is-later .h{color:#BFB9CB}
   .bt-soon{display:flex;align-items:center;justify-content:center;margin-top:14px;height:50px;border-radius:16px;border:3px dashed #4A4460;color:#7F7891;font-family:"DM Sans",sans-serif;font-weight:700;font-size:15px}
@@ -153,7 +154,7 @@
 <section class="bt-hero" aria-labelledby="titre">
   <div class="bt-icon"><img src="/assets/vitrine/icone-app.png" alt="BoostZ"><span class="bt-tag">BÊTA</span></div>
   <h1 id="titre" class="h bt-title">Teste BoostZ <br><span class="acc">avant sa sortie.</span></h1>
-  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. D'ici là, choisis ton téléphone&nbsp;: la bêta est ouverte sur Android, et elle arrive sur iPhone le 14&nbsp;novembre. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
+  <p class="p bt-lead">BoostZ sort le 14&nbsp;janvier 2027. D'ici là, choisis ton téléphone&nbsp;: la bêta est ouverte sur Android et sur iPhone. Ton compte est le même sur les deux&nbsp;: même collection, mêmes Boosties, même Pass.</p>
 </section>
 
 <div class="bt-grid">
@@ -206,16 +207,15 @@
 </details>
 
 <!-- IPHONE (20/10/2026), par TestFlight. Pas de groupe ni de
-     pré-inscription : le lien public suffit. IL N'EXISTE PAS ENCORE : Apple
-     doit d'abord valider la bêta (vers le 5/11). Ne jamais mettre de lien
-     deviné : le 14/11, l'étape 2 reçoit le vrai lien (bouton), donné par
-     TanPib, et la pastille passe à « Ouverte » (bt-pill is-on, bt-ico is-on).
+     pré-inscription : le lien public suffit. OUVERTE LE 06/11/2026, avant le
+     14/11 prévu, comme Android : Apple a validé l'examen bêta du build 8, et
+     le lien public du groupe « Bêta publique » (App Store Connect) est actif.
      Pas de logo Apple ni de badge App Store avant la sortie. -->
 <details class="st bt-vol" id="iphone">
   <summary class="bt-sum">
-    <span class="bt-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span>
+    <span class="bt-ico is-on" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span>
     <h2 class="h bt-name">iPhone<span class="bt-via">Par TestFlight</span></h2>
-    <span class="bt-pill is-later"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4B5FD" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Le 14<span class="bt-long">&nbsp;novembre</span><span class="bt-short">&nbsp;nov.</span></span></span>
+    <span class="bt-pill is-on"><span class="bt-dot" aria-hidden="true"></span>Ouverte</span>
     <svg class="bt-chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F2FB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
   </summary>
   <div class="bt-body">
@@ -228,20 +228,19 @@
           <a class="btn" href="https://apps.apple.com/fr/app/testflight/id899247664"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer TestFlight</a>
         </div>
       </li>
-      <li class="bt-step is-later">
+      <li class="bt-step">
         <span class="bt-num" aria-hidden="true">2</span>
         <div class="bt-step-in">
           <h3 class="h">Ouvre le lien de la bêta</h3>
-          <p class="p">Il sera ici le jour de l'ouverture. Pas d'inscription à faire avant.</p>
-          <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+          <p class="p">Sur ton iPhone&nbsp;: il ouvre BoostZ dans TestFlight. Pas d'inscription à faire avant.</p>
+          <a class="btn is-dark" href="https://testflight.apple.com/join/TUtM4m72"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Rejoindre la bêta</a>
         </div>
       </li>
-      <li class="bt-step is-later">
+      <li class="bt-step">
         <span class="bt-num" aria-hidden="true">3</span>
         <div class="bt-step-in">
           <h3 class="h">Accepte, puis installe</h3>
-          <p class="p">Touche «&nbsp;Accepter&nbsp;», puis «&nbsp;Installer&nbsp;»&nbsp;: BoostZ s'installe depuis TestFlight. Tu as déjà un compte&nbsp;? Connecte-toi avec.</p>
-          <span class="bt-soon">Disponible le 14&nbsp;novembre</span>
+          <p class="p">Touche «&nbsp;Accepter&nbsp;», puis «&nbsp;Installer&nbsp;»&nbsp;: BoostZ s'installe depuis TestFlight. Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
         </div>
       </li>
     </ol>
@@ -257,7 +256,7 @@
   <ul class="pts">
     <li><b>Reste au moins deux semaines</b><span>Sur Android, Google compte les testeurs jour après jour avant d'ouvrir BoostZ à tous&nbsp;: garde l'appli et reste dans le groupe.</span></li>
     <li><b>Un souci, une idée&nbsp;?</b><span>Dans l'appli, Profil › Contacter le support, ou sur <a href="https://discord.gg/adGa9qgbER">notre Discord</a>, dans le salon de ta plateforme, Android ou iPhone. Sur iPhone, tu peux aussi le dire dans TestFlight&nbsp;: une capture d'écran, puis «&nbsp;Envoyer un retour&nbsp;».</span></li>
-    <li><b>Dès 15 ans, comme l'appli</b><span>Le BoostZ Pass et les packs payants sont réservés aux 18&nbsp;ans et plus, et pendant la bêta ce sont de vrais achats.</span></li>
+    <li><b>Dès 15 ans, comme l'appli</b><span>Le BoostZ Pass et les packs payants sont réservés aux 18&nbsp;ans et plus. Sur Android, pendant la bêta, ce sont de vrais achats&nbsp;; sur iPhone, TestFlight ne facture rien.</span></li>
   </ul>
 </section>
 
