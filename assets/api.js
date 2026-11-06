@@ -130,6 +130,26 @@ export async function googleLogin(idToken) {
   return { ...opened, passwordReset: !!data.password_reset };
 }
 
+// « Continuer avec Apple » (06/11/2026, boostz-dev/CONNEXION-APPLE/SPEC.md) :
+// les routes de l'appli, telles quelles. La configuration donne au site son
+// identifiant chez Apple (le « Services ID ») et l'adresse où Apple répond ;
+// sans eux, le bouton reste « Bientôt ».
+export async function appleConfig() {
+  return call('/auth/apple/config');
+}
+
+// Comme pour Google : le site ne crée jamais de compte. Le code d'autorisation
+// part avec le jeton, le serveur l'échange pour pouvoir délier le compte à sa
+// suppression.
+export async function appleLogin({ idToken, code, givenName }) {
+  const body = { id_token: idToken, authorization_code: code };
+  if (givenName) body.given_name = givenName;
+  const data = await call('/auth/apple', { method: 'POST', body });
+  if (data && data.needs_registration) return { needsRegistration: true, email: data.email || '', privateRelay: !!data.private_relay };
+  const opened = await openSession(data);
+  return { ...opened, passwordReset: !!data.password_reset };
+}
+
 async function openSession(data) {
   saveSession(data.token, data.user);
   try {

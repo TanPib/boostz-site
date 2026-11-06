@@ -37,13 +37,16 @@ if (CONTEXT[next]) {
 // ne reste ni dans l'historique ni dans un lien copié. Voir plus bas.
 const fragment = new URLSearchParams(location.hash.slice(1));
 const googleReturn = fragment.has('id_token') || fragment.has('error');
-if (googleReturn) history.replaceState(null, '', location.pathname + location.search);
+// Celui d'Apple de même (06/11/2026), sous ses propres noms (#apple_code=…),
+// posés par la route de rebond du serveur : voir plus bas.
+const appleReturn = fragment.has('apple_code') || fragment.has('apple_error');
+if (googleReturn || appleReturn) history.replaceState(null, '', location.pathname + location.search);
 
 // Déjà connecté : la copie locale de la session n'est pas une preuve de rôle, donc
 // pas de détour par la console sur sa seule foi. Mon compte relit le compte et
 // n'y propose la console qu'à un admin confirmé.
 const existing = session();
-if (existing && !googleReturn) location.replace(DESTINATIONS[next] || 'compte.html');
+if (existing && !googleReturn && !appleReturn) location.replace(DESTINATIONS[next] || 'compte.html');
 
 const form = document.getElementById('form');
 const email = document.getElementById('email');
@@ -273,10 +276,10 @@ googleButton.addEventListener('click', async () => {
   location.assign(GOOGLE_AUTH + '?' + params.toString());
 });
 
-function readFlow() {
+function readFlow(key = GOOGLE_FLOW) {
   try {
-    const flow = JSON.parse(sessionStorage.getItem(GOOGLE_FLOW) || 'null');
-    sessionStorage.removeItem(GOOGLE_FLOW);
+    const flow = JSON.parse(sessionStorage.getItem(key) || 'null');
+    sessionStorage.removeItem(key);
     return flow;
   } catch {
     return null;
@@ -344,3 +347,133 @@ async function finishGoogle() {
 }
 
 if (googleReturn) finishGoogle();
+
+// CONTINUER AVEC APPLE (06/11/2026, boostz-dev/CONNEXION-APPLE/SPEC.md).
+//
+// Le même aller-retour que Google, sans script d'Apple sur cette page, avec un
+// détour : quand on lui demande l'adresse et le nom, Apple ne répond qu'en
+// POST vers l'adresse de retour, et GitHub Pages ne reçoit pas de POST.
+// L'adresse de retour est donc une route du serveur (POST /auth/apple/web),
+// qui renvoie aussitôt le navigateur ici avec la réponse dans le fragment
+// (#apple_code=…&apple_id_token=…&apple_state=…). state et nonce font le même
+// travail que pour Google ; le serveur vérifie le jeton (POST /auth/apple).
+//
+// Le bouton n'existe que si le serveur donne le Services ID du site et cette
+// adresse de retour (GET /auth/apple/config) ; sinon le « Bientôt » reste.
+// Côté Apple, le Services ID doit déclarer exactement cette adresse comme
+// « Return URL » (boostz-dev/CONNEXION-APPLE/GUIDE.md), sans quoi Apple
+// affiche « invalid_request ».
+const APPLE_AUTH = 'https://appleid.apple.com/auth/authorize';
+const APPLE_FLOW = 'boostz.apple';
+const APPLE_STALE = 'La page vient d’être mise à jour : recharge-la pour te connecter avec Apple.';
+const appleButton = document.getElementById('apple');
+const appleSoon = document.getElementById('apple-soon');
+const appleMessage = document.getElementById('apple-message');
+const appleContinue = document.getElementById('apple-continue');
+
+let appleConfigPromise = null;
+function loadAppleConfig() {
+  if (!api.appleConfig) return Promise.reject(new Error(APPLE_STALE));
+  if (!appleConfigPromise) appleConfigPromise = api.appleConfig().catch((err) => { appleConfigPromise = null; throw err; });
+  return appleConfigPromise;
+}
+
+const appleOpen = (config) => !!(config && config.web_client_id && config.web_redirect_uri);
+
+function showAppleButton() {
+  appleSoon.hidden = true;
+  appleButton.hidden = false;
+  appleButton.disabled = false;
+}
+
+// Un serveur d'avant la connexion avec Apple répond 404 : le « Bientôt » reste.
+loadAppleConfig().then((config) => { if (appleOpen(config)) showAppleButton(); }).catch(() => {});
+
+appleButton.addEventListener('click', async () => {
+  appleButton.disabled = true;
+  say(appleMessage, '');
+  let config;
+  try {
+    config = await loadAppleConfig();
+  } catch (err) {
+    say(appleMessage, err.message, 'err');
+    appleButton.disabled = false;
+    return;
+  }
+  if (!appleOpen(config)) {
+    say(appleMessage, 'La connexion avec Apple n’est pas encore ouverte.', 'err');
+    appleButton.disabled = false;
+    return;
+  }
+  const state = randomToken();
+  const nonce = randomToken();
+  try {
+    sessionStorage.setItem(APPLE_FLOW, JSON.stringify({ state, nonce, next }));
+  } catch {
+    say(appleMessage, 'Ton navigateur bloque le stockage de cette page : la connexion avec Apple ne peut pas aboutir. Utilise ton adresse et ton mot de passe.', 'err');
+    appleButton.disabled = false;
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: config.web_client_id,
+    redirect_uri: config.web_redirect_uri,
+    response_type: 'code id_token',
+    response_mode: 'form_post',
+    scope: 'name email',
+    state,
+    nonce
+  });
+  location.assign(APPLE_AUTH + '?' + params.toString());
+});
+
+async function finishApple() {
+  // Le bouton s'affiche, pour que la réponse s'écrive sous lui.
+  showAppleButton();
+  const flow = readFlow(APPLE_FLOW);
+  if (fragment.has('apple_error')) {
+    say(appleMessage, fragment.get('apple_error') === 'user_cancelled_authorize'
+      ? 'Connexion avec Apple annulée.'
+      : 'Apple n’a pas pu te connecter. Réessaie.', 'err');
+    return;
+  }
+  const idToken = fragment.get('apple_id_token');
+  const code = fragment.get('apple_code');
+  if (!flow || !idToken || fragment.get('apple_state') !== flow.state || tokenNonce(idToken) !== flow.nonce) {
+    say(appleMessage, 'Cette connexion avec Apple n’a pas pu être vérifiée. Recommence depuis cette page.', 'err');
+    return;
+  }
+  const destination = (user) => DESTINATIONS[flow.next] || (isAdmin(user) ? 'admin.html' : 'compte.html');
+  if (!api.appleLogin) {
+    say(appleMessage, APPLE_STALE, 'err');
+    return;
+  }
+  appleButton.disabled = true;
+  say(appleMessage, 'Connexion avec Apple…', 'note');
+  const slow = setTimeout(() => say(appleMessage, 'Connexion… le serveur peut mettre une trentaine de secondes à se réveiller.', 'note'), 2000);
+  try {
+    const r = await api.appleLogin({ idToken, code, givenName: fragment.get('apple_given_name') });
+    clearTimeout(slow);
+    if (r.needsRegistration) {
+      say(appleMessage, (r.email && !r.privateRelay
+        ? 'Aucun compte BoostZ n’est relié à ' + r.email + '. '
+        : 'Aucun compte BoostZ n’est relié à cet identifiant Apple. ')
+        + 'Ton compte se crée dans l’appli ; ensuite, tu pourras te connecter ici avec Apple.', 'err');
+      appleButton.disabled = false;
+      return;
+    }
+    if (r.passwordReset) {
+      say(appleMessage, 'Ton compte BoostZ est maintenant relié à ton identifiant Apple. Ton ancien mot de passe ne sert plus : connecte-toi avec Apple, ou choisis-en un nouveau par « Mot de passe oublié ».', 'info');
+      appleContinue.href = destination(r.user);
+      appleContinue.hidden = false;
+      appleContinue.focus();
+      return;
+    }
+    location.href = destination(r.user);
+  } catch (err) {
+    clearTimeout(slow);
+    say(appleMessage, err.message, 'err');
+    appleButton.disabled = false;
+  }
+}
+
+if (appleReturn) finishApple();

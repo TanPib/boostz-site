@@ -37,6 +37,16 @@
   .google-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,0,0,.35); }
   .google-btn:focus-visible { outline: 3px solid #C4B5FD; outline-offset: 2px; }
   .google-btn:disabled { opacity: .6; cursor: default; transform: none; box-shadow: none; }
+  /* « Continuer avec Apple » (06/11/2026) : la même taille que Google, et ce
+     qu'Apple demande d'un bouton fait main sur fond sombre : fond blanc, logo
+     et texte noirs, police du système. Caché tant que le serveur n'annonce
+     pas le site (page-connexion.js) ; le « Bientôt » reste à sa place. */
+  .apple-btn { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 18px; border-radius: 14px; border: 1px solid #FFFFFF; background: #FFFFFF; color: #000000; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+  .apple-btn[hidden] { display: none; }
+  .apple-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+  .apple-btn:focus-visible { outline: 3px solid #C4B5FD; outline-offset: 2px; }
+  .apple-btn:disabled { opacity: .6; cursor: default; transform: none; box-shadow: none; }
+  .soon[hidden] { display: none; }
   .forgot-link { align-self: flex-end; margin-top: -4px; background: none; border: 0; padding: 4px 0; color: var(--text-muted); font: inherit; font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .forgot-link:hover, .forgot-link:focus-visible { color: var(--text, #fff); }
   .forgot-head { margin: 0 0 4px; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
@@ -52,6 +62,7 @@
     .soon { padding: 10px 12px; border-radius: 12px; border-width: 1px; }
     .soon b { font-size: 12.5px; }
     .google-btn { height: 46px; font-size: 14px; border-radius: 12px; }
+    .apple-btn { height: 46px; font-size: 15px; border-radius: 12px; }
   }
 </style>
 </head>
@@ -70,9 +81,11 @@
 
     <div class="bz-card" style="margin-top:22px;padding:22px">
       <div id="login-panel">
-      <!-- Google d'abord, Apple grisé dessous, puis l'adresse et le mot de passe.
+      <!-- Google d'abord, Apple dessous, puis l'adresse et le mot de passe.
            Le bouton Google est désactivé jusqu'au chargement du script, comme
-           SE CONNECTER. -->
+           SE CONNECTER. Apple (06/11/2026) : le « Bientôt » grisé reste affiché
+           tant que le serveur n'annonce pas la connexion avec Apple pour le
+           site ; le script le remplace alors par le vrai bouton. -->
       <div class="bz-stack" style="gap:9px">
         <button id="google" class="google-btn" type="button" disabled>
           <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -80,10 +93,16 @@
         </button>
         <div id="google-message" aria-live="polite"></div>
         <a id="google-continue" class="bz-btn is-primary is-block" href="compte.html" hidden>CONTINUER</a>
-        <div class="soon" aria-disabled="true">
+        <div id="apple-soon" class="soon" aria-disabled="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.8)" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
           <b>Continuer avec Apple</b><span class="bz-pill">Bientôt</span>
         </div>
+        <button id="apple" class="apple-btn" type="button" hidden disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#000000" aria-hidden="true"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.7.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.7 3-.4 7.5 1.3 10 .8 1.2 1.8 2.5 3.1 2.5 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.3.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.6-4.1ZM13.9 5.1c.7-.8 1.1-1.9 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4Z"/></svg>
+          <span>Continuer avec Apple</span>
+        </button>
+        <div id="apple-message" aria-live="polite"></div>
+        <a id="apple-continue" class="bz-btn is-primary is-block" href="compte.html" hidden>CONTINUER</a>
       </div>
 
       <div class="sep"><span></span><span class="bz-eyebrow">ou avec ton e-mail</span><span></span></div>
@@ -153,7 +172,7 @@
 <!-- Daté : GitHub Pages garde un script dix minutes en cache. Le 14/10, une
      page neuve avec l'ancien script laissait le bouton Google grisé, sans
      réaction. Changer la date à chaque modification du script. -->
-<script type="module" src="assets/page-connexion.js?v=2026-10-14b"></script>
+<script type="module" src="assets/page-connexion.js?v=2026-11-06a"></script>
 <script type="module" src="assets/mesure.js"></script>
 </body>
 </html>
