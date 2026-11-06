@@ -2,9 +2,9 @@
   "platform": "android",
   "distribution": "google_play",
   "package": "app.boostz.mobile",
-  "app_version": "1.0.36",
-  "completed_at": "2026-10-26T19:47:00.000Z",
-  "runtime_version": "12b5402ebf7e2fc6a6f86937b8e6681322bcf2e1",
-  "ota_runtime_version": "12b5402ebf7e2fc6a6f86937b8e6681322bcf2e1",
+  "app_version": "1.0.40",
+  "completed_at": "2026-11-06T16:46:00.000Z",
+  "runtime_version": "1b6605f0d64db203b939870c833fe75b79360a12",
+  "ota_runtime_version": "1b6605f0d64db203b939870c833fe75b79360a12",
   "store_url": "https://play.google.com/store/apps/details?id=app.boostz.mobile"
 }
