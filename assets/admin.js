@@ -2131,7 +2131,8 @@ function takeDeepLink() {
   } catch {}
   if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   const [tab, ...rest] = hash.replace(/^#/, '').split('/').map((x) => decodeURIComponent(x));
-  return DEEP_TABS[tab] ? { tab: DEEP_TABS[tab], rest } : null;
+  // Ses propres onglets seulement : #constructor trouvait la fonction Object (07/11/2026).
+  return Object.hasOwn(DEEP_TABS, tab) ? { tab: DEEP_TABS[tab], rest } : null;
 }
 
 async function openDeepLink(link) {

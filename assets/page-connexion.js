@@ -17,6 +17,12 @@ const DESTINATIONS = {
   suppression: 'suppression-compte.html',
   admin: 'admin.html'
 };
+// Une clé de ces tables, ou rien. Une recherche simple trouvait aussi ce que
+// tout objet hérite : ?next=__proto__ écrivait « [object Object] » dans
+// l'encadré, ?next=constructor « function Object() { [native code] } », et la
+// connexion partait ensuite vers cette adresse (07/11/2026). Rien ne
+// s'exécutait, mais une liste blanche ne laisse passer que ses propres noms.
+const own = (map, key) => (typeof key === 'string' && Object.hasOwn(map, key) ? map[key] : undefined);
 const CONTEXT = {
   suppression: 'Connexion requise : la suppression se fait depuis ton propre compte, une fois connecté. Personne ne peut supprimer le tien à ta place.',
   support: 'Connexion requise : le support a besoin de ton compte pour ouvrir une demande et te répondre.',
@@ -24,11 +30,11 @@ const CONTEXT = {
 };
 
 const next = new URLSearchParams(location.search).get('next');
-const destinationFor = (user) => DESTINATIONS[next] || (isAdmin(user) ? 'admin.html' : 'compte.html');
+const destinationFor = (user) => own(DESTINATIONS, next) || (isAdmin(user) ? 'admin.html' : 'compte.html');
 
-if (CONTEXT[next]) {
+if (own(CONTEXT, next)) {
   const box = document.getElementById('context');
-  box.textContent = CONTEXT[next];
+  box.textContent = own(CONTEXT, next);
   box.hidden = false;
 }
 
@@ -46,7 +52,7 @@ if (googleReturn || appleReturn) history.replaceState(null, '', location.pathnam
 // pas de détour par la console sur sa seule foi. Mon compte relit le compte et
 // n'y propose la console qu'à un admin confirmé.
 const existing = session();
-if (existing && !googleReturn && !appleReturn) location.replace(DESTINATIONS[next] || 'compte.html');
+if (existing && !googleReturn && !appleReturn) location.replace(own(DESTINATIONS, next) || 'compte.html');
 
 const form = document.getElementById('form');
 const email = document.getElementById('email');
@@ -312,7 +318,7 @@ async function finishGoogle() {
     say(googleMessage, 'Cette connexion avec Google n’a pas pu être vérifiée. Recommence depuis cette page.', 'err');
     return;
   }
-  const destination = (user) => DESTINATIONS[flow.next] || (isAdmin(user) ? 'admin.html' : 'compte.html');
+  const destination = (user) => own(DESTINATIONS, flow.next) || (isAdmin(user) ? 'admin.html' : 'compte.html');
   if (!api.googleLogin) {
     say(googleMessage, STALE, 'err');
     return;
@@ -442,7 +448,7 @@ async function finishApple() {
     say(appleMessage, 'Cette connexion avec Apple n’a pas pu être vérifiée. Recommence depuis cette page.', 'err');
     return;
   }
-  const destination = (user) => DESTINATIONS[flow.next] || (isAdmin(user) ? 'admin.html' : 'compte.html');
+  const destination = (user) => own(DESTINATIONS, flow.next) || (isAdmin(user) ? 'admin.html' : 'compte.html');
   if (!api.appleLogin) {
     say(appleMessage, APPLE_STALE, 'err');
     return;
