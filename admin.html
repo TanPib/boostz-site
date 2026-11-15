@@ -31,6 +31,10 @@
   @media (max-width: 860px) { .adm-detail { position: static; } }
   .adm-list-head { padding: 13px 16px; border-bottom: 1px solid var(--line); font-family: var(--font-ui); font-weight: 700; font-size: 12px; color: var(--text-muted); }
   .adm-list { max-height: 640px; overflow-y: auto; }
+  /* Les comptes de test (15/11/2026) : visibles, grisés, hors des chiffres. */
+  .bz-table tr.is-test td, .bz-card.is-test { opacity: .58; }
+  /* Le filtre Android / iPhone de l'onglet Utilisateurs, dans la barre de recherche. */
+  .adm-users-bar .adm-platforms { flex: none; }
   .adm-item { display: block; width: 100%; text-align: left; cursor: pointer; background: transparent; color: var(--text);
     border: 0; border-bottom: 1px solid rgba(255,255,255,.05); border-left: 3px solid transparent; padding: 12px 16px; transition: background-color .2s; }
   .adm-item:hover { background: rgba(255,255,255,.03); }
@@ -362,6 +366,8 @@
   @media (max-width: 640px) {
     /* Les quatre chiffres clés en une rangée compacte. */
     .adm-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    /* L'onglet Bêta n'a que trois chiffres : trois colonnes, sans case vide. */
+    .bt-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .adm-kpi { padding: 8px 6px 7px; border-radius: 12px; text-align: center; }
     .adm-kpi .bz-eyebrow { font-size: 9px; letter-spacing: .05em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .adm-kpi-value { font-size: 17px; margin-top: 0; }
@@ -433,6 +439,7 @@
 
     /* ---------- Comptes : recherche, filtre, lignes ---------- */
     .adm-users-phone { margin-top: 10px; }
+    .adm-users-phone .adm-platforms { margin-top: 8px; }
     .adm-toolbar { display: flex; align-items: center; gap: 8px; }
     .adm-toolbar input[type="search"] { flex: 1; }
     .adm-filter-icon {
@@ -783,6 +790,6 @@
     </div>
   </div>
 </main>
-<script type="module" src="assets/page-admin.js?v=2026-11-07a"></script>
+<script type="module" src="assets/page-admin.js?v=2026-11-15a"></script>
 </body>
 </html>

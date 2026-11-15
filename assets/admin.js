@@ -8,7 +8,7 @@ import { session, refreshMe, call, isAdmin } from './api.js';
 import { el, clear, put, renderTop, gate, dateShort, dateTime, dateTimeShort, roleLabel, rolePillClass, initialOf, thumbs, togglePopover, closePopover } from './chrome.js';
 import { renderRevenue, passSummary, hasPassData } from './revenue.js?v=2026-10-26a';
 import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
-import { renderBeta } from './beta.js';
+import { renderBeta, onPlatform, platformText, profileText, platformFilter, platformCounts, testPill } from './beta.js?v=2026-11-15a';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
 import { loadVenues, renderVenues, venuesPendingCount, selectVenueRequest } from './venues.js?v=2026-10-31p';
@@ -157,6 +157,9 @@ const state = {
   aiClosed: new Set(),
   aiMore: new Set(),
   q: '', userKinds: new Set(['members', 'admins', 'supers', 'banned']),
+  // Le filtre par téléphone de l'onglet Utilisateurs : '' (tous), 'android'
+  // ou 'ios'.
+  userPlatform: '',
   loaded: false
 };
 
@@ -601,6 +604,7 @@ function statusPills(u) {
   else pills.push(el('span', { class: rolePillClass(u), text: roleLabel(u) }));
   if (!u.deleted && u.super_user_since) pills.push(el('span', { class: 'bz-pill is-green', title: 'Pass annuel offert et Boosties sans solde', text: 'Super User' }));
   if (!u.deleted && !u.is_adult) pills.push(el('span', { class: 'bz-pill is-amber', text: 'Mineur' }));
+  if (!u.deleted && u.is_test_account) pills.push(testPill());
   return pills;
 }
 
@@ -679,6 +683,34 @@ function lastSeenInfo(u) {
   if (u.deleted) return ['—'];
   if (!u.last_app_seen_at) return [el('span', { class: 'bz-muted', text: 'Aucune' }), 'depuis le 14 sept. 2026'];
   return [el('span', { text: dateTimeShort(u.last_app_seen_at) }), sinceFr(u.last_app_seen_at)];
+}
+
+// Le téléphone et le profil d'un compte (15/11/2026), avec les mots de l'onglet
+// Bêta (beta.js). Rien tant que /admin/users ne les porte pas.
+const hasPlatformData = (users) => users.some((u) => u.platforms !== undefined);
+
+function platformInfo(u) {
+  if (u.deleted) return ['—'];
+  const names = platformText(u);
+  return [names ? el('span', { text: names }) : el('span', { class: 'bz-muted', title: 'Ce compte n’a pas lancé l’appli des magasins', text: '—' })];
+}
+
+function profileInfo(u) {
+  if (u.deleted) return ['—'];
+  const profile = profileText(u);
+  return [el('span', { class: u.is_public ? null : 'bz-muted', text: profile || '—' })];
+}
+
+// Dans le tableau, le téléphone et le profil partagent une colonne : deux
+// colonnes de plus poussaient le statut et le bouton « … » hors de l'écran.
+// Un profil public ressort ; privé, le réglage par défaut, reste discret.
+function appInfo(u) {
+  if (u.deleted) return ['—'];
+  const profile = profileText(u);
+  return [
+    platformInfo(u)[0],
+    profile ? el('span', { style: { color: u.is_public ? 'var(--text)' : '' }, text: 'Profil ' + profile.toLowerCase() }) : null
+  ];
 }
 
 // ---------- Boostz Pass d'un compte ----------
@@ -791,6 +823,11 @@ function renderUsers() {
     : el('button', { class: 'bz-input bz-filter-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Choisir les comptes affichés' }, filterLabel, caretIcon());
   filter.addEventListener('click', () => openKindsList(filter, update));
 
+  // Android ou iPhone (15/11/2026) : à côté du filtre des catégories, pas
+  // dedans, parce que c'est le tri qu'on fait le plus pendant la bêta.
+  const withPlatforms = hasPlatformData(state.users);
+  const platforms = platformFilter((value) => { state.userPlatform = value; update(); });
+
   const count = el('span', { class: 'bz-small bz-muted adm-count', style: { whiteSpace: 'nowrap' } });
   const tbody = el('tbody');
   const cards = el('div', { class: 'bz-cards' });
@@ -802,8 +839,12 @@ function renderUsers() {
     const q = state.q.trim().toLowerCase();
     const matching = state.users.filter((u) =>
       !q || (u.pseudo || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q));
-    const shown = matching.filter((u) => state.userKinds.has(userKind(u)));
-    const hidden = matching.length - shown.length;
+    const kept = matching.filter((u) => state.userKinds.has(userKind(u)));
+    // Les totaux du filtre par téléphone portent sur ce que la recherche et
+    // les catégories laissent : un chiffre qu'un clic retrouve à l'identique.
+    platforms.set(state.userPlatform, platformCounts(kept));
+    const shown = state.userPlatform ? kept.filter((u) => onPlatform(u, state.userPlatform)) : kept;
+    const hidden = matching.length - kept.length;
     filterLabel.textContent = kindsLabel(state.userKinds);
     // Un point sur le filtre dès qu'on s'écarte du réglage par défaut.
     filterDot.hidden = state.userKinds.size === DEFAULT_KINDS.length && DEFAULT_KINDS.every((k) => state.userKinds.has(k));
@@ -819,6 +860,7 @@ function renderUsers() {
     search.style.minWidth = '0';
     return el('div', { class: 'adm-users-phone' },
       el('div', { class: 'adm-toolbar' }, search, filter),
+      withPlatforms ? platforms.node : null,
       el('div', { class: 'adm-count' }, count),
       el('section', { class: 'bz-card adm-ulist' }, cards, empty)
     );
@@ -826,15 +868,16 @@ function renderUsers() {
 
   return el('section', { class: 'bz-card', style: { padding: '0', overflow: 'hidden', marginTop: '16px' } },
     el('div', { class: 'bz-row adm-users-bar', style: { padding: '14px 16px', borderBottom: '1px solid var(--line)' } },
-      search, filter, count
+      search, filter, withPlatforms ? platforms.node : null, count
     ),
     // Téléphone : des fiches. Un tableau de neuf colonnes cachait le statut et le
     // bouton « … » derrière un défilement horizontal.
     phone ? cards : el('div', { class: 'bz-table-wrap' },
-      el('table', { class: 'bz-table is-compact', style: { minWidth: hasPassData(state.users) ? '1220px' : '1040px' } },
+      el('table', { class: 'bz-table is-compact', style: { minWidth: (hasPassData(state.users) ? 1220 : 1040) + (withPlatforms ? 110 : 0) + 'px' } },
         el('thead', {}, el('tr', {},
           el('th', { text: 'Membre' }), el('th', { text: 'Inscription' }),
           el('th', { text: 'Âge déclaré' }), el('th', { text: 'Déclaré le' }), el('th', { text: 'Dernière utilisation' }),
+          withPlatforms ? el('th', { text: 'Appli · Profil', title: 'Le téléphone sur lequel le compte utilise l’appli des magasins, et son réglage « Profil public »' }) : null,
           hasPassData(state.users) ? el('th', { text: 'Boostz Pass' }) : null,
           el('th', { style: { textAlign: 'center' }, text: 'Reçus' }), el('th', { style: { textAlign: 'center' }, text: 'Émis' }),
           el('th', { text: 'Statut' }), el('th', { style: { textAlign: 'right' } }, el('span', { class: 'bz-sr', text: 'Actions' }))
@@ -888,6 +931,8 @@ function openUserSheet(anchor, u) {
       el('div', {}, el('dt', { text: 'Déclaré le' }), dd2(declaredAtInfo(u))),
       el('div', {}, el('dt', { text: 'Dernière utilisation' }), dd2(lastSeenInfo(u))),
       el('div', {}, el('dt', { text: 'Inscription' }), dd2([dateShort(u.created_date)])),
+      hasPlatformData(state.users) ? el('div', {}, el('dt', { text: 'Appli' }), dd2(platformInfo(u))) : null,
+      hasPlatformData(state.users) ? el('div', {}, el('dt', { text: 'Profil' }), dd2(profileInfo(u))) : null,
       el('div', { class: 'is-full' }, el('dt', { text: 'Signalements' }), dd2([el('span', {}, received, ' · ' + u.reports_sent + ' émis')])),
       u.banned_reason && !u.deleted ? el('div', { class: 'is-full' }, el('dt', { text: 'Motif de la sanction' }), dd2([u.banned_reason + (u.banned_until ? ' (jusqu’au ' + dateShort(u.banned_until) + ')' : '')])) : null,
       hasPassData(state.users) ? el('div', { class: 'is-full' }, el('dt', { text: 'Boostz Pass' }), dd2(passInfo(u))) : null
@@ -959,6 +1004,7 @@ function userRow(u) {
     cell2(ageInfo(u)),
     cell2(declaredAtInfo(u)),
     cell2(lastSeenInfo(u)),
+    hasPlatformData(state.users) ? cell2(appInfo(u)) : null,
     hasPassData(state.users) ? cell2(passInfo(u)) : null,
     el('td', { style: { textAlign: 'center', fontWeight: '700', color: u.reports_received >= 3 ? 'var(--text-danger)' : 'var(--text-muted)' }, text: String(u.reports_received) }),
     el('td', { style: { textAlign: 'center' }, class: 'bz-muted', text: String(u.reports_sent) }),
