@@ -81,6 +81,12 @@
   .bt-warn svg{flex:none;margin-top:1px}
   .bt-warn b{color:#FCD34D}
   .bt-step .bt-warn + .btn{margin-top:12px}
+  /* Le secours sous le bouton de l'étape 3 Android (15/11/2026) : une
+     testeuse inscrite, invitation acceptée, n'avait que « Élément
+     introuvable » dans le Play Store de son téléphone ; la même fiche ouverte
+     sur un ordinateur lui a installé l'appli à distance. Sous le bouton, parce
+     qu'on ne le lit qu'après avoir essayé. */
+  .bt-help{margin:12px 0 0;font-family:"DM Sans",sans-serif;font-size:13px;line-height:1.45;color:#A8A2B8}
   /* Les étapes qui attendent une date (l'iPhone jusqu'au 06/11/2026 ; plus
      aucune depuis, gardé pour une étape à venir). */
   .bt-step.is-later .bt-num{background:#2A2140;border-color:#7F7891;color:#BFB9CB;box-shadow:none}
@@ -135,6 +141,7 @@
     .bt-step .p{font-size:16px}
     .bt-step .btn{height:58px;padding:0 24px;font-size:17px}
     .bt-warn{font-size:14px}
+    .bt-help{font-size:14px}
     .bt-more{margin-top:72px}
     .bt-more .pts{flex-direction:row;flex-wrap:wrap;gap:28px 40px}
     .bt-more .pts li{flex:1 1 280px;min-width:0}
@@ -199,6 +206,7 @@
           <p class="p">Pendant la bêta, BoostZ n'apparaît pas dans la recherche du Play Store&nbsp;: passe par ce bouton. Tu as déjà un compte&nbsp;? Connecte-toi avec, ta collection t'attend.</p>
           <p class="bt-warn" role="note"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg><span><b>L'étape&nbsp;2 d'abord.</b> Sinon la fiche affiche «&nbsp;Élément introuvable&nbsp;».</span></p>
           <a class="btn is-dark" href="https://play.google.com/store/apps/details?id=app.boostz.mobile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Installer BoostZ</a>
+          <p class="bt-help">Encore «&nbsp;Élément introuvable&nbsp;» après l'étape&nbsp;2&nbsp;? Ouvre cette page sur un ordinateur, avec le même compte Google&nbsp;: par ce bouton, Google Play installe BoostZ sur ton téléphone.</p>
         </div>
       </li>
     </ol>
