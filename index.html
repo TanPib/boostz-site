@@ -84,7 +84,7 @@
 }
 </script>
 <link rel="stylesheet" href="assets/site.css">
-<link rel="stylesheet" href="assets/vitrine.css?v=2026-10-20b">
+<link rel="stylesheet" href="assets/vitrine.css?v=2026-11-16a">
 </head>
 <body>
 <!-- Sommaire : une colonne de points à gauche sur ordinateur, un bouton en bas à gauche sur téléphone -->
@@ -163,6 +163,16 @@
 <span class="hbeta-txt"><b>La bêta est ouverte</b><span class="acc">sur Android et iPhone</span></span>
 <span class="hbeta-go"><span class="hbeta-go-t">Teste-la</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D1730" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
 </a>
+<!-- Les chiffres du jour (16/11/2026) : utilisateurs et boutiques partenaires,
+     lus sur le serveur par vitrine.js (GET /site/figures), jamais écrits ici.
+     La place est réservée dès le départ, sans rien montrer, pour que la
+     colonne ne saute pas quand ils arrivent ; sans réponse du serveur, ou sans
+     JavaScript, aucun chiffre ne s'affiche. Un chiffre à zéro reste caché
+     (les boutiques partenaires, le 16/11/2026) et paraît au premier. -->
+<ul class="hnum is-wait" id="hnum" aria-label="BoostZ en chiffres">
+<li class="hnum-it is-mem"><b class="hnum-n" id="hnum-users">0</b><span class="hnum-l" id="hnum-users-l">utilisateurs</span></li>
+<li class="hnum-it is-shop"><b class="hnum-n" id="hnum-shops">0</b><span class="hnum-l" id="hnum-shops-l">boutiques partenaires</span></li>
+</ul>
 <!-- Les réseaux de Boostz dès le haut de page (14/10/2026) : les quatre du
      Profil de l'appli, chacun à la couleur de sa marque. -->
 <nav class="socials" aria-label="BoostZ sur les réseaux">
@@ -589,7 +599,7 @@
 
 <!-- Daté, comme vitrine.css : GitHub Pages garde un script dix minutes en
      cache. Changer la date à chaque modification de vitrine.js. -->
-<script type="module" src="assets/vitrine.js?v=2026-10-14c"></script>
+<script type="module" src="assets/vitrine.js?v=2026-11-16a"></script>
 <script type="module" src="assets/parrainage.js?v=2026-10-26"></script>
 <script type="module" src="assets/mesure.js"></script>
 </body>

@@ -66,6 +66,22 @@ button{font:inherit}
    lignes. « Inscris-toi » reste lu par les lecteurs d'écran. */
 .hbeta-go{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:5px;width:36px;height:36px;border-radius:10px;border:2px solid #F5F2FB;background:#C4B5FD;color:#1D1730;font-family:"DM Sans",sans-serif;font-weight:700;font-size:12px;box-sizing:border-box}
 .hbeta-go-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Les chiffres sous l'encart de la bêta (16/11/2026) : deux autocollants
+   droits (TanPib ne les veut pas penchés), le nombre en Outfit et son libellé
+   dessous. Violet pour les utilisateurs, turquoise pour les boutiques, la
+   couleur de leur rubrique. .is-wait garde la place sans rien montrer tant que
+   le serveur n'a pas répondu : la colonne ne saute pas à l'arrivée des
+   chiffres. [hidden] est redit ici parce que display:flex l'emporterait.
+   Chaque autocollant prend la moitié de la ligne, pas « ce qui reste » : un
+   chiffre à zéro ne s'affiche pas (vitrine.js), et celui qui reste seul garde
+   sa largeur au lieu de s'étirer d'un bord à l'autre. */
+.hnum{display:flex;justify-content:center;gap:12px;max-width:340px;margin:20px auto 0;padding:0;list-style:none}
+.hnum[hidden],.hnum-it[hidden]{display:none}
+.hnum.is-wait{visibility:hidden}
+.hnum-it{flex:0 1 calc(50% - 6px);min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px 9px;border-radius:16px;border:3px solid #F5F2FB;background:#1D1730;box-shadow:5px 5px 0 #05040A;box-sizing:border-box;text-align:left}
+.hnum-n{font-family:Outfit,sans-serif;font-weight:800;font-size:30px;line-height:1;letter-spacing:-0.02em;color:#C4B5FD;font-variant-numeric:tabular-nums}
+.hnum-it.is-shop .hnum-n{color:#5FDCDC}
+.hnum-l{font-family:"DM Sans",sans-serif;font-weight:700;font-size:12px;line-height:1.25;color:#F5F2FB}
 /* Les réseaux sous l'accroche (14/10/2026) : un carré par marque, à sa
    couleur, avec le trait clair et l'ombre dure des autocollants du site. */
 .socials{display:flex;justify-content:center;gap:14px;margin:24px auto 0}
@@ -203,6 +219,10 @@ div.grow{overflow:hidden}
 .hbeta-txt{font-size:min(21px,5.4cqi)}
 .hbeta-go{width:auto;height:auto;font-size:14px;padding:9px 13px}
 .hbeta-go-t{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+.hnum{justify-content:flex-start;gap:16px;max-width:470px;margin:26px 0 0}
+.hnum-it{flex-basis:calc(50% - 8px);padding:13px 16px 12px;border-radius:18px;box-shadow:6px 6px 0 #05040A}
+.hnum-n{font-size:40px}
+.hnum-l{font-size:14px}
 .socials{justify-content:flex-start;gap:16px;margin:30px 0 0}
 .soc{width:58px;height:58px;border-radius:18px}
 .stage{zoom:1.6}

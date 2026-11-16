@@ -3,7 +3,7 @@
 //
 // Sans JavaScript, tout le contenu reste lisible (et indexable) : c'est la
 // classe .anim, posée ici, qui cache les éléments jusqu'à leur arrivée.
-import { session, refreshMe, isVerifiedAdmin, clearSession } from './api.js';
+import { API, session, refreshMe, isVerifiedAdmin, clearSession } from './api.js';
 import { el, put, clear, initialOf, lockIcon, accountButton } from './chrome.js';
 
 const $ = (id) => document.getElementById(id);
@@ -370,8 +370,55 @@ if (fil) {
   build();
 }
 
+// ---------- Les chiffres sous l'accroche ----------
+// (16/11/2026) Le nombre d'utilisateurs et celui des boutiques partenaires,
+// lus sur le serveur à chaque visite : GET /site/figures, deux décomptes qu'il
+// refait au plus une fois par heure. Une requête sans en-tête à nous, donc
+// sans requête préalable du CORS. Le bloc a déjà sa place dans la page,
+// invisible (.is-wait) : à l'arrivée des chiffres rien ne bouge autour.
+//
+// PAS DE CHIFFRE PLUTÔT QU'UN CHIFFRE FAUX. Serveur injoignable ou réponse
+// illisible : le bloc se retire. Il n'affiche jamais le « 0 » d'attente écrit
+// dans la page, ni un nombre gardé d'une visite précédente.
+//
+// UN CHIFFRE À ZÉRO NE S'AFFICHE PAS (choix de TanPib, 16/11/2026 : ce jour-là
+// BoostZ compte 16 utilisateurs et aucune boutique partenaire). Son autocollant
+// reste caché et paraît de lui-même au premier ; l'autre garde sa largeur, il
+// ne s'étire pas pour remplir la ligne. Les deux à zéro : rien du tout.
+const NOMBRE = new Intl.NumberFormat('fr-FR');
+// Les milliers : Intl écrit une espace fine insécable, qu'Outfit ne dessine
+// pas (« 1 240 » se lisait « 1240 »). L'insécable ordinaire la remplace. Par
+// leurs numéros et non en toutes lettres : ces deux caractères sont
+// invisibles dans un éditeur.
+const FINE = String.fromCharCode(0x202f);
+const INSECABLE = String.fromCharCode(0xa0);
+const nombre = (n) => NOMBRE.format(n).split(FINE).join(INSECABLE);
+
+async function loadFigures() {
+  const bloc = $('hnum');
+  if (!bloc) return;
+  try {
+    const res = await fetch(API + '/site/figures');
+    if (!res.ok) throw new Error('réponse ' + res.status);
+    const f = await res.json();
+    if (!Number.isInteger(f.users) || !Number.isInteger(f.partner_venues)) throw new Error('réponse illisible');
+    if (f.users === 0 && f.partner_venues === 0) throw new Error('rien à montrer');
+    const poser = (id, n, un, plusieurs) => {
+      $(id).textContent = nombre(n);
+      $(id + '-l').textContent = n > 1 ? plusieurs : un;
+      $(id).parentElement.hidden = n === 0;
+    };
+    poser('hnum-users', f.users, 'utilisateur', 'utilisateurs');
+    poser('hnum-shops', f.partner_venues, 'boutique partenaire', 'boutiques partenaires');
+    bloc.classList.remove('is-wait');
+  } catch {
+    bloc.hidden = true;
+  }
+}
+
 renderAccount();
 verifyAccount();
+loadFigures();
 
 // Sommaire : le point de la section à l'écran s'allume ; sur téléphone, le
 // bouton paraît une fois le booster passé, en remontant, et la liste se ferme
