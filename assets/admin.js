@@ -11,13 +11,13 @@ import { loadData, renderData, dataRedCount } from './data.js?v=2026-10-19g';
 import { renderBeta, onPlatform, platformText, profileText, platformFilter, platformCounts, testPill } from './beta.js?v=2026-11-15a';
 import { loadTodo, renderTodo, todoMineCount } from './todo.js?v=2026-10-19g';
 import { loadSources, renderSources, sourcesCutCount } from './sources.js';
-import { loadVenues, renderVenues, venuesPendingCount, selectVenueRequest } from './venues.js?v=2026-10-31p';
+import { loadVenues, renderVenues, venuesPendingCount, selectVenueRequest, selectDirectoryVenue } from './venues.js?v=2026-11-17a';
 import { renderAudience } from './audience.js?v=2026-10-19g';
 import { renderCrashes } from './plantages.js?v=2026-10-19j';
 import { renderHome } from './home.js?v=2026-10-19g';
 import { renderBilling } from './billing.js?v=2026-10-19g';
 import { renderStudio } from './studio.js?v=2026-10-19g';
-import { renderProspection } from './prospection.js?v=2026-11-02a';
+import { renderProspection } from './prospection.js?v=2026-11-17a';
 
 const REASONS = {
   fraud: 'Arnaque ou tentative de fraude',
@@ -1898,7 +1898,8 @@ function detailText(a) {
     case 'studio_invoice': return ({ deposit: 'Acompte', balance: 'Solde', yearly: 'Services annuels', modification: 'Modifications' }[d.purpose] || 'Facture') + ' en brouillon · ' + (d.client || '') + (Number.isInteger(d.amount_cents) ? ' · ' + (d.amount_cents / 100).toFixed(2).replace('.', ',') + ' €' : '');
     case 'studio_contract': return d.step === 'modifications' ? 'Modifications · ' + (d.client || '') + ' · ' + d.pages + ' page' + (d.pages > 1 ? 's' : '') + (d.covered ? ' (' + d.covered + ' incluse' + (d.covered > 1 ? 's' : '') + ')' : '') : ({ renew: 'Renouvelé', stop: 'Arrêté', restart: 'Repris' }[d.step] || d.step) + ' · ' + (d.client || '');
     // L'onglet Prospection : le geste et ce qu'il concerne.
-    case 'prospection': return ({ send: 'E-mail envoyé à la main', template: 'Texte modifié', template_reset: 'Texte d’origine rétabli', settings: 'Réglages de l’envoi', import: 'Import', opt_out_removed: 'Adresse retirée de « Ne pas contacter »' }[d.step] || d.step) +
+    case 'prospection': return ({ send: 'E-mail envoyé à la main', template: 'Texte modifié', template_reset: 'Texte d’origine rétabli', settings: 'Réglages de l’envoi', import: 'Import', opt_out_removed: 'Adresse retirée de « Ne pas contacter »', venue_create: 'Boutique créée dans l’appli', venue_link: 'Reliée à une boutique de l’appli', venue_unlink: 'Déliée de sa boutique de l’appli' }[d.step] || d.step) +
+      (d.venue_name ? ' · ' + d.venue_name : '') + (d.force ? ' · malgré une boutique ressemblante' : '') +
       (d.key ? ' · ' + d.key : '') + (d.value ? ' · ' + d.value : '') + (d.step === 'import' ? ' · ' + (d.created || 0) + ' créée(s), ' + (d.updated || 0) + ' mise(s) à jour' : '') +
       (d.step === 'settings' && typeof d.sending_enabled === 'boolean' ? ' · envoi ' + (d.sending_enabled ? 'allumé' : 'éteint') : '');
     default: return '';
@@ -2190,6 +2191,13 @@ async function openDeepLink(link) {
     state.reportId = a;
     goTo('reports');
     openPane('report');
+    return render();
+  }
+  // #venues/fiche/<id> : une boutique de l'Annuaire, ouverte depuis le CRM.
+  if (link.tab === 'venues' && a === 'fiche' && b) {
+    selectDirectoryVenue(b);
+    goTo('venues');
+    openPane('venue-dir');
     return render();
   }
   if (link.tab === 'venues' && b) {

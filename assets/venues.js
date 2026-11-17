@@ -282,6 +282,14 @@ export async function selectVenueRequest(type, id) {
   await loadVenues();
 }
 
+// Un lien direct vers la fiche d'une boutique de l'Annuaire (#venues/fiche/<id>) :
+// le CRM de prospection l'ouvre depuis la fiche d'une boutique démarchée
+// (assets/prospection.js, « Ouvrir dans Boutiques »).
+export function selectDirectoryVenue(id) {
+  vn.level = 'directory';
+  pickVenue(id);
+}
+
 function openRequest(ctx, id) {
   vn.selId = id;
   ctx.openPane(PANE);
