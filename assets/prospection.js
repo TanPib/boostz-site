@@ -453,6 +453,96 @@ async function stop(ctx) {
   if (r) { pr.fiche = r; ctx.rerender(); }
 }
 
+// ---------- la boutique dans l'appli ----------
+// (17/11/2026) L'appli ne connaît que les boutiques d'OpenStreetMap ; une
+// boutique trouvée sur le web peut y manquer, et ne peut alors pas devenir
+// partenaire. La fiche la relie à sa boutique de l'appli, ou la crée. Le
+// serveur refuse de créer une boutique qui ressemble trop à une boutique déjà
+// présente (même endroit, même nom, même téléphone, même site), sauf
+// confirmation explicite que c'est une autre.
+const venuePath = () => '/admin/prospection/prospects/' + encodeURIComponent(pr.ficheId) + '/venue';
+const venueLine = (v) => [v.address || [v.postal_code, v.city].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+const venueHref = (id) => 'admin.html#venues/fiche/' + encodeURIComponent(id);
+
+async function linkVenue(ctx, v) {
+  const ok = await ctx.ask({ title: 'Relier à cette boutique de l’appli', text: v.name + (venueLine(v) ? ' · ' + venueLine(v) : '') + '. La fiche du CRM la retient ; rien ne change dans l’appli.', confirmLabel: 'Relier' });
+  if (!ok) return;
+  const r = await act('venue', () => call(venuePath(), { method: 'POST', body: { venue_id: v.id } }), ctx, 'Reliée.');
+  if (r) { pr.fiche = r; ctx.rerender(); }
+}
+
+async function createVenue(ctx, force = false) {
+  const p = pr.fiche.prospect;
+  const where = [p.address, [p.postal_code, p.city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const ok = await ctx.ask({
+    title: force ? 'Créer quand même la boutique ?' : 'Créer la boutique dans l’appli',
+    text: (force ? 'Tu confirmes que c’est une autre boutique que celles proposées. ' : '') +
+      'Elle apparaîtra dans la liste des lieux de son département, avec ces informations du CRM : ' + p.name + ' · ' + where +
+      (p.phone ? ' · ' + p.phone : '') + (p.website ? ' · ' + p.website : '') + '. Pas encore partenaire : son statut se règle dans l’onglet Boutiques.',
+    confirmLabel: force ? 'Créer quand même' : 'Créer', ...(force ? { tone: 'red' } : {})
+  });
+  if (!ok) return;
+  if (pr.busy.has('venue')) return;
+  pr.busy.add('venue');
+  ctx.rerender();
+  try {
+    pr.fiche = await call(venuePath(), { method: 'POST', body: { create: true, force } });
+    ctx.toast('Boutique créée dans l’appli.');
+  } catch (e) {
+    // Une boutique ressemblante : la fiche relue la montre en tête.
+    ctx.toast(e.message, 'err');
+    try { pr.fiche = await call('/admin/prospection/prospects/' + encodeURIComponent(pr.ficheId)); } catch {}
+  } finally {
+    pr.busy.delete('venue');
+    ctx.rerender();
+  }
+}
+
+async function unlinkVenue(ctx) {
+  const v = pr.fiche.venue.linked;
+  const ok = await ctx.ask({ title: 'Délier la boutique de l’appli', text: 'La fiche du CRM oublie « ' + v.name + ' ». La boutique reste dans l’appli, avec son statut et ses gérants.', confirmLabel: 'Délier' });
+  if (!ok) return;
+  const r = await act('venue', () => call(venuePath(), { method: 'DELETE' }), ctx, 'Déliée.');
+  if (r) { pr.fiche = r; ctx.rerender(); }
+}
+
+function venueCard(ctx) {
+  const vb = pr.fiche.venue;
+  if (!vb) return null;
+  const head = el('h3', { class: 'bz-h3', text: 'Dans l’appli' });
+  const busy = pr.busy.has('venue');
+  if (vb.linked) {
+    const v = vb.linked;
+    return el('section', { class: 'bz-card' }, head,
+      el('div', { class: 'pr-reply-head' }, el('b', { text: v.name }),
+        pill(v.partner ? 'Partenaire' : 'Pas encore partenaire', v.partner ? 'is-green' : 'is-amber'),
+        pill(v.source === 'manual' ? 'Créée à la main' : 'OpenStreetMap', 'is-grey'),
+        pill(v.managers ? v.managers + ' gérant' + (v.managers > 1 ? 's' : '') : 'Aucun gérant', v.managers ? 'is-green' : 'is-grey')),
+      el('p', { class: 'bz-small bz-muted', text: venueLine(v) || '—' }),
+      v.partner ? null : el('p', { class: 'bz-small', text: 'Pour la rendre partenaire et lui donner un gérant : ouvre-la dans l’onglet Boutiques.' }),
+      el('div', { class: 'bz-row' },
+        el('a', { class: 'bz-btn is-sm is-primary', href: venueHref(v.id), target: '_blank', rel: 'noopener', text: 'Ouvrir dans Boutiques' }),
+        btn('Délier', () => unlinkVenue(ctx), { disabled: busy })));
+  }
+  const strong = vb.candidates.filter((c) => c.strong);
+  const rows = vb.candidates.map((c) => el('li', { class: 'pr-venue-cand' },
+    el('div', {},
+      el('b', { text: c.name }), c.strong ? pill('Sans doute elle', 'is-amber') : null,
+      el('div', { class: 'bz-tiny bz-muted', text: [venueLine(c), c.reasons.join(', '), c.partner ? 'partenaire' : null, c.source === 'manual' ? 'créée à la main' : null].filter(Boolean).join(' · ') })),
+    el('div', { class: 'bz-row' },
+      el('a', { class: 'bz-btn is-sm', href: venueHref(c.id), target: '_blank', rel: 'noopener', text: 'Voir' }),
+      btn('Relier', () => linkVenue(ctx, c), { tone: c.strong ? 'primary' : null, disabled: busy }))));
+  return el('section', { class: 'bz-card' }, head,
+    el('p', { class: 'bz-small', text: 'Cette boutique n’est reliée à aucune boutique de l’appli : tant qu’elle n’y est pas, elle ne peut pas devenir partenaire.' }),
+    vb.candidates.length ? el('p', { class: 'bz-small bz-muted', text: strong.length ? 'Ces boutiques de l’appli lui ressemblent : si c’est l’une d’elles, relie-la plutôt que d’en créer une seconde.' : 'Les boutiques de l’appli les plus proches :' }) : el('p', { class: 'bz-small bz-muted', text: 'Aucune boutique de l’appli ne lui ressemble (même nom, même téléphone, même site) ni ne se trouve à moins de 2 km.' }),
+    vb.candidates.length ? el('ul', { class: 'pr-venue-list' }, rows) : null,
+    vb.create_blocker ? el('div', { class: 'bz-msg pr-warn', text: vb.create_blocker }) : null,
+    el('div', { class: 'bz-row' },
+      vb.duplicate_risk
+        ? btn('C’est une autre boutique : la créer', () => createVenue(ctx, true), { disabled: busy || !!vb.create_blocker, title: vb.create_blocker || null })
+        : btn('Créer la boutique dans l’appli', () => createVenue(ctx), { tone: 'primary', disabled: busy || !!vb.create_blocker, title: vb.create_blocker || null })));
+}
+
 function ficheView(ctx, canWrite) {
   const back = btn('← Retour', () => { pr.view = pr.back || 'list'; ctx.rerender(); });
   if (!pr.fiche) return el('div', { class: 'bl' }, back, el('div', { class: 'bz-skeleton', style: { height: '400px' } }));
@@ -542,7 +632,7 @@ function ficheView(ctx, canWrite) {
       f.can_send.followup_due && !f.can_send.email_2 ? el('div', { class: 'bz-msg is-ok', text: 'La relance est due.' }) : null,
       actions,
       contacts),
-    replies, mails, texts, timeline);
+    venueCard(ctx), replies, mails, texts, timeline);
 }
 
 // ---------- les textes ----------
